@@ -86,7 +86,7 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
 #' \dontrun{
 #' Plot sin grupos
 #' data <- readr::read_tsv("data_agua_RDLP.tsv")
-#' col_pars <- "Parame"
+#' col_pars <- "Param"
 #' col_sitio <- "Sitio"
 #' col_valor <- "Resultado"
 #' col_unidad <- "Unidad"
