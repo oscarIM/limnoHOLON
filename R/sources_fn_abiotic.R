@@ -1,4 +1,4 @@
-##### funciones para medio abiótico abiótico#################################################################
+##### funciones para medio abiótico abiótico####
 #' @title fn_stat
 #' @description función para obtener la tabla de estadística descriptiva.
 #' @param data archivo de entrada. Tiene que tener, al menos, las columnas: sitio, parámetros (nombre o sigla), valor de parámetros. Tiene que estar en formato "long". Se recomida usar csv o tsv como formatos.
@@ -6,8 +6,8 @@
 #' @param data_pars "dataframe" que contenga los parámetros (sus siglas) tal como aparecen en el "dataframe" de entrada, junto a un columna que indique a que tipo de parámetro pertenece (i.e. Físico, Químico, Nutriente, Metal, Orgánico e inorgánico y Biológico).Las columnas se tienen que llamar: Param y cat_pars
 #' @param col_valor string que indica el nombre de la columna que tiene el valor de los parámetros.
 #' @param matriz string que indica el nombre de la "matriz" de datos que se esta analizando. Sirve principalmente como ID para las salidas y para diferenciar entre sedimentos y aguas.
-#' @param round  integro de determina el número de decimales para redondeo en la tabla
-#' @import dplyr
+#' @param round  integro de determina el número de decimales para redondeo en la tabla. Por defecto, round =2.
+#' @import tidyverse
 #' @import scales
 #' @import knitr
 #' @return tabla básica estadisticos
@@ -61,7 +61,6 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
   print(knitr::kable(table_export, format = "markdown", align = "c", caption = "Tabla parámetros"))
   write.table(table_export, file = paste0("descript_stats_table_", matriz, ".csv"), sep = ";", na = "NA", dec = ",", row.names = F, col.names = T)
 }
-####################################################################################################
 #' @title fn_plot_bar_abiotic
 #' @description función para graficar las concentraciones o niveles de los parámetros a los largo de las estaciones de muestro, coloreadolos por tipo (físicos, químicos, nutrientes, metales, orgánico e inorgánico y biológico; en este mismo orden)
 #' @param data archivo entrada que tiene que tener, al menos, las columnas: sitio, parámetros (nombre o sigla), valor de parámetros. Tiene que estar en formato "long". Se recomida usar csv o tsv como formatos.
@@ -70,16 +69,17 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
 #' @param col_valor string que indica el nombre de la columna que tiene el valor de los parámetros.
 #' @param code_sitio string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.
 #' @param matriz string que indica el nombre de la "matriz" de datos que se esta analizando. Sirve principalmente como ID para las salidas y para diferenciar entre sedimentos y aguas.
-#' @param data_pars "dataframe" que contenga los parámetros (sus siglas) tal como aparecen en el "dataframe" de entrada, junto a un columna que indique a que tipo de parámetro pertenece (i.e. Físico, Químico, Nutriente, Metal, Orgánico e inorgánico y Biológico).Las columnas se tienen que llamar: Param y cat_pars
-#' @param ord_sitio string que indica el orden en que se quiere que aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estación o punto de muestreo)
-#' @param col_grupo string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.)
-#' @param ord_grupo string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo
-#' @param aspect_ratio relación alto-ancho
+#' @param data_pars "dataframe" que contenga los parámetros (sus siglas) tal como aparecen en el "dataframe" de entrada, junto a una columna que indique a que tipo de parámetro pertenece (i.e. Físico, Químico, Nutriente, Metal, Orgánico e inorgánico y Biológico).Las columnas se tienen que llamar: Param y cat_pars
+#' @param ord_sitio string que indica el orden en que se quiere que aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estación o punto de muestreo). Por defecto, toma valor "asc" (órden ascendente)
+#' @param col_grupo string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.
+#' @param ord_grupo string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
+#' @param width ancho del gráfico. Por defecto, toma valor 8
+#' @param height alto del gráfico. Por defecto, toma valor 6
+#' @param aspect_ratio relación alto-ancho. Por defecto, toma valor 1.
 #' @import rlang
-#' @import dplyr
-#' @import ggplot2
-#' @import stringr
+#' @import tidyverse
 #' @import RcolorBrewer
+#' @import grDevices
 #' @return gráfico de barras por tipo de parámetros
 #' @export fn_plot_bar_abiotic
 #' @examples
@@ -118,21 +118,18 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
   # setting vars#
   pars_gran <- c("LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN")
   vars <- c(col_sitio, col_pars, col_unidad, col_valor, col_grupo)
-  data_plot <- data %>% select(all_of(vars))
-  patterns <- c("(?i)sitio|(?i)estacion", "(?i)param", "(?i)unidad", "(?i)resultado|(?i)valor")
-  new_names <- c("col_sitio", "col_pars", "col_unidad", "col_valor")
-  data_plot <- data_plot %>%
-    dplyr::select(matches(patterns)) %>%
-    dplyr::rename_at(vars(matches(patterns)), ~new_names)
+  data_plot <- data %>%
+    dplyr::select(all_of(vars)) %>%
+    dplyr::rename_at(vars, ~c("col_sitio", "col_pars", "col_unidad", "col_valor"))
   if (!is.null(col_grupo) && length(col_grupo) == 1) {
-    grupo <- data %>% pull({{ col_grupo }})
-    data_plot <- data_plot %>% mutate(col_grupo = grupo)
+    grupo <- data %>% dplyr::pull({{ col_grupo }})
+    data_plot <- data_plot %>% dplyr::mutate(col_grupo = grupo)
   }
   if (!is.null(col_grupo) && length(col_grupo) == 2) {
     grupos <- data %>%
-      select(all_of(col_grupo)) %>%
-      rename(col_grupo1 = 1, col_grupo2 = 2)
-    data_plot <- bind_cols(data_plot, grupos)
+      dplyr::select(all_of(col_grupo)) %>%
+      dplyr::rename(col_grupo1 = 1, col_grupo2 = 2)
+    data_plot <- dplur::bind_cols(data_plot, grupos)
   }
   cols_type <- c("#66C2A5", "#C6B18B", "#D58EC4", "#F8D348", "#A89BB0", "#B7D84C")
   order_type <- c("Físico", "Químico", "Nutriente", "Metal", "Orgánicos e inorgánicos", "Biológico")
@@ -295,12 +292,14 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
 #' @param code_sitio string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.
 #' @param matriz string que indica el nombre de la "matriz" de datos que se esta analizando. Sirve principalmente como ID para las salidas y para diferenciar entre sedimentos y aguas.
 #' @param data_pars "dataframe" que contenga los parámetros (sus siglas) tal como aparecen en el "dataframe" de entrada, junto a un columna que indique a que tipo de parámetro pertenece (i.e. Físico, Químico, Nutriente, Metal, Orgánico e inorgánico y Biológico).Las columnas se tienen que llamar: Param y cat_pars
+#' @param width ancho del gráfico. Por defecto, toma valor 6
+#' @param height alto del gráfico. Por defecto, toma valor 6
 #' @import corrplot
-#' @import dplyr
+#' @import tidyverse
 #' @import rstatix
-#' @import tidyr
 #' @return gráfico de correlaciones de spearmann
 #' @export fn_plot_correlogram
+#' @examples
 #' \dontrun{
 #' data <- readr::read_tsv("data_sedimento (copia).tsv")
 #' col_pars <- "Param"
@@ -316,12 +315,10 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
 fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, data_pars, width = 6, height = 6) {
   # setting vars#
   pars_gran <- c("LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN")
-  patterns <- c("(?i)sitio|(?i)estacion", "(?i)param", "(?i)resultado|(?i)valor")
-  new_names <- c("col_sitio", "col_pars", "col_valor")
   order_type <- c("Físico", "Químico", "Nutriente", "Metal", "Orgánicos e inorgánicos", "Biológico")
   data <- data %>%
-    dplyr::select(matches(patterns)) %>%
-    dplyr::rename_at(vars(matches(patterns)), ~new_names)
+    dplyr::select(all_of(vars)) %>%
+    dplyr::rename_at(vars, ~c("col_sitio", "col_pars", "col_valor"))
   # setting base dataframe#
   selected_pars <- data %>%
     dplyr::group_by(col_pars) %>%
@@ -421,15 +418,18 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, d
 #' @param code_sitio string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.
 #' @param matriz string que indica el nombre de la "matriz" de datos que se esta analizando. Sirve principalmente como ID para las salidas y para diferenciar entre sedimentos y aguas.
 #' @param data_pars "dataframe" que contenga los parámetros (sus siglas) tal como aparecen en el "dataframe" de entrada, junto a un columna que indique a que tipo de parámetro pertenece (i.e. Físico, Químico, Nutriente, Metal, Orgánico e inorgánico y Biológico).Las columnas se tienen que llamar: Param y cat_pars
-#' @param col_grupo string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.)
-#' @param ord_grupo string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo
-#' @import dplyr
-#' @import ggplot2
+#' @param col_grupo string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.
+#' @param ord_grupo string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
+#' @param width ancho del gráfico. Por defecto, toma valor 6
+#' @param height alto del gráfico. Por defecto, toma valor 6
+#' @import tydiverse
 #' @import scales
-#' @import stringr
 #' @import vegan
+#' @import RColorBrewer
+#' @import grDevices
 #' @return gráfico pca
 #' @export fn_plot_pca
+#' @examples
 #' \dontrun{
 #' #figura sin factor de agrupamiento
 #' data <- readr::read_tsv("data_agua_RDLP.tsv")
@@ -641,15 +641,17 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
 #' @param ord_sitio string que indica el orden en que se quiere que aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estación o punto de muestreo).
 #' @param code_sitio string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.
 #' @param col_valor string que indica el nombre de la columna que tiene el valor de los parámetros.
-#' @param col_grupo string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.)
-#' @param ord_grupo string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo
-
-#' @import dplyr
-#' @import dplyr
-#' @import ggplot2
-#' @import stringr
-#' @return gráfico granulometría
+#' @param col_grupo string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.
+#' @param ord_grupo string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
+#' @param width ancho del gráfico. Por defecto, toma valor 8
+#' @param height alto del gráfico. Por defecto, toma valor 6
+#' @param aspect_ratio relación alto-ancho. Por defecto, toma valor 1.
+#' @import tidyverse
+#' @import RColorBrewer
+#' @import grDevices
+#' @return gráfico de granulometría
 #' @export fn_plot_granulometria
+#' @examples
 #' \dontrun{
 #' # figura sin grupos
 #' data <- readr::read_tsv("data_sedimento_RDLP.tsv")
@@ -662,7 +664,7 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
 #' height <- 4
 #' fn_plot_granulometria(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor,ord_sitio = ord_sitio, width = 8,height = 6, aspect_ratio = 1, code_sitio = code_sitio)
 #' }
-fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sitio, ord_sitio = "asc", col_grupo = NULL, ord_grupo = NULL, width, height, aspect_ratio = 1) {
+fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sitio, ord_sitio = "asc", col_grupo = NULL, ord_grupo = NULL, width = 8, height = 6, aspect_ratio = 1) {
   # setting vars#
   pars_gran <- c("LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN")
   vars <- c(col_sitio, col_pars, col_valor)
