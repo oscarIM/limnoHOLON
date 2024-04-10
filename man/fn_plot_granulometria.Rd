@@ -13,8 +13,8 @@ fn_plot_granulometria(
   ord_sitio = "asc",
   col_grupo = NULL,
   ord_grupo = NULL,
-  width,
-  height,
+  width = 8,
+  height = 6,
   aspect_ratio = 1
 )
 }
@@ -31,13 +31,33 @@ fn_plot_granulometria(
 
 \item{ord_sitio}{string que indica el orden en que se quiere que aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estación o punto de muestreo).}
 
-\item{col_grupo}{string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.)}
+\item{col_grupo}{string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.}
 
-\item{ord_grupo}{string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo}
+\item{ord_grupo}{string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.}
+
+\item{width}{ancho del gráfico. Por defecto, toma valor 8}
+
+\item{height}{alto del gráfico. Por defecto, toma valor 6}
+
+\item{aspect_ratio}{relación alto-ancho. Por defecto, toma valor 1.}
 }
 \value{
-gráfico granulometría
+gráfico de granulometría
 }
 \description{
 función para graficar fracciones granulométricas. Solo tiene sentido para datos de Sedimentos.
+}
+\examples{
+\dontrun{
+# figura sin grupos
+data <- readr::read_tsv("data_sedimento_RDLP.tsv")
+col_pars <- "Param"
+col_sitio <- "Estacion"
+col_valor <- "Resultado"
+code_sitio <- "P-"
+ord_sitio <- "asc"# "desc o asc"
+width <- 6
+height <- 4
+fn_plot_granulometria(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor,ord_sitio = ord_sitio, width = 8,height = 6, aspect_ratio = 1, code_sitio = code_sitio)
+}
 }

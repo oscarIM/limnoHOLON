@@ -17,7 +17,7 @@ fn_stats(data, col_pars, col_valor, data_pars, matriz, round = 2)
 
 \item{matriz}{string que indica el nombre de la "matriz" de datos que se esta analizando. Sirve principalmente como ID para las salidas y para diferenciar entre sedimentos y aguas.}
 
-\item{round}{integro de determina el número de decimales para redondeo en la tabla}
+\item{round}{integro de determina el número de decimales para redondeo en la tabla. Por defecto, round =2.}
 }
 \value{
 tabla básica estadisticos

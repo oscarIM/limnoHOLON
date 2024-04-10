@@ -28,6 +28,10 @@ fn_plot_correlogram(
 
 \item{data_pars}{"dataframe" que contenga los parámetros (sus siglas) tal como aparecen en el "dataframe" de entrada, junto a un columna que indique a que tipo de parámetro pertenece (i.e. Físico, Químico, Nutriente, Metal, Orgánico e inorgánico y Biológico).Las columnas se tienen que llamar: Param y cat_pars}
 
+\item{width}{ancho del gráfico. Por defecto, toma valor 6}
+
+\item{height}{alto del gráfico. Por defecto, toma valor 6}
+
 \item{col_valor}{string que indica el nombre de la columna que tiene el valor de los parámetros.}
 }
 \value{
@@ -35,4 +39,18 @@ gráfico de correlaciones de spearmann
 }
 \description{
 función para graficar el correlograma de las variables.
+}
+\examples{
+\dontrun{
+data <- readr::read_tsv("data_sedimento (copia).tsv")
+col_pars <- "Param"
+col_sitio <- "Estacion"
+col_valor <- "Valor"
+matriz <- "sedimento"
+code_sitio <- "E-"
+data_pars <- readr::read_tsv("tabla_pars.tsv")
+width <- 8
+height <- 9
+fn_plot_correlogram(data = data, col_pars = col_pars, col_sitio = col_sitio, matriz = matriz, code_sitio, code_sitio, data_pars = data_pars, width = width,height = width)
+}
 }

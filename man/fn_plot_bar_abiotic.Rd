@@ -30,19 +30,23 @@ fn_plot_bar_abiotic(
 
 \item{col_valor}{string que indica el nombre de la columna que tiene el valor de los parámetros.}
 
-\item{col_grupo}{string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.)}
+\item{col_grupo}{string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.}
 
 \item{code_sitio}{string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.}
 
 \item{matriz}{string que indica el nombre de la "matriz" de datos que se esta analizando. Sirve principalmente como ID para las salidas y para diferenciar entre sedimentos y aguas.}
 
-\item{data_pars}{"dataframe" que contenga los parámetros (sus siglas) tal como aparecen en el "dataframe" de entrada, junto a un columna que indique a que tipo de parámetro pertenece (i.e. Físico, Químico, Nutriente, Metal, Orgánico e inorgánico y Biológico).Las columnas se tienen que llamar: Param y cat_pars}
+\item{data_pars}{"dataframe" que contenga los parámetros (sus siglas) tal como aparecen en el "dataframe" de entrada, junto a una columna que indique a que tipo de parámetro pertenece (i.e. Físico, Químico, Nutriente, Metal, Orgánico e inorgánico y Biológico).Las columnas se tienen que llamar: Param y cat_pars}
 
-\item{ord_sitio}{string que indica el orden en que se quiere que aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estación o punto de muestreo)}
+\item{ord_sitio}{string que indica el orden en que se quiere que aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estación o punto de muestreo). Por defecto, toma valor "asc" (órden ascendente)}
 
-\item{ord_grupo}{string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo}
+\item{width}{ancho del gráfico. Por defecto, toma valor 8}
 
-\item{aspect_ratio}{relación alto-ancho}
+\item{height}{alto del gráfico. Por defecto, toma valor 6}
+
+\item{ord_grupo}{string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.}
+
+\item{aspect_ratio}{relación alto-ancho. Por defecto, toma valor 1.}
 }
 \value{
 gráfico de barras por tipo de parámetros
@@ -52,7 +56,7 @@ función para graficar las concentraciones o niveles de los parámetros a los la
 }
 \examples{
 \dontrun{
-Plot sin grupos  
+Plot sin grupos
 data <- readr::read_tsv("data_agua_RDLP.tsv")
 col_pars <- "Param"
 col_sitio <- "Sitio"
