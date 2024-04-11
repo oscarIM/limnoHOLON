@@ -1,5 +1,5 @@
 ##### funciones para medio abiótico abiótico####
-#' @title fn_stat
+#' @title fn_stats
 #' @description función para obtener la tabla de estadística descriptiva.
 #' @param data archivo de entrada. Tiene que tener, al menos, las columnas: sitio, parámetros (nombre o sigla), valor de parámetros. Tiene que estar en formato "long". Se recomida usar csv o tsv como formatos.
 #' @param col_pars string que indica el nombre de la columna en data que tiene los parámetros (su sigla).
@@ -11,7 +11,7 @@
 #' @import scales
 #' @import knitr
 #' @return tabla básica estadisticos
-#' @export fn_stat
+#' @export fn_stats
 #' @examples
 #' \dontrun{
 #' data <- readr::read_tsv("data_agua_RDLP_RDLP.tsv")
@@ -78,7 +78,7 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
 #' @param aspect_ratio relación alto-ancho. Por defecto, toma valor 1.
 #' @import rlang
 #' @import tidyverse
-#' @import RcolorBrewer
+#' @import RColorBrewer
 #' @import grDevices
 #' @return gráfico de barras por tipo de parámetros
 #' @export fn_plot_bar_abiotic
@@ -422,7 +422,7 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, d
 #' @param ord_grupo string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
 #' @param width ancho del gráfico. Por defecto, toma valor 6
 #' @param height alto del gráfico. Por defecto, toma valor 6
-#' @import tydiverse
+#' @import tidyverse
 #' @import scales
 #' @import vegan
 #' @import RColorBrewer
