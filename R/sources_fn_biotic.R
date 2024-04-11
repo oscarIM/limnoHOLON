@@ -735,9 +735,205 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
   }
 }  
   
+#' @title fn_plot_div_index
+#' @description función para graficar indices de diversidad a lo largo de estaciones o sitios de muestreo
+#' @param data archivo entrada que tiene que tener, al menos, las columnas que contengan a los taxones, N y sitios de muestreo. Tiene que estar en formato "long". Se recomida usar csv o tsv como formatos.
+#' @param col_N cadena de texto que indica el nombre de la columna que contiene el N (abundancia) en la base de datos de entrada.
+#' @param col_sitio cadena de texto que indica el nombre de la columna que contiene los sitios de muestreo en la base de datos de entrada.
+#' @param code_sitio cadena de texto que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-").
+#' @param col_taxa cadena de texto que indica el nombre de la columna que contiene los taxones (generalmente se llama especie, taxa, sigla) en la base de datos de entrada.
+#' @param col_factor cadena de texto que indica el nombre de la columna que contiene al factor de agrupamiento (zonas, campañas, etc) en la base de datos de entrada. Por defecto, Nulo.
+#' @param ord_factor cadena de texto que indica el orden en el cual se quiere que aparezcan los niveles del factor en el leyenda. Solo tiene sentido al usarlo con col_factor. Por defecto, Nulo.
+#' @param ord_sitio cadena de texto que indica el orden en el que se quiere aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estaciones o puntos de muestreo). Por defecto, toma valor "asc" (orden ascendente).
+#' @param taxa_id cadena de texto que indica el nombre del "grupo funcional" al cual pertenecen los taxones ("fitoplancton", "zooplancton", "macrofitas", "perifiton", "ictiofauna",etc.).
+#' @param fun cadena de texto que indica la función aritmética para el calculo de los indices a través de los sitios y/o factores. Por defecto, toma valor "sum".
+#' @param height alto del gráfico. Por defecto, toma valor 8.
+#' @param width ancho del gráfico. Por defecto, toma valor 8.
+#' @import rlang
+#' @import tidyverse
+#' @import ggpubr
+#' @import patchwork
+#' @import vegan
+#' @import scales
+#' @return gráfico  con los indices de diversidad calculados por sitios y/o factor.
+#' @export fn_plot_div_index
+#' @examples
+#' \dontrun{
+#' # plot indices diversidad sin factor de agrupamiento, ni orden de
+#' data <- read_tsv("data_fitoplancton.tsv")
+#' col_N <- "N"
+#' col_sitio <- "Sitio"
+#' code_sitio <- "P-"
+#' col_taxa <- "Sigla"
+#' fun = "sum"
+#' ord_sitio <- "asc"
+#' taxa_id <-  "fitoplancton"
+#' height <- 6
+#' width <- 6
+#' fn_plot_div_index(data = data, col_sitio = col_sitio, code_sitio = code_sitio,col_taxa = col_taxa,fun = fun, ord_sitio = ord_sitio, col_N = col_N, taxa_id = taxa_id,height = height, width = width, )
+#' # plot indices diversidad con factor de agrupamiento y en orden alfanumérico.
+#' data <- read_tsv("data_fitoplancton.tsv")
+#' fake data
+#' data <- data %>% mutate(grupo = if_else(Sitio %in% c("P-1", "P-2", "P-3", "P-4","P-5","P-6","P-7"), "area1", "area2"))
+#' col_N <- "N"
+#' col_sitio <- "Sitio"
+#' code_sitio <- "P-"
+#' col_taxa <- "Sigla"
+#' fun <- "sum"
+#' ord_sitio <- "asc"
+#' taxa_id <- "fitoplancton"
+#' col_factor <- "grupo"
+#' height <- 10
+#' width <- 10
+#' fn_plot_div_index(data = data, col_sitio = col_sitio, code_sitio = code_sitio,col_taxa = col_taxa,col_factor = col_factor,fun = fun, ord_sitio = ord_sitio, col_N = col_N, taxa_id = taxa_id, height = height, width = width)
+#'}
+fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_factor = NULL, ord_sitio = NULL, ord_factor = NULL, taxa_id, fun = "sum", width = 8, height = 8) {
+  options(scipen = 999)
+  # setting dataframe base, with out replica neither factor#
+  fun <- rlang::as_function(fun)
+  vars <- c(col_sitio, col_taxa, col_N)
+  sitios_tmp <- data %>% 
+    dplyr::pull({{col_sitio}}) %>% 
+    stringr::str_extract_all(., "\\d+",simplify = T) %>% 
+    as.numeric() %>% 
+    unique()
+  sitios_ord <- dplyr::case_when(
+    ord_sitio == "asc" ~ paste0(code_sitio, sitios_tmp),
+    ord_sitio == "desc" ~ paste0(code_sitio, rev(sitios_tmp)),
+    TRUE ~ NA_character_
+  )
+  data_plot <- data %>% 
+    dplyr::select(all_of(vars)) %>% 
+    dplyr::rename_at(vars, ~  c( "col_sitio", "col_taxa", "col_N")) %>% 
+    dplyr::mutate(col_sitio = factor(col_sitio, levels = sitios_ord))
   
-  
-  
-  
-  
-  
+  if (str_detect(taxa_id , "(?i)macrof")) {
+    data_plot <- data_plot %>%
+      dplyr::mutate(
+        col_N = dplyr::case_when(
+          stringr::str_detect(col_N, "1") ~ 3,
+          stringr::str_detect(col_N, "\\+") ~ 2,
+          stringr::str_detect(col_N, "r") ~ 1,
+          stringr::str_detect(col_N, "2") ~ 4,
+          stringr::str_detect(col_N, "3") ~ 5,
+          stringr::str_detect(col_N, "4") ~ 6,
+          stringr::str_detect(col_N, "5") ~ 7,
+          TRUE ~ as.numeric(col_N)))
+  } else {
+    data_plot <- data_plot
+  }
+  if (length(sitios_ord) <= 10) {
+    angle <- 0
+    } else {
+      angle <- 90
+      }
+#comienza setting para basic plot, sin col, factor ni orden, etc
+  if (is.null(col_factor)) {
+    data_index <-  data_plot %>%
+      dplyr::group_by(col_sitio, col_taxa) %>%
+      dplyr::summarise(col_N = fun(col_N, na.rm = TRUE)) %>%
+      tidyr::pivot_wider(names_from = col_taxa, values_from = col_N, values_fill = 0) %>%
+      dplyr::ungroup()
+    index_labels <- data_index %>% dplyr::select(col_sitio)
+    index_data <- data_index %>% dplyr::select(!names(index_labels))
+    summ_index <- index_data %>%
+      dplyr::mutate(
+        N = rowSums(.),
+        S = vegan::specnumber(.),
+        H = vegan::diversity(.,"shannon"),
+        J = H/log(S), 
+        L = vegan::diversity(.,"simpson")) %>% 
+      dplyr::select(N, S, H, J, L) %>% 
+      dplyr::mutate(J = tidyr::replace_na(J, 0),
+                    N2 = log10(N))
+    summ_index <- dplyr::bind_cols(index_labels, summ_index)
+    vars <- c("N", "S", "H", "J")
+    summ_index <-  summ_index %>% dplyr::select(-c(N2,L)) %>% 
+      tidyr::pivot_longer(., 
+                          cols = all_of(vars), 
+                          names_to = "vars_plot", 
+                          values_to = "values") %>% 
+      dplyr::mutate(vars_plot = factor(vars_plot, levels = vars))
+    plot <- ggplot2::ggplot(data = summ_index, aes(x = col_sitio, y = values, group = vars_plot)) + 
+      geom_point() +
+      geom_line() +
+      #scale_y_continuous(labels = scales::label_number()) +
+      facet_wrap(~vars_plot, scales = "free_y") + 
+      theme_bw() +
+      theme(strip.background = element_rect(fill = "gray95"), 
+            axis.text.x = element_text(angle = angle, 
+                                       hjust = 1, 
+                                       vjust = 0.5)) +
+      labs(y = "Valores", x = "Sitios")
+    ggsave(filename = paste0("plot_div_index_",taxa_id, ".png"), plot = plot,device = "png",width = width, height = height, dpi = 300)
+    } 
+  if (!is.null(col_factor)) {
+    col_factor <- data %>% pull({{col_factor}})
+    data_plot <- data_plot %>% mutate(col_factor = col_factor)
+    if (is.null(ord_factor)) {
+      ord <- data_plot %>% 
+        dplyr::pull(col_factor) %>% 
+        unique() %>% 
+        sort()
+    } else {
+      ord <- ord_factor
+    }
+    data_index <-  data_plot %>%
+      dplyr::group_by(col_factor, col_sitio, col_taxa) %>%
+      dplyr::summarise(col_N = fun(col_N, na.rm = TRUE)) %>%
+      tidyr::pivot_wider(names_from = col_taxa, values_from = col_N, values_fill = 0) %>%
+      dplyr::ungroup()
+    index_labels <- data_index %>% dplyr::select(col_factor, col_sitio)
+    index_data <- data_index %>% dplyr::select(!names(index_labels))
+    summ_index <- index_data %>%
+      dplyr::mutate(
+        N = rowSums(.),
+        S = vegan::specnumber(.),
+        H = vegan::diversity(.,"shannon"),
+        J = H/log(S), 
+        L = vegan::diversity(.,"simpson")) %>% 
+      dplyr::select(N, S, H, J, L) %>% 
+      dplyr::mutate(J = tidyr::replace_na(J, 0),
+                    N2 = log10(N))
+    summ_index <- dplyr::bind_cols(index_labels, summ_index)
+    vars <- c("N", "S", "H", "J")
+    comb <- expand.grid(vars, "col_factor", stringsAsFactors = FALSE)
+    formula <- paste0(comb$Var1, "~", comb$Var2)
+    list_test <- purrr::map(formula, ~ kruskal.test(as.formula(.), data = summ_index))
+    allres_test <- purrr::map_dfr(list_test, ~{
+      tidyr::tibble(
+        Test = .[["data.name"]],
+        ChiSquare = .[["statistic"]],
+        df = .[["parameter"]],
+        p_value = .[["p.value"]]
+      )
+    }) %>% 
+      tidyr::separate(., col = Test, into = c("vars", "factor"), sep = " by ", remove = FALSE)
+    titles <- paste0("Kruskal-Wallis: ", signif(allres_test[["ChiSquare"]], 4), "; valor-p: ", signif(allres_test[["p_value"]], 4))
+    x_axis <- "col_sitio"
+    fn_plot <- function(data, x_axis, var, title){
+      #data <- data %>% dplyr::mutate(Zona = factor(Zona, levels = zonas_ord))
+      #facet <- paste0("~",vars[2])
+      plot <- ggerrorplot(data, x = x_axis, 
+                          y = var,
+                          desc_stat = "mean_se", 
+                          color = "black",
+                          add.params = list(color = "darkgray")) + 
+        xlab("") +
+        ylab(var) +
+        scale_y_continuous(labels = scales::label_number()) +
+        facet_grid(~col_factor, scales = "free_x", space = "free_x") + 
+        theme_bw() +
+        theme(strip.background = element_rect(fill = "gray95"), 
+              axis.text.x = element_text(angle = 90, 
+                                         hjust = 1, 
+                                         vjust = 0.5)) +
+        ggtitle(title)
+      }
+    list_plots <- purrr::map2(vars, titles, ~fn_plot(data = summ_index, x_axis = x_axis,var = .x, title = .y))  
+    panel_1 <- list_plots[[1]]/list_plots[[2]] + patchwork::plot_annotation(tag_suffix = ")", tag_levels = list(c('a', 'b'), '1'))
+    ggsave(filename = paste0("plot_div_index_1_",taxa_id, ".png"), panel_1, width = width, height = height, dpi = 300)
+    panel_2 <- list_plots[[3]]/list_plots[[4]] + patchwork::plot_annotation(tag_levels = list(c('a', 'b'), '1'), tag_suffix = ")")
+    ggsave(filename = paste0("plot_div_index_2_",taxa_id, ".png"), panel_2, width = width, height = height, dpi = 300)
+    }
+  }  
