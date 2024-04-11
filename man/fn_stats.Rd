@@ -2,7 +2,7 @@
 % Please edit documentation in R/sources_fn_abiotic.R
 \name{fn_stats}
 \alias{fn_stats}
-\title{fn_stat}
+\title{fn_stats}
 \usage{
 fn_stats(data, col_pars, col_valor, data_pars, matriz, round = 2)
 }
