@@ -158,6 +158,11 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
     ord_sitio == "desc" ~ paste0(code_sitio, rev(sitios_tmp)),
     TRUE ~ NA_character_
   )
+  if (length(sitios_ord) <= 10) {
+    angle <- 0
+    } else {
+      angle <- 90
+      }
   if (is.null(col_grupo)) {
     data_plot <- data_plot %>%
       dplyr::mutate(
@@ -187,7 +192,10 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
       theme_bw() +
       theme(
         text = element_text(size = 10, family = "Arial"),
-        strip.text = element_text(size = 6, family = "Arial")
+        strip.text = element_text(size = 6, family = "Arial"),
+        axis.text.x = element_text(angle = angle, 
+                                       hjust = 1, 
+                                       vjust = 0.5)
       )
     ggsave(filename = paste0("bar_pars_", ord_sitio, "_", matriz, ".png"), plot = plot, width = width, height = height, dpi = 300)
   }
@@ -225,7 +233,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         theme_bw() +
         theme(
           text = element_text(size = 10, family = "Arial"),
-          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+          axis.text.x = element_text(angle = angle, vjust = 0.5, hjust = 1),
           aspect.ratio = aspect_ratio
         )
 
@@ -275,7 +283,10 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         theme_bw() +
         theme(
           text = element_text(size = 10, family = "Arial"),
-          aspect.ratio = aspect_ratio
+          aspect.ratio = aspect_ratio,
+          axis.text.x = element_text(angle = angle, 
+                                       hjust = 1, 
+                                       vjust = 0.5)
         )
       ggsave(filename = paste0("bar_pars_both_gr_", ord_sitio, "_", matriz, "_", unique(data$cats_pars), ".png"), plot = plot, width = width, height = height, dpi = 300)
     }
