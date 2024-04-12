@@ -153,6 +153,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
   sitios_tmp <- stringr::str_extract_all(data_plot$col_sitio, "\\d+", simplify = T) %>%
     as.numeric() %>%
     unique()
+    sort()
   sitios_ord <- dplyr::case_when(
     ord_sitio == "asc" ~ paste0(code_sitio, sitios_tmp),
     ord_sitio == "desc" ~ paste0(code_sitio, rev(sitios_tmp)),
@@ -189,13 +190,14 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         y = "Valor parámetro",
         fill = " Tipo parámetro"
       ) + 
+      theme_bw() +
       theme(
         text = element_text(size = 10, family = "Arial"),
         strip.text = element_text(size = 6, family = "Arial"),
         axis.text.x = element_text(angle = angle, 
                                        hjust = 1, 
-                                       vjust = 0.5) #+
-        #theme_bw()
+                                       vjust = 0.5)
+        
       )
     ggsave(filename = paste0("bar_pars_", ord_sitio, "_", matriz, ".png"), plot = plot, width = width, height = height, dpi = 300)
   }
