@@ -2,7 +2,7 @@
 title: "Análisis de mattriz abiótica"
 author: "Oscar Inostroza-Michael"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{Análisis de mattriz abiótica}
   %\VignetteEngine{knitr::rmarkdown}
