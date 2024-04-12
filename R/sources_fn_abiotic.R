@@ -152,7 +152,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
   data_plot <- dplyr::left_join(data_plot, data_pars, by = c("col_pars" = "Param"))
   sitios_tmp <- stringr::str_extract_all(data_plot$col_sitio, "\\d+", simplify = T) %>%
     as.numeric() %>%
-    unique()
+    unique() %>%
     sort()
   sitios_ord <- dplyr::case_when(
     ord_sitio == "asc" ~ paste0(code_sitio, sitios_tmp),
