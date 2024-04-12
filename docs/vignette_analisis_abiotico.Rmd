@@ -1,0 +1,108 @@
+---
+title: "Análisis del medio abiótico"
+author: "Oscar Inostroza-Michael"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Análisis del medio abiótico}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Este tutorial está diseñado para aprender a realizar análisis básicos sobre datos del *medio abiótico* utilizando nuestro programa de R [**limnoHOLON**](https://github.com/oscarIM/limnoHOLON). Los análisis implementados a la fecha son:
+
+1.  Tabla de estadísticos descriptivos.
+2.  Gráfico barra de concentración/niveles de parámetros de laboratorio analizados.
+3.  Correlograma (*i.e.* gráfico de correlaciones pareadas).
+4.  Gráfico PCA.
+5.  Gráfico de granulometría (solo para sedimentos).
+
+## Datos de entrada
+
+Como en cualquier otro tipo de análisis, los datos de entrada son **fundamentales**. Si no representan la información pretendida adecuadamente, los resultados y conclusiones posteriores podrían ser erróneos. Como regla general, los datos deben cumplir con ciertas condiciones mínimas de formato:
+
+1. Cada entrada de datos implica un gasto considerable de recursos (tiempo, plata, etc). Así que, hay que asegurarse de que cada entrada represente un valor definido y correcto. Las celdas vacías, típicamente son interpretados como casos NA (*Not available*). Sin embargo, para quien hizo la base datos esa celda no la relleno por ser una valor = 0. Por ejemplo:
+
+
+```{r, echo = TRUE}
+vec1 <- c(1, 2, 3, 4, 5)# vector con los valores reales
+vec2 <- c(1, 2, 3, 4, 0) # vector con la última entrada con NA
+vec3 <- c(1, 2, 3, 4, NA) # vector con la última entrada con 0
+avg1 <- mean(vec1)  
+avg2 <- mean(vec2)
+avg3 <- mean(vec3)
+print(avg1)
+print(avg2)
+print(avg3)
+```
+El vector vec3, al tener un _**NA**_ en su ultima posición, se produce un *error* y entrega un _**NA**_ como resultado. Dicho error puede ser fácilmente *corregido* con:
+
+```{r, echo = TRUE}
+avg3 <- mean(vec3, na.rm = TRUE)
+print(avg3)
+```
+Pero el resultado no es el correcto.
+
+2. Formato *long*; es decir, una variable por columna y en las filas cada caso.
+
+3. Nombres de las variables concisos, no repetidos, sin tildes, espacios ni caraceteres espeaciales. Generalmente, se usa notaciónes tales como : _camelCase_ (nombreVariable), _snakecase_ (nombre_variable), _flatcase_ (nombrevariable).
+
+4. Generalmente y para no incurrir en errores involuntarios en la lectura de datos, se recomiendan los formatos **.csv** ( _comma separated values_ ) o **.tsv** ( _tab sepatared values_). Este último es es más sencillo ya que solo hay que copiar la hoja de Excel y pegarla en un documento de texto plano. Cipiar y pegar en un documento de texto plano tiene la ventaja adicional de ver si se estan colando caracteres inesperados.
+
+## Análisis del medio abiótico
+### Tabla de estadísticos descriptivos
+
+Habiendo revisado los puntos anteriores, proseguiremos con el análisis del medio abíotico. Para esto utilizaremos los datos de XXX junto a nuestro paquete de R
+```{r, echo=TRUE, eval=FALSE}
+#instalación
+#Para que funcione, se necesitan instalar previamento los paquetes: RColorBrewer, corrplot, ggpubr, grDevices, Knitr, patchwork, rlang, rstatix, scales, tidyverse, vegan (ejemplo : install.packages("RColorBrewer")) Una vez listo, instalamos y cargamos limnoHOLON
+devtools::install_github("oscarIM/limnoHOLON")
+library(limnoHOLON)
+```
+
+
+```         
+output: 
+  rmarkdown::html_vignette:
+    css: mystyles.css
+```
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side.
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+```         
+output:
+  rmarkdown::html_vignette:
+    fig_caption: yes
+```
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes[^1], and tables, e.g. using `knitr::kable()`.
+
+[^1]: A footnote here.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither." ([via](https://twitter.com/hadleywickham/status/504368538874703872))
