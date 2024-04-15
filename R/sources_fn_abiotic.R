@@ -469,7 +469,7 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, d
 #' height <- 8
 #' fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height,matriz = matriz,col_grupo = col_grupo,ord_grupo = ord_grupo)
 #' }
-fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, ord_grupo = NULL, matriz, data_pars, width = 6, height = 6) {
+fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, ord_grupo = NULL, matriz, data_pars, width = 6, height = 6, dist = "euc") {
   # aux fn: stolen from ggbiplot#
   get_data_pca_plot <- function(pca_obj) {
     choices <- 1:2
@@ -507,13 +507,9 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
   cols_type <- c("#66C2A5", "#C6B18B", "#D58EC4", "#F8D348", "#A89BB0", "#B7D84C")
   names(cols_type) <- order_type
   vars <- c(col_sitio, col_pars, col_valor)
-  data_plot <- data %>% select(all_of(vars))
-  patterns <- c("(?i)sitio|(?i)estacion", "(?i)param", "(?i)resultado|(?i)valor")
-  new_names <- c("col_sitio", "col_pars", "col_valor")
-  data_plot <- data_plot %>%
-    dplyr::select(matches(patterns)) %>%
-    dplyr::rename_at(vars(matches(patterns)), ~new_names)
-  if (!is.null(col_grupo)) {
+  data_plot <- data %>% select(all_of(vars)) %>%
+    dplyr::rename_at(vars, ~c("col_sitio", "col_pars", "col_valor"))
+   if (!is.null(col_grupo)) {
     grupo <- data %>% pull({{ col_grupo }})
     data_plot <- data_plot %>% mutate(col_grupo = grupo)
   }
@@ -590,7 +586,7 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
     pca <- prcomp(to_pca[begin:ncol(to_pca)], scale = T)
     sco <- scores(pca)
     # to_pca$factor_col_grupo <- as.factor(to_pca[[col_grupo]])
-    test <- adonis2(sco ~ as.factor(col_grupo), data = to_pca, method = "bray")
+    test <- adonis2(sco ~ as.factor(col_grupo), data = to_pca, method = dist)
     prop_pca <- pca$sdev^2 / sum(pca$sdev^2)
     tmp_data <- get_data_pca_plot(pca_obj = pca)
     directions <- tmp_data$directions
