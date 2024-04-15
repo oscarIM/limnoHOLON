@@ -436,6 +436,7 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, d
 #' @param ord_grupo string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
 #' @param width ancho del gráfico. Por defecto, toma valor 6
 #' @param height alto del gráfico. Por defecto, toma valor 6
+#' @param dist cadena de texto que indica la distancia a usar para el calculo de la disimilitud para Permanova ("euc", "bray"). Por defecto, toma valor "euc".
 #' @import tidyverse
 #' @import scales
 #' @import vegan
@@ -454,6 +455,7 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, d
 #' data_pars <- readr::read_tsv("tabla_pars_master.tsv")
 #' width <- 7
 #' height <- 7
+#' dist<- "euc"
 #' fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height, matriz = matriz)
 #' #figura con 1 factor de agrupamiento#
 #' data <- readr::read_tsv("data_agua_VEN.tsv")
