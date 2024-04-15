@@ -2,7 +2,7 @@
 title: "Análisis del medio abiótico"
 author: "Oscar Inostroza-Michael"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{Análisis del medio abiótico}
   %\VignetteEngine{knitr::rmarkdown}
@@ -12,6 +12,8 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
+  tidy.opts = list(width.cutoff = 80),
+  tidy = TRUE,
   comment = "#>"
 )
 ```
@@ -52,57 +54,180 @@ Pero el resultado no es el correcto.
 
 2. Formato *long*; es decir, una variable por columna y en las filas cada caso.
 
-3. Nombres de las variables concisos, no repetidos, sin tildes, espacios ni caraceteres espeaciales. Generalmente, se usa notaciónes tales como : _camelCase_ (nombreVariable), _snakecase_ (nombre_variable), _flatcase_ (nombrevariable).
+3. Nombres de las variables concisos, no repetidos, sin tildes, espacios ni caracteres especiales. Generalmente, se usa notaciones tales como : _camelCase_ (nombreVariable), _snakecase_ (nombre_variable), _flatcase_ (nombrevariable).
 
-4. Generalmente y para no incurrir en errores involuntarios en la lectura de datos, se recomiendan los formatos **.csv** ( _comma separated values_ ) o **.tsv** ( _tab sepatared values_). Este último es es más sencillo ya que solo hay que copiar la hoja de Excel y pegarla en un documento de texto plano. Cipiar y pegar en un documento de texto plano tiene la ventaja adicional de ver si se estan colando caracteres inesperados.
+4. Generalmente y para no incurrir en errores involuntarios en la lectura de datos, se recomiendan los formatos **.csv** ( _comma separated values_ ) o **.tsv** ( _tab sepatared values_). Este último es es más sencillo ya que solo hay que copiar la hoja de Excel y pegarla en un documento de texto plano. Copiar y pegar en un documento de texto plano tiene la ventaja adicional de ver si se están colando caracteres inesperados.
 
 ## Análisis del medio abiótico
 ### Tabla de estadísticos descriptivos
 
 Habiendo revisado los puntos anteriores, proseguiremos con el análisis del medio abíotico. Para esto utilizaremos los datos de XXX junto a nuestro paquete de R
-```{r, echo=TRUE, eval=FALSE}
+
+```{r, echo = TRUE, eval = TRUE}
 #instalación
 #Para que funcione, se necesitan instalar previamento los paquetes: RColorBrewer, corrplot, ggpubr, grDevices, Knitr, patchwork, rlang, rstatix, scales, tidyverse, vegan (ejemplo : install.packages("RColorBrewer")) Una vez listo, instalamos y cargamos limnoHOLON
-devtools::install_github("oscarIM/limnoHOLON")
+#devtools::install_github("oscarIM/limnoHOLON")
+library(tidyverse)
+library(scales)
+library(RColorBrewer)
+library(grDevices)
+library(vegan)
 library(limnoHOLON)
+#Para ver las funciones con sus páginas de ayuda
+help(package = "limnoHOLON")
+```
+
+```{r, echo = TRUE, eval = TRUE}
+data <- readr::read_tsv("data_agua_VEN.tsv")
+head(data)
+col_pars <- "Param"
+data_pars <- readr::read_tsv("tabla_pars_master.tsv")
+col_valor <- "Valor"
+matriz <- "agua"
+round <- 4
+fn_stats(data = data ,col_pars = col_pars, col_valor = col_valor,data_pars = data_pars,matriz = matriz, round = round)
+
+```
+### Gráfico barra de concentración/niveles de parámetros
+```{r, echo = TRUE, eval = TRUE}
+#Sin grupos
+data <- readr::read_tsv("data_agua_VEN.tsv")
+col_pars <- "Param"
+col_sitio <- "Sitio"
+col_valor <- "Valor"
+col_unidad <- "Unidad"
+matriz <- "agua"
+code_sitio <- "P-"
+ord_sitio <- "asc"# "desc o asc"
+data_pars <- readr::read_tsv("tabla_pars_master.tsv")
+width <- 12
+height <- 11
+fn_plot_bar_abiotic(data = data,col_pars = col_pars,col_sitio = col_sitio,col_valor = col_valor,aspect_ratio = 1, col_unidad = col_unidad,code_sitio = code_sitio,matriz = matriz,data_pars = data_pars,ord_sitio = ord_sitio,width = width,height = height)
+
+```        
+
+```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico de concentración/nivel de parámetros a lo largo de las estaciones de muestreo."}
+knitr::include_graphics("bar_pars_asc_agua.png")
 ```
 
 
-```         
-output: 
-  rmarkdown::html_vignette:
-    css: mystyles.css
+```{r, echo = TRUE, eval = TRUE}
+#Con un grupo(generalmente son zonas para agrupar puntos, campañas, etc.) en donde los niveles de este se ordenen de forma alfanumérica.
+data <- readr::read_tsv("data_agua_VEN.tsv")
+col_pars <- "Param"
+col_sitio <- "Sitio"
+col_valor <- "Valor"
+col_unidad <- "Unidad"
+col_grupo <- "zonas"
+matriz <- "agua"
+code_sitio <- "P-"
+ord_sitio <- "asc"# "desc o asc"
+data_pars <- readr::read_tsv("tabla_pars_master.tsv")
+width <- 12
+height <- 11
+fn_plot_bar_abiotic(data = data,col_pars = col_pars,col_sitio = col_sitio,col_valor = col_valor,col_grupo = col_grupo,aspect_ratio = 2, col_unidad = col_unidad,code_sitio = code_sitio,matriz = matriz,data_pars = data_pars,ord_sitio = ord_sitio,width = width,height = height)
 ```
 
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side.
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico de concentración/nivel de parámetros a lo largo de las estaciones de muestreo por grupo."}
+knitr::include_graphics("bar_pars_Físico_zonas_asc_agua.png")
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-```         
-output:
-  rmarkdown::html_vignette:
-    fig_caption: yes
+```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico de concentración/nivel de parámetros a lo largo de las estaciones de muestreo por grupo."}
+knitr::include_graphics("bar_pars_Químico_zonas_asc_agua.png")
+```
+### Gráfico de correlaciones pareadas (correlograma)
+```{r}
+data <- readr::read_tsv("data_agua_VEN.tsv")
+col_pars <- "Param"
+col_sitio <- "Sitio"
+col_valor <- "Valor"
+matriz <- "agua"
+code_sitio <- "P-"
+data_pars <- readr::read_tsv("tabla_pars_master.tsv")
+width <- 6
+height <- 6
+fn_plot_correlogram(data = data, col_pars = col_pars, col_sitio = col_sitio, matriz = matriz, code_sitio = code_sitio, data_pars = data_pars, width = width,height = width)
 ```
 
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico de correlaciones pareadas."}
+knitr::include_graphics("fig_correlograma_agua.png")
+```
+### Gráfico de PCA.
 
-## More Examples
+```{r}
+#figura sin factor de agrupamiento
+data <- readr::read_tsv("data_agua_VEN.tsv")
+col_pars <- "Param"
+col_sitio <- "Sitio"
+col_valor <- "Valor"
+matriz <- "agua"
+data_pars <- readr::read_tsv("tabla_pars_master.tsv")
+width <- 8
+height <- 6
+fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height, matriz = matriz)
 
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes[^1], and tables, e.g. using `knitr::kable()`.
-
-[^1]: A footnote here.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
 ```
 
-Also a quote using `>`:
+```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico PCA sin factor de agrupamiento"}
+knitr::include_graphics("fig_pca_agua.png")
+```
 
-> "He who gives up [code] safety for [code] speed deserves neither." ([via](https://twitter.com/hadleywickham/status/504368538874703872))
+```{r}
+#figura con 1 factor de agrupamiento#
+data <- readr::read_tsv("data_agua_VEN.tsv")
+col_pars <- "Param"
+col_sitio <- "Sitio"
+col_valor <- "Valor"
+matriz <- "agua"
+code_sitio <- "P-"
+data_pars <- readr::read_tsv("tabla_pars_master.tsv")
+col_grupo <- "zonas"
+ord_grupo <- c("L", "Q1", "Q2", "Q3", "Q4", "Q5")
+width <- 7
+height <- 5
+dist <- "euc"
+fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height,matriz = matriz,col_grupo = col_grupo,ord_grupo = ord_grupo,dist = dist)
+```
+
+```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico PCA sin factor de agrupamiento"}
+knitr::include_graphics("fig_pca_agua_zonas.png")
+```
+
+### Gráfico de granulometría.
+Obviamente, este gráfico tiene sentido solo si se usa sobre datos de sedimentos, y que contengan las fracciones : **"LIM"**, **"AMF"**, **"AF"**, **"AM"**, **"AG"**, **"AMG"**, **"GRAN"**
+
+```{r}
+#gráfico sin factor o grupo
+data <- readr::read_tsv("data_sedimentos_VEN.tsv")
+col_pars <- "Param"
+col_sitio <- "Sitio"
+col_valor <- "Valor"
+code_sitio <- "P-"
+ord_sitio <- "asc"# "desc o asc"
+width <- 8
+height <- 7
+fn_plot_granulometria(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor,ord_sitio = ord_sitio, width = width,height = height, aspect_ratio = 2, code_sitio = code_sitio)
+```
+
+```{r, echo=FALSE, out.width = "80%", fig.cap = "Gráfico de granulometría sin factor de agrupamiento"}
+knitr::include_graphics("fig_granulometria.png")
+```
+
+```{r}
+#gráfico con 1 factor o grupo
+data <- readr::read_tsv("data_sedimentos_VEN.tsv")
+col_pars <- "Param"
+col_sitio <- "Sitio"
+col_valor <- "Valor"
+ord_sitio <- "asc"# "desc o asc"
+width <- 8
+height <- 7
+col_grupo <- "zonas"
+code_sitio <- "P-"
+#ord_grupo <- c("Q1", "Q2", "Q3","Q4","Q5", "L")
+fn_plot_granulometria(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor,ord_sitio = ord_sitio, width = width, height = height, col_grupo = col_grupo,ord_grupo = NULL, code_sitio = code_sitio, aspect_ratio = 2)
+```
+
+```{r, echo=FALSE, out.width = "80%", fig.cap = "Gráfico de granulometría con factor de agrupamiento"}
+knitr::include_graphics("fig_granulometria_zonas.png")
+```

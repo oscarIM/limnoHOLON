@@ -14,7 +14,8 @@ fn_plot_pca(
   matriz,
   data_pars,
   width = 6,
-  height = 6
+  height = 6,
+  dist = "euc"
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ fn_plot_pca(
 
 \item{height}{alto del gráfico. Por defecto, toma valor 6}
 
+\item{dist}{cadena de texto que indica la distancia a usar para el calculo de la disimilitud para Permanova ("euc", "bray"). Por defecto, toma valor "euc".}
+
 \item{code_sitio}{string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.}
 }
 \value{
@@ -57,6 +60,7 @@ matriz <- "agua"
 data_pars <- readr::read_tsv("tabla_pars_master.tsv")
 width <- 7
 height <- 7
+dist<- "euc"
 fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height, matriz = matriz)
 #figura con 1 factor de agrupamiento#
 data <- readr::read_tsv("data_agua_VEN.tsv")
