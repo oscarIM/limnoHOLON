@@ -327,6 +327,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
 #' }
 fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, data_pars, width = 6, height = 6) {
   # setting vars#
+  vars <- c(col_sitio, col_pars, col_valor)
   pars_gran <- c("LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN")
   order_type <- c("Físico", "Químico", "Nutriente", "Metal", "Orgánicos e inorgánicos", "Biológico")
   data <- data %>%
