@@ -742,10 +742,10 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
     plot <- ggplot(data = data_plot, aes(x = as.factor(col_sitio), y = col_valor, fill = col_pars)) +
       geom_col(position = "stack") +
       facet_grid(~col_grupo, scales = "free") +
-      labs(x = "Sitio",
+      labs(x = "Estación",
            y = "Tamaño de grano (%)") +
       scale_fill_manual("Tamaño", values = col_grano) +
-      theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.position = "right") +
+      theme(axis.text.x = element_text(angle = angle, hjust = 0.5), legend.position = "right") +
       guides(fill = guide_legend(ncol = 1, byrow = TRUE)) +
       theme_bw() +
       theme(strip.placement = "outside",
