@@ -85,7 +85,7 @@ data_pars <- readr::read_tsv("tabla_pars_master.tsv")
 col_valor <- "Valor"
 matriz <- "agua"
 round <- 4
-fn_stats(data = data ,col_pars = col_pars, col_valor = col_valor,data_pars = data_pars,matriz = matriz, round = round)
+fn_stats(data = data ,col_pars = col_pars, col_valor = col_valor, data_pars = data_pars,matriz = matriz, round = round)
 
 ```
 ### Gráfico barra de concentración/niveles de parámetros
@@ -102,11 +102,22 @@ ord_sitio <- "asc"# "desc o asc"
 data_pars <- readr::read_tsv("tabla_pars_master.tsv")
 width <- 12
 height <- 11
-fn_plot_bar_abiotic(data = data,col_pars = col_pars,col_sitio = col_sitio,col_valor = col_valor,aspect_ratio = 1, col_unidad = col_unidad,code_sitio = code_sitio,matriz = matriz,data_pars = data_pars,ord_sitio = ord_sitio,width = width,height = height)
+fn_plot_bar_abiotic(data = data,
+                    col_pars = col_pars,
+                    col_sitio = col_sitio,
+                    col_valor = col_valor,
+                    aspect_ratio = 1, 
+                    col_unidad = col_unidad,
+                    code_sitio = code_sitio,
+                    matriz = matriz,
+                    data_pars = data_pars,
+                    ord_sitio = ord_sitio,
+                    width = width,
+                    height = height)
 
 ```        
 
-```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico de concentración/nivel de parámetros a lo largo de las estaciones de muestreo."}
+```{r, echo=FALSE, out.width = "80%", out.height = "90%",fig.align='center', dpi=300,fig.cap = "Gráfico de concentración/nivel de parámetros a lo largo de las estaciones de muestreo."}
 knitr::include_graphics("bar_pars_asc_agua.png")
 ```
 
@@ -125,14 +136,26 @@ ord_sitio <- "asc"# "desc o asc"
 data_pars <- readr::read_tsv("tabla_pars_master.tsv")
 width <- 12
 height <- 11
-fn_plot_bar_abiotic(data = data,col_pars = col_pars,col_sitio = col_sitio,col_valor = col_valor,col_grupo = col_grupo,aspect_ratio = 2, col_unidad = col_unidad,code_sitio = code_sitio,matriz = matriz,data_pars = data_pars,ord_sitio = ord_sitio,width = width,height = height)
+fn_plot_bar_abiotic(data = data,
+                    col_pars = col_pars,
+                    col_sitio = col_sitio,
+                    col_valor = col_valor,
+                    col_grupo = col_grupo,
+                    aspect_ratio = 2, 
+                    col_unidad = col_unidad,
+                    code_sitio = code_sitio,
+                    matriz = matriz,
+                    data_pars = data_pars,
+                    ord_sitio = ord_sitio,
+                    width = width,
+                    height = height)
 ```
 
-```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico de concentración/nivel de parámetros a lo largo de las estaciones de muestreo por grupo."}
+```{r, echo=FALSE, out.width = "80%", out.height = "90%",fig.align='center', dpi=300, fig.cap = "Gráfico de concentración/nivel de parámetros a lo largo de las estaciones de muestreo por grupo."}
 knitr::include_graphics("bar_pars_Físico_zonas_asc_agua.png")
 ```
 
-```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico de concentración/nivel de parámetros a lo largo de las estaciones de muestreo por grupo."}
+```{r, echo=FALSE, out.width = "80%", out.height = "90%",fig.align='center', dpi=300, fig.cap = "Gráfico de concentración/nivel de parámetros a lo largo de las estaciones de muestreo por grupo."}
 knitr::include_graphics("bar_pars_Químico_zonas_asc_agua.png")
 ```
 ### Gráfico de correlaciones pareadas (correlograma)
@@ -146,10 +169,17 @@ code_sitio <- "P-"
 data_pars <- readr::read_tsv("tabla_pars_master.tsv")
 width <- 6
 height <- 6
-fn_plot_correlogram(data = data, col_pars = col_pars, col_sitio = col_sitio, matriz = matriz, code_sitio = code_sitio, data_pars = data_pars, width = width,height = width)
+fn_plot_correlogram(data = data, 
+                    col_pars = col_pars, 
+                    col_sitio = col_sitio, 
+                    matriz = matriz, 
+                    code_sitio = code_sitio, 
+                    data_pars = data_pars, 
+                    width = width,
+                    height = width)
 ```
 
-```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico de correlaciones pareadas."}
+```{r, echo=FALSE, out.width = "80%", out.height = "90%",fig.align='center', dpi=300, fig.cap = "Gráfico de correlaciones pareadas."}
 knitr::include_graphics("fig_correlograma_agua.png")
 ```
 ### Gráfico de PCA.
@@ -164,11 +194,18 @@ matriz <- "agua"
 data_pars <- readr::read_tsv("tabla_pars_master.tsv")
 width <- 8
 height <- 6
-fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height, matriz = matriz)
+fn_plot_pca(data = data,
+            col_pars = col_pars,
+            col_sitio = col_sitio, 
+            col_valor = col_valor, 
+            data_pars = data_pars,
+            width = width, 
+            height = height, 
+            matriz = matriz)
 
 ```
 
-```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico PCA sin factor de agrupamiento"}
+```{r, echo=FALSE,out.width = "80%", out.height = "90%",fig.align='center', dpi=300,  fig.cap = "Gráfico PCA sin factor de agrupamiento"}
 knitr::include_graphics("fig_pca_agua.png")
 ```
 
@@ -186,10 +223,20 @@ ord_grupo <- c("L", "Q1", "Q2", "Q3", "Q4", "Q5")
 width <- 7
 height <- 5
 dist <- "euc"
-fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height,matriz = matriz,col_grupo = col_grupo,ord_grupo = ord_grupo,dist = dist)
+fn_plot_pca(data = data,
+            col_pars = col_pars,
+            col_sitio = col_sitio, 
+            col_valor = col_valor, 
+            data_pars = data_pars,
+            width = width, 
+            height = height,
+            matriz = matriz,
+            col_grupo = col_grupo,
+            ord_grupo = ord_grupo,
+            dist = dist)
 ```
 
-```{r, echo=FALSE, out.width = "70%", fig.cap = "Gráfico PCA sin factor de agrupamiento"}
+```{r, echo=FALSE,out.width = "80%", out.height = "90%",fig.align='center', dpi=300, fig.cap = "Gráfico PCA sin factor de agrupamiento"}
 knitr::include_graphics("fig_pca_agua_zonas.png")
 ```
 
@@ -206,10 +253,18 @@ code_sitio <- "P-"
 ord_sitio <- "asc"# "desc o asc"
 width <- 8
 height <- 7
-fn_plot_granulometria(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor,ord_sitio = ord_sitio, width = width,height = height, aspect_ratio = 2, code_sitio = code_sitio)
+fn_plot_granulometria(data = data,
+                      col_pars = col_pars,
+                      col_sitio = col_sitio, 
+                      col_valor = col_valor,
+                      ord_sitio = ord_sitio, 
+                      width = width,
+                      height = height, 
+                      aspect_ratio = 2, 
+                      code_sitio = code_sitio)
 ```
 
-```{r, echo=FALSE, out.width = "80%", fig.cap = "Gráfico de granulometría sin factor de agrupamiento"}
+```{r, echo=FALSE, out.width = "80%", out.height = "90%",fig.align='center', dpi=300, fig.cap = "Gráfico de granulometría sin factor de agrupamiento"}
 knitr::include_graphics("fig_granulometria.png")
 ```
 
@@ -225,9 +280,18 @@ height <- 7
 col_grupo <- "zonas"
 code_sitio <- "P-"
 #ord_grupo <- c("Q1", "Q2", "Q3","Q4","Q5", "L")
-fn_plot_granulometria(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor,ord_sitio = ord_sitio, width = width, height = height, col_grupo = col_grupo,ord_grupo = NULL, code_sitio = code_sitio, aspect_ratio = 2)
+fn_plot_granulometria(data = data,
+                      col_pars = col_pars,
+                      col_sitio = col_sitio, 
+                      col_valor = col_valor,
+                      ord_sitio = ord_sitio, 
+                      width = width, 
+                      height = height, 
+                      col_grupo = col_grupo, 
+                      code_sitio = code_sitio, 
+                      aspect_ratio = 2)
 ```
 
-```{r, echo=FALSE, out.width = "80%", fig.cap = "Gráfico de granulometría con factor de agrupamiento"}
+```{r, echo=FALSE, out.width = "80%", out.height = "90%",fig.align='center', dpi=300, fig.cap = "Gráfico de granulometría con factor de agrupamiento"}
 knitr::include_graphics("fig_granulometria_zonas.png")
 ```
