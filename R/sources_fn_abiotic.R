@@ -680,12 +680,8 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
   # setting vars#
   pars_gran <- c("LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN")
   vars <- c(col_sitio, col_pars, col_valor)
-  data_plot <- data %>% select(all_of(vars))
-  patterns <- c("(?i)sitio|(?i)estacion","(?i)param", "(?i)resultado|(?i)valor")
-  new_names <- c( "col_sitio", "col_pars", "col_valor")
-  data_plot <- data_plot %>%
-    dplyr::select(matches(patterns)) %>%
-    dplyr::rename_at(vars(matches(patterns)), ~ new_names)
+  data_plot <- data %>% select(all_of(vars)) %>%
+    dplyr::rename_at(vars, ~  c( "col_sitio", "col_pars", "col_valor"))
   if (!is.null(col_grupo)) {
     grupo <- data %>% pull({{ col_grupo }})
     data_plot <- data_plot %>% mutate(col_grupo = grupo)
@@ -703,6 +699,11 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
     ord_sitio == "desc" ~ paste0(code_sitio, rev(sitios_tmp)),
     TRUE ~ NA_character_
   )
+  if (length(sitios_ord) <= 10) {
+    angle <- 0
+  } else {
+    angle <- 90
+  }
   col_grano <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(length(pars_gran))
   names(col_grano) <- pars_gran
   # setting df#
@@ -719,7 +720,10 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
       labs(x = "Estación", y = "Tamaño de grano (%)") +
       theme_bw() +
       scale_fill_manual("Tamaño", values = col_grano) +
-      theme(text = element_text(family = "Arial"))
+      theme(text = element_text(family = "Arial"),
+            axis.text.x = element_text(angle = angle,
+                               hjust = 1,
+                               vjust = 0.5))
     ggsave(filename = "fig_granulometria.png", plot = plot, width = width, height = height, dpi = 300)
   }
   if (!is.null(col_grupo) && length(col_grupo) == 1) {
@@ -747,7 +751,7 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
       theme(strip.placement = "outside",
             strip.background = element_rect(fill = "gray95"),
             text = element_text(size = 10, family = "Arial"),
-            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+            axis.text.x = element_text(angle = angle, vjust = 0.5, hjust = 1),
             aspect.ratio = aspect_ratio,
             legend.key.size = unit(1 / 2, "picas"))
     ggsave(filename = paste0("fig_granulometria_", col_grupo, ".png"), plot = plot, width = 10, height = 5, dpi = 300)
