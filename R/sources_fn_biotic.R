@@ -4,12 +4,12 @@
 #' @param data archivo entrada que tiene que tener, al menos, las columnas que representen al taxón, grupo taxonómico, sitios y N. Tiene que estar en formato "long". Se recomida usar csv o tsv como formatos.
 #' @param col_sitio cadena de texto que indica el nombre de la columna que tiene los sitios de muestreo.
 #' @param code_sitio cadena de texto que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-").
-#' @param col_zona Si aplica, cadena de texto que indica el nombre de la columna que contiene los grupos o factores de agrupamiento en la base de datos de entrada.
+#' @param col_factor Si aplica, cadena de texto que indica el nombre de la columna que contiene los grupos o factores de agrupamiento en la base de datos de entrada. Por defecto, Nulo
 #' @param col_taxa cadena de texto que indica el nombre de la columna que contiene a los taxones (generalmente se llama especie, taxa, etc.) en la base de datos de entrada.
 #' @param col_N cadena de texto que indica el nombre de la columna que contiene el N (abundancia) en la base de datos de entrada.
 #' @param taxa_grupo cadena de texto que indica la clasificación taxonómica de los taxones (e.g. Familia, Clase, etc.) en la base de datos de entrada.
 #' @param ord_sitio cadena de texto que indica el orden en el que se quiere aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estaciones o puntos de muestreo). Por defecto, toma valor "asc" (orden ascendente).
-#' @param ord_zonas Si aplica, cadena de texto que indica el orden (en la leyenda, ejes, etc.) del grupo o factor de agrupamiento. Por defecto, NULO.
+#' @param ord_factor Si aplica, cadena de texto que indica el orden (en la leyenda, ejes, etc.) del grupo o factor de agrupamiento. Por defecto, Nulo.
 #' @param taxa_id cadena de texto que indica el nombre del "grupo funcional" al cual pertenecen los taxones ("fitoplancton", "zooplancton", "macrofitas", "perifiton", "ictiofauna",etc.) 
 #' @param width ancho del gráfico. Por defecto, toma valor 12
 #' @param height alto del gráfico. Por defecto, toma valor 12
@@ -43,7 +43,7 @@
 #' col_sitio <- "Sitio"
 #' ord_sitio <- "asc"
 #' code_sitio <- "P-"
-#' col_zonas <- "Grupo"
+#' col_factor <- "Grupo"
 #' taxa_id <- "fitoplancton"
 #' width <- 12
 #' height <- 12
@@ -59,15 +59,15 @@
 #' col_sitio <- "Sitio"
 #' ord_sitio <- "asc"
 #' code_sitio <- "P-"
-#' col_zonas <- "Grupo"
-#' ord_zonas <- c("Q1", "Q2", "Q3", "Q4", "Q5","L")
+#' col_factor <- "Grupo"
+#' ord_factor <- c("Q1", "Q2", "Q3", "Q4", "Q5","L")
 #' taxa_id <- "fitoplancton"
 #' width <- 12
 #' height <- 12
 #' fn_plot_bar_biotic(data = data, col_taxa = col_taxa, taxa_grupo = taxa_grupo,col_N = col_N, col_sitio = col_sitio, ord_sitio = ord_sitio, code_sitio = code_sitio, col_zonas = col_zonas,ord_zonas = ord_zonas, taxa_id = taxa_id, width = width, height = height)
 #' }
 
-fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_zonas = NULL, col_taxa, taxa_grupo, ord_sitio = "asc", ord_zonas = NULL, taxa_id, code_sitio, width = 12, height = 12) {
+fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_taxa, taxa_grupo, ord_sitio = "asc", ord_factor = NULL, taxa_id, code_sitio, width = 12, height = 12) {
   options(scipen = 999)
   # setting dataframe#
   vars <- c(col_sitio, taxa_grupo, col_taxa, col_N)
@@ -78,20 +78,21 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_zonas = NULL, col_tax
   #setting some vars#
   if (taxa_id == "ictiofauna") {
     n_taxa <- data_plot %>%
-    dplyr::pull(col_taxa) %>%
-    unique() %>%
-    length()
-    } else {
-      n_taxa <- data_plot %>%
-        dplyr::pull(taxa_grupo) %>%
-        unique() %>%
-        length()
-    }
+      dplyr::pull(col_taxa) %>%
+      unique() %>%
+      length()
+  } else {
+    n_taxa <- data_plot %>%
+      dplyr::pull(taxa_grupo) %>%
+      unique() %>%
+      length()
+  }
   sitios_tmp <-  data_plot %>% 
     dplyr::pull(col_sitio) %>% 
     stringr::str_extract_all(string = ., "\\d+",simplify = T) %>% 
     as.numeric() %>% 
-    unique()
+    unique()%>%
+    sort()
   
   sitios_ord <- dplyr::case_when(
     ord_sitio == "asc" ~ paste0(code_sitio, sitios_tmp),
@@ -99,7 +100,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_zonas = NULL, col_tax
     TRUE ~ NA_character_
   )
   # flujo si col_zonas == NULL hay una columna de zona, se indica/determina la zona y se crear un dataplot dependiendo si es o no un ouputd_id == "macrofita"
-  if (is.null(col_zonas)) {
+  if (is.null(col_factor)) {
     if (str_detect(taxa_id, "(?i)macrofita")) {
       # que hacer si no hay columna de zonas y es para macrofitas
       data_plot <- data_plot %>%
@@ -134,16 +135,16 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_zonas = NULL, col_tax
         theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
         theme_light()
       ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
-      } else {
-        data_plot <- data_plot %>% 
-          dplyr::mutate(
-            col_N = tidyr::replace_na(col_N, 0),
-            col_taxa = factor(col_taxa, levels = unique(col_taxa)),
-            col_sitio = factor(col_sitio, levels = sitios_ord),
-            taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
-            S = if_else(col_N >= 1, 1, 0)
-      )
-        data_plot <- data_plot %>%
+    } else {
+      data_plot <- data_plot %>% 
+        dplyr::mutate(
+          col_N = tidyr::replace_na(col_N, 0),
+          col_taxa = factor(col_taxa, levels = unique(col_taxa)),
+          col_sitio = factor(col_sitio, levels = sitios_ord),
+          taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
+          S = if_else(col_N >= 1, 1, 0)
+        )
+      data_plot <- data_plot %>%
         dplyr::group_by(taxa_grupo, col_sitio) %>%
         dplyr::summarise(
           N = sum(col_N, na.rm = TRUE),
@@ -151,33 +152,37 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_zonas = NULL, col_tax
         tidyr::pivot_longer(cols = c("N", "S"), names_to = "vars", values_to = "values") %>%
         dplyr::group_by(vars) %>%
         dplyr::group_split()
-        data_plot <- purrr::map(data_plot, ~ dplyr::arrange(., desc(values))) 
-        data_plot <- dplyr::bind_rows(data_plot) %>%
-          dplyr::mutate(label = dplyr::case_when(
-            vars == "N" ~ "Abundancia relativa (ind/m³)",
-            vars == "S" ~ "Número de taxa (S)"
+      data_plot <- purrr::map(data_plot, ~ dplyr::arrange(., desc(values))) 
+      data_plot <- dplyr::bind_rows(data_plot) %>%
+        dplyr::mutate(label = dplyr::case_when(
+          vars == "N" ~ "Abundancia relativa (ind/m³)",
+          vars == "S" ~ "Número de taxa (S)"
         ))
       color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Paired"))(n_taxa)
       plot <- ggplot() +
         geom_col(data = data_plot, aes(x = col_sitio, y = values, fill = fct_inorder(taxa_grupo)), position = "dodge") +
-        labs(x = "Sitio",y = "Valor") +
+        labs(x = "Estación",y = "Valor") +
         scale_fill_manual(taxa_grupo, values = color) +
         guides(fill = guide_legend(ncol = 1)) +
         facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label)) +
         theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
         theme_light()
       ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
-      }
+    }
   }
-  if (!is.null(col_zonas) && is.null(ord_zonas)) {
-    if (stringr::str_detect(taxa_id, "(?i)macrofita")) {
-      #formatear datos con presencia col_zonas, con orden y para macrofitas y no macrofitas
-      col_zonas <- data %>% dplyr::pull({{col_zonas}})
-      data_plot <- data_plot %>% dplyr::mutate(col_zonas = col_zonas)
-      order_zone <- data_plot %>% 
-        dplyr::pull(col_zonas) %>% 
+  if (!is.null(col_factor))  {
+    if (is.null(ord_factor)) {
+      order_factor <- data_plot %>% 
+        dplyr::pull(col_factor) %>% 
         unique() %>% 
         sort()
+    } else {
+      order_factor <- ord_factor
+    }
+    col_factor <- data %>% dplyr::pull({{col_factor}})
+    data_plot <- data_plot %>% dplyr::mutate(col_factor = factor(col_factor, levels = order_factor))
+    if (stringr::str_detect(taxa_id, "(?i)macrofita")) {
+      #formatear datos con presencia col_zonas, con orden y para macrofitas y no macrofitas
       data_plot <- data_plot %>%
         dplyr::mutate(
           col_N = case_when(
@@ -193,35 +198,27 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_zonas = NULL, col_tax
           col_N = tidyr::replace_na(col_N, 0),
           col_taxa = factor(col_taxa, levels = unique(col_taxa)),
           col_sitio = factor(col_sitio, levels = sitios_ord),
-          taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
-          col_zonas = factor(col_zonas, levels = order_zone))
+          taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))))
       color <- colorRampPalette(brewer.pal(9, "Paired"))(n_taxa)
       plot <- ggplot() + 
         geom_col(data = data_plot, aes(x = col_sitio, y = col_N, fill = taxa_grupo), position = "dodge") +
         labs(x = "Sitio", y = "Densidad cualitativa") +
         scale_fill_manual(stringr::str_to_sentence(taxa_grupo), values = color) +
         guides(fill = guide_legend(ncol = 1)) +
-        facet_grid(scales = "free", switch = "y", cols = vars(col_zonas)) +
+        facet_grid(scales = "free", switch = "y", cols = vars(col_factor)) +
         #facet_grid(scales = "free", switch = "y", rows = vars(taxa_grupo), cols = vars(col_zonas)) +
         theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
         theme_light()
       ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
     } else {
       #formatear datos con presencia col_zonas, sin orden y para todo menos macrofitas
-      col_zonas <- data %>% dplyr::pull({{col_zonas}})
-      data_plot <- data_plot %>% dplyr::mutate(col_zonas = col_zonas)
-      order_zone <- data_plot %>% 
-        dplyr::pull(col_zonas) %>% 
-        unique() %>% 
-        sort()
       data_plot <- data_plot %>% dplyr::mutate(
         col_N = tidyr::replace_na(col_N, 0),
         col_taxa = factor(col_taxa, levels = unique(col_taxa)),
         col_sitio = factor(col_sitio, levels = sitios_ord),
         taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
-        col_zonas = factor(col_zonas, levels = order_zone),
         S = if_else(col_N >= 1, 1, 0)) %>% 
-        dplyr::group_by(taxa_grupo, col_sitio, col_zonas) %>%
+        dplyr::group_by(taxa_grupo, col_sitio, col_factor) %>%
         dplyr::summarise(
           N = sum(col_N, na.rm = TRUE),
           S = sum(S, na.rm = TRUE)) %>% 
@@ -239,85 +236,14 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_zonas = NULL, col_tax
         labs(x = "Sitio", y = "Valor") + 
         scale_fill_manual(taxa_grupo, values = color) + 
         guides(fill = guide_legend(ncol = 1)) + 
-        facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label), cols = vars(col_zonas)) + 
+        facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label), cols = vars(col_factor)) + 
         theme_light() 
       ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
       
     }
   }
-  if (!is.null(col_zonas) && !is.null(ord_zonas)) {
-    if (str_detect(taxa_id, "(?i)macrofita")) {
-        #formatear datos con presencia col_zonas, con orden y para macrofitas y no macrofitas
-      col_zonas <- data %>% dplyr::pull({{col_zonas}})
-      data_plot <- data_plot %>% dplyr::mutate(col_zonas = col_zonas)
-      order_zone <- ord_zonas
-      data_plot <- data_plot %>%
-          dplyr::mutate(
-            col_N = case_when(
-              str_detect(col_N, "1") ~ 3,
-              str_detect(col_N, "\\+") ~ 2,
-              str_detect(col_N, "r") ~ 1,
-              str_detect(col_N, "2") ~ 4,
-              str_detect(col_N, "3") ~ 5,
-              str_detect(col_N, "4") ~ 6,
-              str_detect(col_N, "5") ~ 7,
-              TRUE ~ as.numeric(col_N)
-            )
-          ) %>%
-          dplyr::mutate(
-            col_N = tidyr::replace_na(col_N, 0),
-            col_taxa = factor(col_taxa, levels = unique(col_taxa)),
-            col_sitio = factor(col_sitio, levels = sitios_ord),
-            taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
-            col_zonas = factor(col_zonas, levels = order_zone)
-          )
-      color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Paired"))(length(unique(data_plot$col_taxa)))
-        plot <- ggplot() + 
-          geom_col(data = data_plot, aes(x = col_sitio, y = col_N, fill = col_taxa), position = "dodge") +
-          labs(x = "Sitio", y = "Densidad cualitativa") +
-          scale_fill_manual("Especie", values = color) +
-          guides(fill = guide_legend(ncol = 2)) +
-          facet_grid(scales = "free", switch = "y", rows = vars(taxa_grupo), cols = vars(col_zonas)) +
-          theme_light()
-        ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
-      } else {
-        #formatear datos con presencia col_zonas, con orden y todo menos macrofitas
-        col_zonas <- data %>% dplyr::pull({{col_zonas}})
-        data_plot <- data_plot %>% dplyr::mutate(col_zonas = col_zonas)
-        order_zone <- ord_zonas
-        data_plot <- data_plot %>% 
-          dplyr::mutate(
-            col_N = tidyr::replace_na(col_N, 0),
-            col_taxa = factor(col_taxa, levels = unique(col_taxa)),
-            col_sitio = factor(col_sitio, levels = sitios_ord),
-            taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
-            col_zonas = factor(col_zonas, levels = order_zone),
-            S = if_else(col_N >= 1, 1, 0)) %>% 
-          dplyr::group_by(taxa_grupo, col_sitio, col_zonas) %>%
-          dplyr::summarise(
-            N = sum(col_N, na.rm = TRUE),
-            S = sum(S, na.rm = TRUE)) %>% 
-          tidyr::pivot_longer(cols = c("N", "S"), names_to = "vars", values_to = "values") %>%
-          dplyr::group_by(vars) %>%
-          dplyr::group_split()
-        data_plot <- purrr::map(data_plot, ~ dplyr::arrange(., desc(values)))
-        data_plot <- dplyr::bind_rows(data_plot) %>% 
-          dplyr::mutate(label = dplyr::case_when(
-            vars == "N" ~ "Abundancia relativa (ind/m³)",
-            vars == "S" ~ "Número de taxa (S)"))
-        color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Paired"))(n_taxa)
-        plot <- ggplot() + 
-          geom_col(data = data_plot, aes(x = col_sitio, y = values, fill = fct_inorder(taxa_grupo)), position = "dodge") + 
-          labs(x = "Sitio", y = "Valor") + 
-          scale_fill_manual(taxa_grupo, values = color) + 
-          guides(fill = guide_legend(ncol = 1)) + 
-          facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label), cols = vars(col_zonas)) + 
-          theme_light() 
-        ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
-        
-      }
-    }
 }
+
 
 #' @title fn_plot_pie
 #' @description función para graficar la composición porcentual de taxones por grupos taxonómicos en gráficos de tortas.

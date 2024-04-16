@@ -8,11 +8,11 @@ fn_plot_bar_biotic(
   data,
   col_sitio,
   col_N,
-  col_zonas = NULL,
+  col_factor = NULL,
   col_taxa,
   taxa_grupo,
   ord_sitio = "asc",
-  ord_zonas = NULL,
+  ord_factor = NULL,
   taxa_id,
   code_sitio,
   width = 12,
@@ -26,13 +26,15 @@ fn_plot_bar_biotic(
 
 \item{col_N}{cadena de texto que indica el nombre de la columna que contiene el N (abundancia) en la base de datos de entrada.}
 
+\item{col_factor}{Si aplica, cadena de texto que indica el nombre de la columna que contiene los grupos o factores de agrupamiento en la base de datos de entrada. Por defecto, Nulo}
+
 \item{col_taxa}{cadena de texto que indica el nombre de la columna que contiene a los taxones (generalmente se llama especie, taxa, etc.) en la base de datos de entrada.}
 
 \item{taxa_grupo}{cadena de texto que indica la clasificación taxonómica de los taxones (e.g. Familia, Clase, etc.) en la base de datos de entrada.}
 
 \item{ord_sitio}{cadena de texto que indica el orden en el que se quiere aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estaciones o puntos de muestreo). Por defecto, toma valor "asc" (orden ascendente).}
 
-\item{ord_zonas}{Si aplica, cadena de texto que indica el orden (en la leyenda, ejes, etc.) del grupo o factor de agrupamiento. Por defecto, NULO.}
+\item{ord_factor}{Si aplica, cadena de texto que indica el orden (en la leyenda, ejes, etc.) del grupo o factor de agrupamiento. Por defecto, Nulo.}
 
 \item{taxa_id}{cadena de texto que indica el nombre del "grupo funcional" al cual pertenecen los taxones ("fitoplancton", "zooplancton", "macrofitas", "perifiton", "ictiofauna",etc.)}
 
@@ -41,8 +43,6 @@ fn_plot_bar_biotic(
 \item{width}{ancho del gráfico. Por defecto, toma valor 12}
 
 \item{height}{alto del gráfico. Por defecto, toma valor 12}
-
-\item{col_zona}{Si aplica, cadena de texto que indica el nombre de la columna que contiene los grupos o factores de agrupamiento en la base de datos de entrada.}
 }
 \value{
 gráfico de barras de abundancia/riqueza de especies de taxones por grupo taxonómico
@@ -75,7 +75,7 @@ col_N <- "N"
 col_sitio <- "Sitio"
 ord_sitio <- "asc"
 code_sitio <- "P-"
-col_zonas <- "Grupo"
+col_factor <- "Grupo"
 taxa_id <- "fitoplancton"
 width <- 12
 height <- 12
@@ -91,8 +91,8 @@ col_N <- "N"
 col_sitio <- "Sitio"
 ord_sitio <- "asc"
 code_sitio <- "P-"
-col_zonas <- "Grupo"
-ord_zonas <- c("Q1", "Q2", "Q3", "Q4", "Q5","L")
+col_factor <- "Grupo"
+ord_factor <- c("Q1", "Q2", "Q3", "Q4", "Q5","L")
 taxa_id <- "fitoplancton"
 width <- 12
 height <- 12
