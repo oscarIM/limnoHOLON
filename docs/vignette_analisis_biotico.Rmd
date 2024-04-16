@@ -1,0 +1,225 @@
+---
+title: "Análisis del medio biótico"
+author: "Oscar Inostroza-Michael"
+date: "`r Sys.Date()`"
+output: rmarkdown::pdf_document
+vignette: >
+  %\VignetteIndexEntry{Análisis del medio biótico}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  tidy.opts = list(width.cutoff = 80),
+  tidy = TRUE,
+  comment = "#>"
+)
+```
+
+Este tutorial está diseñado para aprender a realizar análisis básicos sobre datos del *medio biótico* utilizando nuestro programa de R [**limnoHOLON**](https://github.com/oscarIM/limnoHOLON). Los análisis implementados a la fecha son:
+
+1.  Gráfico barra de abundancia y riqueza de taxones por grupo taxonómico.
+2.  Gráfico de torta de composición porcentual de taxones por grupo taxonómico
+3.  Gráfico NMDS
+4.  Gráfico de indices de diversidad por sitio o estación de muestreo.
+
+```{r, echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE}
+#cargar librerías
+library(tidyverse)
+library(scales)
+library(RColorBrewer)
+library(grDevices)
+library(vegan)
+library(ggpubr)
+library(patchwork)
+library(limnoHOLON)
+```
+
+### Gráfico barra de abundancia y riqueza de taxones por grupo taxonómico.
+
+```{r, echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE}
+# Gráfico sin factor o grupo
+data <- read_tsv("data_fitoplancton_VEN.tsv")
+col_taxa <- "Taxa"
+taxa_grupo <- "Clase"
+col_N <- "N"
+col_sitio <- "Sitio"
+ord_sitio <- "asc"
+code_sitio <- "P-"
+taxa_id <- "fitoplancton"
+width <- 10
+height <- 9
+fn_plot_bar_biotic(data = data, 
+                   col_taxa = col_taxa, 
+                   taxa_grupo = taxa_grupo,
+                   col_N = col_N, 
+                   col_sitio = col_sitio, 
+                   ord_sitio = ord_sitio, 
+                   code_sitio = code_sitio, 
+                   taxa_id = taxa_id, 
+                   width = width, 
+                   height = height)
+```
+
+```{r, echo=FALSE, out.width = "90%", out.height = "90%", fig.align ="center", dpi = 300,fig.cap = "Gráfico de abundacia y riqueza de taxones por grupo taxonómicos y estaciones"}
+knitr::include_graphics("bar_fitoplancton_by_Clase.png")
+```
+
+```{r, echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE}
+# Gráfico con factor o grupo
+data <- read_tsv("data_fitoplancton_VEN.tsv")
+col_taxa <- "Taxa"
+taxa_grupo <- "Clase"
+col_N <- "N"
+col_sitio <- "Sitio"
+ord_sitio <- "asc"
+code_sitio <- "P-"
+col_factor <- "Grupo"
+ord_factor <- c("Q1", "Q2", "Q3", "Q4", "Q5","L")
+taxa_id <- "fitoplancton"
+width <- 12
+height <- 12
+fn_plot_bar_biotic(data = data, 
+                   col_taxa = col_taxa, 
+                   taxa_grupo = taxa_grupo,
+                   col_N = col_N, 
+                   col_sitio = col_sitio, 
+                   ord_sitio = ord_sitio, 
+                   code_sitio = code_sitio, 
+                   col_factor = col_factor,
+                   ord_factor = ord_factor, 
+                   taxa_id = taxa_id, 
+                   width = width, 
+                   height = height)
+
+```
+
+```{r, echo=FALSE, out.width = "90%", out.height = "90%", fig.align ="center", dpi = 300,fig.cap = "Gráfico de abundacia y riqueza de taxones por grupo taxonómicos y estaciones. Además, las observaciones se encuentran agrupadas por la variable $**col_factor**$"}
+knitr::include_graphics("bar_fitoplancton_by_Clase_by_factor.png")
+```
+
+### Gráfico de torta de composición porcentual de taxones por grupo taxonómico
+
+```{r, message = FALSE, warning = FALSE}
+data <- read_tsv("data_fitoplancton_VEN.tsv")
+taxa_id <- "fitoplancton"
+col_N <- "N"
+col_taxa <- "Taxa"
+taxa_grupo <- "Clase"
+cumsum_cut <- 96
+n_size <- 5
+width <-  width
+height <-  height
+fn_plot_pie(data = data,
+            col_N = col_N,
+            taxa_grupo = taxa_grupo, 
+            cumsum_cut = cumsum_cut, 
+            n_size = n_size, 
+            width = width, 
+            height = height)
+```
+
+```{r, echo=FALSE, out.width = "90%", out.height = "90%", fig.align ="center", dpi = 300,fig.cap = "Gráfico de composición porcentual de taxones por grupo taxonómico"}
+knitr::include_graphics("pie_fitoplancton_by_Clase.png")
+```
+
+### Gráfico NMDS
+
+```{r, message = FALSE, warning = FALSE}
+#  Gráfico sin factor o grupo para Permanova
+data <- read_tsv("data_fitoplancton_VEN.tsv")
+col_sitio <- "Sitio"
+col_taxa <- "Sigla"
+col_N <- "N"
+dist <- "euc"
+taxa_id <-  "fitoplancton"
+height <- 6
+width <- 6
+fn_plot_nmds(data = data,
+             col_sitio = col_sitio, 
+             col_taxa = col_taxa, 
+             col_N = col_N, 
+             dist = dist, 
+             taxa_id = taxa_id, 
+             height = height, 
+             width = width)
+```
+
+```{r, echo=FALSE, out.width = "90%", out.height = "90%", fig.align ="center", dpi = 300,fig.cap = "Gráfico NMDS sin factores"}
+knitr::include_graphics("NMDS_fitoplancton.png")
+```
+
+```{r, message = FALSE, warning = FALSE}
+#  Gráfico con factor o grupo para Permanova
+data <- read_tsv("data_fitoplancton_VEN.tsv")
+col_sitio <- "Sitio"
+col_taxa <- "Sigla"
+col_N <- "N"
+col_factor <- "Grupo"
+dist <- "euc"
+taxa_id <-  "fitoplancton"
+height <- 6
+width <- 6
+title_factor <- "Zonas geogáficas"
+fn_plot_nmds(data = data,col_sitio = col_sitio, col_taxa = col_taxa,col_factor = col_factor, col_N = col_N, dist = dist, taxa_id = taxa_id, height = height, width = width,title_factor = title_factor)
+
+```
+
+```{r, echo=FALSE, out.width = "90%", out.height = "90%", fig.align ="center", dpi = 300,fig.cap = "Gráfico NMDS con factores"}
+knitr::include_graphics("NMDS_with_factor_fitoplancton.png")
+```
+
+### Gráfico de indices de diversidad por sitio o estación de muestreo.
+
+```{r, message = FALSE, warning = FALSE}
+# Gráfico de índices diversidad sin factor de agrupamiento
+data <- read_tsv("data_fitoplancton_VEN.tsv")
+col_N <- "N"
+col_sitio <- "Sitio"
+code_sitio <- "P-"
+col_taxa <- "Sigla"
+fun <- "sum"
+ord_sitio <- "asc"
+taxa_id <-  "fitoplancton"
+height <- 6
+width <- 9
+fn_plot_div_index(data = data, col_sitio = col_sitio, code_sitio = code_sitio,col_taxa = col_taxa,fun = fun, ord_sitio = ord_sitio, col_N = col_N, taxa_id = taxa_id,height = height, width = width)
+```
+
+```{r, echo=FALSE, out.width = "90%", out.height = "90%", fig.align ="center", dpi = 300,fig.cap = "Gráfico de indices de duversidad por estación de muestreo"}
+knitr::include_graphics("plot_div_index_fitoplancton.png")
+```
+
+```{r, message = FALSE, warning = FALSE}
+# Gráfico de índices diversidad con factor de agrupamiento
+data <- read_tsv("data_fitoplancton_VEN.tsv")
+col_N <- "N"
+col_sitio <- "Sitio"
+code_sitio <- "P-"
+col_taxa <- "Sigla"
+fun <- "sum"
+ord_sitio <- "asc"
+taxa_id <-  "fitoplancton"
+height <- 6
+width <- 9
+col_factor <- "Grupo"
+fn_plot_div_index(data = data, 
+                  col_sitio = col_sitio, 
+                  code_sitio = code_sitio,
+                  col_taxa = col_taxa,
+                  col_factor = col_factor,
+                  fun = fun, 
+                  ord_sitio = ord_sitio,
+                  col_N = col_N, 
+                  taxa_id = taxa_id,
+                  height = height, 
+                  width = width)
+```
+
+```{r, echo=FALSE, out.width = "100%", out.height = "50%", fig.align ="center", dpi = 300,fig.cap = "Gráfico de indices de diversidad por estación de muestreo. Las estaciones estan agrupadas por un factor"}
+knitr::include_graphics(c("plot_div_index_1_fitoplancton.png","plot_div_index_2_fitoplancton.png"))
+```
+
+
