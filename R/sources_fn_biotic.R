@@ -209,7 +209,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         #facet_grid(scales = "free", switch = "y", rows = vars(taxa_grupo), cols = vars(col_zonas)) +
         theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
         theme_light()
-      ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
+      ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, , "_by_", col_factor, ".png"), plot = plot, width = width, height = height, dpi = 300)
     } else {
       #formatear datos con presencia col_zonas, sin orden y para todo menos macrofitas
       data_plot <- data_plot %>% dplyr::mutate(
@@ -238,7 +238,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         guides(fill = guide_legend(ncol = 1)) + 
         facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label), cols = vars(col_factor)) + 
         theme_light() 
-      ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
+     ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, , "_by_", col_factor, ".png"), plot = plot, width = width, height = height, dpi = 300)
       
     }
   }
@@ -273,7 +273,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
 #' n_size <- 5
 #' width = width
 #' height = height
-#' fn_plot_pie <- function(data = data, taxa_grupo = taxa_grupo, cumsum_cut = 90, n_size = 5, width = width, height = height)
+#' fn_plot_pie(data = data, taxa_grupo = taxa_grupo, cumsum_cut = 90, n_size = 5, width = width, height = height)
 #' }
 fn_plot_pie <- function(data, taxa_grupo, col_N, cumsum_cut = 90, n_size = 5, width = 12, height = 13) {
   options(scipen = 999)
@@ -285,7 +285,7 @@ fn_plot_pie <- function(data, taxa_grupo, col_N, cumsum_cut = 90, n_size = 5, wi
     list <- map(data_list, ~ {
       .x %>%
         group_by(col_taxa) %>%
-        summarise(N = sum(col_N)) %>%
+        summarise(N = sum(col_N, na.rm = TRUE)) %>%
         mutate(Prop = round(N / sum(N) * 100, 2)) %>%
         arrange(desc(Prop)) %>%
         mutate(
@@ -307,7 +307,7 @@ fn_plot_pie <- function(data, taxa_grupo, col_N, cumsum_cut = 90, n_size = 5, wi
     final <- map(data_list, ~ {
       .x %>%
         group_by(col_taxa) %>%
-        summarise(N = sum(col_N)) %>%
+        summarise(N = sum(col_N, na.rm = TRUE)) %>%
         mutate(Prop = round(N / sum(N) * 100, 2)) %>%
         select(-N) %>%
         arrange(desc(Prop)) %>%
