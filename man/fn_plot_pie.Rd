@@ -49,6 +49,6 @@ cumsum_cut <- 90
 n_size <- 5
 width = width
 height = height
-fn_plot_pie <- function(data = data, taxa_grupo = taxa_grupo, cumsum_cut = 90, n_size = 5, width = width, height = height)
+fn_plot_pie(data = data, taxa_grupo = taxa_grupo, cumsum_cut = 90, n_size = 5, width = width, height = height)
 }
 }
