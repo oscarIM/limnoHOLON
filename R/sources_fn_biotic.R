@@ -626,7 +626,7 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
     factor <- sig_factor$factor[1]
     color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Dark2"))(length(unique(data_nmds$col_factor)))
     names(color) <- ord
-    png(filename = paste0("NMDS_", taxa_id, ".png"), width = width,height = height,units = "in",
+    png(filename = paste0("NMDS_with_factor_", taxa_id, ".png"), width = width,height = height,units = "in",
         res = 300, family = "Arial")
     ordiplot(NMDS1,type = "n", main = paste0("NMDS ",str_to_sentence(taxa_id), " (PERMANOVA R² = ", round(sig_factor$R2[1], 2),"; P = ", round(sig_factor$p[1],3),")"), cex.main = 0.9)
     mtext(paste0("Factor Permanova: ", title_factor), side = 3, line = -4, cex = 0.9, outer = TRUE)
