@@ -503,7 +503,7 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
       as.data.frame()
     data_nmds <- bind_cols(labels, data_nmds) %>% na.omit()
     begin <- ncol(labels) + 1
-    NMDS1 <- metaMDS(data_nmds[, begin:ncol(data_nmds)], k = 2, trymax = 5000, distance = dist)
+    NMDS1 <- metaMDS(data_nmds[, begin:ncol(data_nmds)], k = 2, trymax = 5000, distance = dist, trace = FALSE)
     sco_sites <- scores(NMDS1)[[1]]
     data_nmds <- bind_cols(sco_sites, data_nmds)
     png(filename = paste0("NMDS_", taxa_id, ".png"), width = width,height = height, units = "in", res = 300,family = "Arial")
