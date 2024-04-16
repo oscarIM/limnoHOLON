@@ -67,7 +67,6 @@ fn_plot_div_index(data = data, col_sitio = col_sitio, code_sitio = code_sitio,co
 # plot indices diversidad con factor de agrupamiento y en orden alfanumérico.
 data <- read_tsv("data_fitoplancton.tsv")
 fake data
-data <- data \%>\% mutate(grupo = if_else(Sitio \%in\% c("P-1", "P-2", "P-3", "P-4","P-5","P-6","P-7"), "area1", "area2"))
 col_N <- "N"
 col_sitio <- "Sitio"
 code_sitio <- "P-"
@@ -75,7 +74,7 @@ col_taxa <- "Sigla"
 fun <- "sum"
 ord_sitio <- "asc"
 taxa_id <- "fitoplancton"
-col_factor <- "grupo"
+col_factor <- "Grupo"
 height <- 10
 width <- 10
 fn_plot_div_index(data = data, col_sitio = col_sitio, code_sitio = code_sitio,col_taxa = col_taxa,col_factor = col_factor,fun = fun, ord_sitio = ord_sitio, col_N = col_N, taxa_id = taxa_id, height = height, width = width)

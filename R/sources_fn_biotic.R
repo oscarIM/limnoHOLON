@@ -161,7 +161,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
       color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Paired"))(n_taxa)
       plot <- ggplot() +
         geom_col(data = data_plot, aes(x = col_sitio, y = values, fill = fct_inorder(taxa_grupo)), position = "dodge") +
-        labs(x = "Estación",y = "Valor") +
+        labs(x = "Estaciones",y = "Valores") +
         scale_fill_manual(taxa_grupo, values = color) +
         guides(fill = guide_legend(ncol = 1)) +
         facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label)) +
@@ -202,7 +202,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
       color <- colorRampPalette(brewer.pal(9, "Paired"))(n_taxa)
       plot <- ggplot() + 
         geom_col(data = data_plot, aes(x = col_sitio, y = col_N, fill = taxa_grupo), position = "dodge") +
-        labs(x = "Sitio", y = "Densidad cualitativa") +
+        labs(x = "Estaciones", y = "Densidad cualitativa") +
         scale_fill_manual(stringr::str_to_sentence(taxa_grupo), values = color) +
         guides(fill = guide_legend(ncol = 1)) +
         facet_grid(scales = "free", switch = "y", cols = vars(col_factor)) +
@@ -233,7 +233,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
       color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Paired"))(n_taxa)
       plot <- ggplot() + 
         geom_col(data = data_plot, aes(x = col_sitio, y = values, fill = fct_inorder(taxa_grupo)), position = "dodge") + 
-        labs(x = "Sitio", y = "Valor") + 
+        labs(x = "Estaciones", y = "Valores") + 
         scale_fill_manual(taxa_grupo, values = color) + 
         guides(fill = guide_legend(ncol = 1)) + 
         facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label), cols = vars(col_factor)) + 
@@ -700,7 +700,6 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
 #' # plot indices diversidad con factor de agrupamiento y en orden alfanumérico.
 #' data <- read_tsv("data_fitoplancton.tsv")
 #' fake data
-#' data <- data %>% mutate(grupo = if_else(Sitio %in% c("P-1", "P-2", "P-3", "P-4","P-5","P-6","P-7"), "area1", "area2"))
 #' col_N <- "N"
 #' col_sitio <- "Sitio"
 #' code_sitio <- "P-"
@@ -708,7 +707,7 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
 #' fun <- "sum"
 #' ord_sitio <- "asc"
 #' taxa_id <- "fitoplancton"
-#' col_factor <- "grupo"
+#' col_factor <- "Grupo"
 #' height <- 10
 #' width <- 10
 #' fn_plot_div_index(data = data, col_sitio = col_sitio, code_sitio = code_sitio,col_taxa = col_taxa,col_factor = col_factor,fun = fun, ord_sitio = ord_sitio, col_N = col_N, taxa_id = taxa_id, height = height, width = width)
@@ -722,7 +721,8 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
     dplyr::pull({{col_sitio}}) %>% 
     stringr::str_extract_all(., "\\d+",simplify = T) %>% 
     as.numeric() %>% 
-    unique()
+    unique() %>% 
+    sort()
   sitios_ord <- dplyr::case_when(
     ord_sitio == "asc" ~ paste0(code_sitio, sitios_tmp),
     ord_sitio == "desc" ~ paste0(code_sitio, rev(sitios_tmp)),
@@ -733,7 +733,7 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
     dplyr::rename_at(vars, ~  c( "col_sitio", "col_taxa", "col_N")) %>% 
     dplyr::mutate(col_sitio = factor(col_sitio, levels = sitios_ord))
   
-  if (str_detect(taxa_id , "(?i)macrof")) {
+  if (stringr::str_detect(taxa_id , "(?i)macrof")) {
     data_plot <- data_plot %>%
       dplyr::mutate(
         col_N = dplyr::case_when(
@@ -750,10 +750,10 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
   }
   if (length(sitios_ord) <= 10) {
     angle <- 0
-    } else {
-      angle <- 90
-      }
-#comienza setting para basic plot, sin col, factor ni orden, etc
+  } else {
+    angle <- 90
+  }
+  #comienza setting para basic plot, sin col, factor ni orden, etc
   if (is.null(col_factor)) {
     data_index <-  data_plot %>%
       dplyr::group_by(col_sitio, col_taxa) %>%
@@ -790,9 +790,9 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
             axis.text.x = element_text(angle = angle, 
                                        hjust = 1, 
                                        vjust = 0.5)) +
-      labs(y = "Valores", x = "Sitios")
+      labs(y = "Valores", x = "Estaciones")
     ggsave(filename = paste0("plot_div_index_",taxa_id, ".png"), plot = plot,device = "png",width = width, height = height, dpi = 300)
-    } 
+  } 
   if (!is.null(col_factor)) {
     col_factor <- data %>% pull({{col_factor}})
     data_plot <- data_plot %>% mutate(col_factor = col_factor)
@@ -801,9 +801,10 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
         dplyr::pull(col_factor) %>% 
         unique() %>% 
         sort()
-    } else {
-      ord <- ord_factor
-    }
+      } else {
+        ord <- ord_factor
+      }
+    data_plot <- data_plot %>% mutate(col_factor = factor(col_factor, levels = ord))
     data_index <-  data_plot %>%
       dplyr::group_by(col_factor, col_sitio, col_taxa) %>%
       dplyr::summarise(col_N = fun(col_N, na.rm = TRUE)) %>%
@@ -845,21 +846,21 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
                           desc_stat = "mean_se", 
                           color = "black",
                           add.params = list(color = "darkgray")) + 
-        xlab("") +
+        xlab("Estaciones") +
         ylab(var) +
         scale_y_continuous(labels = scales::label_number()) +
         facet_grid(~col_factor, scales = "free_x", space = "free_x") + 
         theme_bw() +
         theme(strip.background = element_rect(fill = "gray95"), 
-              axis.text.x = element_text(angle = 90, 
+              axis.text.x = element_text(angle = angle, 
                                          hjust = 1, 
                                          vjust = 0.5)) +
         ggtitle(title)
-      }
-    list_plots <- purrr::map2(vars, titles, ~fn_plot(data = summ_index, x_axis = x_axis,var = .x, title = .y))  
-    panel_1 <- list_plots[[1]]/list_plots[[2]] + patchwork::plot_annotation(tag_suffix = ")", tag_levels = list(c('a', 'b'), '1'))
-    ggsave(filename = paste0("plot_div_index_1_",taxa_id, ".png"), panel_1, width = width, height = height, dpi = 300)
-    panel_2 <- list_plots[[3]]/list_plots[[4]] + patchwork::plot_annotation(tag_levels = list(c('a', 'b'), '1'), tag_suffix = ")")
-    ggsave(filename = paste0("plot_div_index_2_",taxa_id, ".png"), panel_2, width = width, height = height, dpi = 300)
     }
-  }  
+    list_plots <- purrr::map2(vars, titles, ~fn_plot(data = summ_index, x_axis = x_axis,var = .x, title = .y))  
+    panel_1 <- list_plots[[1]]/list_plots[[2]] + patchwork::plot_annotation(tag_suffix = ")", tag_levels = list(c('a', 'b'), '1')) + patchwork::plot_layout(axis_titles = "collect")
+    ggsave(filename = paste0("plot_div_index_1_",taxa_id, ".png"), panel_1, width = width, height = height, dpi = 300)
+    panel_2 <- list_plots[[3]]/list_plots[[4]] + patchwork::plot_annotation(tag_levels = list(c('a', 'b'), '1'), tag_suffix = ")") + patchwork::plot_layout(axis_titles = "collect")
+    ggsave(filename = paste0("plot_div_index_2_",taxa_id, ".png"), panel_2, width = width, height = height, dpi = 300)
+  }
+}  
