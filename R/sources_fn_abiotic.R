@@ -129,7 +129,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
     grupos <- data %>%
       dplyr::select(all_of(col_grupo)) %>%
       dplyr::rename(col_grupo1 = 1, col_grupo2 = 2)
-    data_plot <- dplur::bind_cols(data_plot, grupos)
+    data_plot <- dplyr::bind_cols(data_plot, grupos)
   }
   cols_type <- c("#66C2A5", "#C6B18B", "#D58EC4", "#F8D348", "#A89BB0", "#B7D84C")
   order_type <- c("Físico", "Químico", "Nutriente", "Metal", "Orgánicos e inorgánicos", "Biológico")
@@ -171,7 +171,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         label = paste0(col_pars, " (", col_unidad, ")"),
         cats_pars = factor(cats_pars, levels = order_type)
       ) %>%
-      dplyr::mutate(label = stringr::str_replace(label, "pH \\(-\\)", replacement = "pH"))
+      dplyr::mutate(label = stringr::str_replace(label, "pH \\(-\\)|pH \\(unidad\\)", replacement = "pH"))
     plot <- ggplot2::ggplot(data_plot, aes(x = col_sitio, y = col_valor, fill = cats_pars)) +
       geom_bar(stat = "identity", position = "dodge") +
       facet_wrap(~ reorder(label, match(cats_pars, order_type)),
@@ -225,7 +225,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         cats_pars = factor(cats_pars, levels = order_type),
         col_grupo = factor(col_grupo, levels = order_grupo)
       ) %>%
-      mutate(label = stringr::str_replace(label, "pH \\(-\\)", replacement = "pH"))
+      dplyr::mutate(label = stringr::str_replace(label, "pH \\(-\\)|pH \\(unidad\\)", replacement = "pH"))
     data_plot <- data_plot %>%
       arrange(cats_pars) %>%
       mutate(label = factor(label, levels = sort(unique(label))))
@@ -270,7 +270,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         col_grupo1 = factor(col_grupo1, levels = sort(unique(col_grupo1))),
         col_grupo2 = factor(col_grupo2, levels = sort(unique(col_grupo2)))
       ) %>%
-      dplyr::mutate(label = stringr::str_replace(label, "pH \\(-\\)", replacement = "pH"))
+      dplyr::mutate(label = stringr::str_replace(label, "pH \\(-\\)|pH \\(unidad\\)", replacement = "pH"))
     data_plot <- data_plot %>%
       dplyr::arrange(cats_pars) %>%
       mutate(label = factor(label, levels = unique(label)))
@@ -739,7 +739,13 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
                                hjust = 1,
                                vjust = 0.5))
     ggplot2::ggsave(filename = "fig_granulometria.png", plot = plot, width = width, height = height, dpi = 300)
-    readr::write_tsv(x = data_plot, "data_from_granulometry.tsv")
+    summ_data_plot <- data_plot %>% 
+      dplyr::group_by (col_grupo, col_pars) %>%
+      dplyr::summarise(mean_par = mean(col_valor),
+                min_par = min(col_valor),
+                max_par =max(col_valor))
+
+    readr::write_tsv(x = summ_data_plot, "data_from_granulometry.tsv")
   }
   if (!is.null(col_grupo) && length(col_grupo) == 1) {
     if (!is.null(ord_grupo)) {
@@ -770,7 +776,12 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
             aspect.ratio = aspect_ratio,
             legend.key.size = unit(1 / 2, "picas"))
     ggsave(filename = paste0("fig_granulometria_", col_grupo, ".png"), plot = plot, width = 10, height = 5, dpi = 300)
-    readr::write_tsv(x = data_plot, "data_from_granulometry.tsv")
+     summ_data_plot <- data_plot %>% 
+      dplyr::group_by (col_grupo, col_pars) %>%
+      dplyr::summarise(mean_par = mean(col_valor),
+                min_par = min(col_valor),
+                max_par =max(col_valor))
+    readr::write_tsv(x = summ_data_plot, "data_from_granulometry.tsv")
   }
   #if (!is.null(col_grupo) && length(col_grupo) == 2) {
   #  grupo1 <- sym(col_grupo[1])
