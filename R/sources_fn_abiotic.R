@@ -199,7 +199,15 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
                                        vjust = 0.5)
 
       )
-    ggsave(filename = paste0("bar_pars_", ord_sitio, "_", matriz, ".png"), plot = plot, width = width, height = height, dpi = 300)
+    ggplot2::ggsave(filename = paste0("bar_pars_", ord_sitio, "_", matriz, ".png"), plot = plot, width = width, height = height, dpi = 300)
+    summ_data_plot <- data_plot %>% 
+      dplyr::group_by (col_grupo, col_pars) %>%
+      dplyr::summarise(mean_par = mean(col_valor),
+                min_par = min(col_valor),
+                max_par =max(col_valor))
+
+    readr::write_tsv(x = summ_data_plot, "data_from_bar_plot.tsv")
+
   }
   if (!is.null(col_grupo) && length(col_grupo) == 1) {
     if (!is.null(ord_grupo)) {
@@ -240,6 +248,12 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         )
 
       ggsave(filename = paste0("bar_pars_", unique(data$cats_pars), "_", col_grupo, "_", ord_sitio, "_", matriz, ".png"), plot = plot, width = width, height = height, dpi = 300)
+      summ_data_plot <- data_plot %>% 
+      dplyr::group_by (col_grupo, col_pars) %>%
+      dplyr::summarise(mean_par = mean(col_valor),
+                min_par = min(col_valor),
+                max_par =max(col_valor))
+    ||readr::write_tsv(x = summ_data_plot, "data_from_bar_plot.tsv")
     }
     df_list <- data_plot %>%
       dplyr::group_by(cats_pars) %>%
@@ -724,7 +738,8 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
             axis.text.x = element_text(angle = angle,
                                hjust = 1,
                                vjust = 0.5))
-    ggsave(filename = "fig_granulometria.png", plot = plot, width = width, height = height, dpi = 300)
+    ggplot2::ggsave(filename = "fig_granulometria.png", plot = plot, width = width, height = height, dpi = 300)
+    readr::write_tsv(x = data_plot, "data_from_granulometry.tsv")
   }
   if (!is.null(col_grupo) && length(col_grupo) == 1) {
     if (!is.null(ord_grupo)) {
@@ -755,6 +770,7 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
             aspect.ratio = aspect_ratio,
             legend.key.size = unit(1 / 2, "picas"))
     ggsave(filename = paste0("fig_granulometria_", col_grupo, ".png"), plot = plot, width = 10, height = 5, dpi = 300)
+    readr::write_tsv(x = data_plot, "data_from_granulometry.tsv")
   }
   #if (!is.null(col_grupo) && length(col_grupo) == 2) {
   #  grupo1 <- sym(col_grupo[1])
