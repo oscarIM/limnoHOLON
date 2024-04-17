@@ -186,8 +186,8 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         n.breaks = 5
       ) +
       labs(
-        x = "Estación",
-        y = "Valor parámetro",
+        x = "Estaciónes",
+        y = "Valores parámetros",
         fill = " Tipo parámetro"
       ) +
       theme_bw() +
@@ -220,7 +220,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
       mutate(label = stringr::str_replace(label, "pH \\(-\\)", replacement = "pH"))
     data_plot <- data_plot %>%
       arrange(cats_pars) %>%
-      mutate(label = factor(label, levels = unique(label)))
+      mutate(label = factor(label, levels = sort(unique(label))))
     fn_plot_aux <- function(data) {
       plot <- ggplot(data, aes(x = col_sitio, y = col_valor, fill = cats_pars)) +
         geom_bar(stat = "identity", position = "dodge", show.legend = F) +
@@ -228,8 +228,8 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         scale_fill_manual(values = cols_type) +
         scale_y_continuous(breaks = waiver(), n.breaks = 5) +
         labs(
-          x = "Estación",
-          y = "Valor parámetro"
+          x = "Estaciónes",
+          y = "Valores parámetros"
           # fill = "Tipo parámetro"
         ) +
         theme_bw() +
@@ -278,8 +278,8 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         # scale_fill_manual(values = cols_pars) +
         scale_y_continuous(breaks = waiver(), n.breaks = 5) +
         labs(
-          x = "Estación",
-          y = "Valor parámetro",
+          x = "Estaciónes",
+          y = "Valores parámetros",
           fill = "Parámetro"
         ) +
         theme_bw() +
@@ -717,7 +717,7 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
     plot <- ggplot() +
       geom_col(data = data_plot, aes(x = as.factor(col_sitio), y = col_valor, fill = col_pars)) +
       # facet_grid(~ zona, scales = "free") +
-      labs(x = "Estación", y = "Tamaño de grano (%)") +
+      labs(x = "Estaciónes", y = "Tamaño de grano (%)") +
       theme_bw() +
       scale_fill_manual("Tamaño", values = col_grano) +
       theme(text = element_text(family = "Arial"),
@@ -742,7 +742,7 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
     plot <- ggplot(data = data_plot, aes(x = as.factor(col_sitio), y = col_valor, fill = col_pars)) +
       geom_col(position = "stack") +
       facet_grid(~col_grupo, scales = "free") +
-      labs(x = "Estación",
+      labs(x = "Estaciónes",
            y = "Tamaño de grano (%)") +
       scale_fill_manual("Tamaño", values = col_grano) +
       theme(axis.text.x = element_text(angle = angle, hjust = 0.5), legend.position = "right") +
