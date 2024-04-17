@@ -253,7 +253,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
       dplyr::summarise(mean_par = mean(col_valor),
                 min_par = min(col_valor),
                 max_par =max(col_valor))
-    ||readr::write_tsv(x = summ_data_plot, "data_from_bar_plot.tsv")
+      readr::write_tsv(x = summ_data_plot, "data_from_bar_plot.tsv")
     }
     df_list <- data_plot %>%
       dplyr::group_by(cats_pars) %>%
