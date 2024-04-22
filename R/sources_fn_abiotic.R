@@ -48,8 +48,8 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
       max = max(col_valor),
       prom = mean(col_valor),
       desvest = sd(col_valor),
-      cv_num = desvest / prom,
-      "cv%" = scales::label_percent()(desvest / prom)
+      cv_num = abs(desvest / prom),
+      "cv%" = abs(scales::label_percent()(desvest / prom))
     ) %>%
     dplyr::rename(Sigla = col_pars) %>%
     dplyr::mutate_at(vars(3:6), list(~ round(., round)))
@@ -142,7 +142,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
       desvest = sd(col_valor),
       cv_num = desvest / prom
     ) %>%
-    dplyr::filter(cv_num > 0) %>%
+    dplyr::filter(abs(cv_num) > 0) %>%
     dplyr::pull(col_pars)
   if (stringr::str_detect(string = matriz, pattern = "(?i)sedimento?")) {
     selected_pars <- setdiff(selected_pars, pars_gran)
@@ -200,7 +200,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
 
       )
     ggplot2::ggsave(filename = paste0("bar_pars_", ord_sitio, "_", matriz, ".png"), plot = plot, width = width, height = height, dpi = 300)
-    summ_data_plot <- data_plot %>% 
+    summ_data_plot <- data_plot %>%
       dplyr::group_by (col_grupo, col_pars) %>%
       dplyr::summarise(mean_par = mean(col_valor),
                 min_par = min(col_valor),
@@ -248,7 +248,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         )
 
       ggsave(filename = paste0("bar_pars_", unique(data$cats_pars), "_", col_grupo, "_", ord_sitio, "_", matriz, ".png"), plot = plot, width = width, height = height, dpi = 300)
-      summ_data_plot <- data_plot %>% 
+      summ_data_plot <- data_plot %>%
       dplyr::group_by (col_grupo, col_pars) %>%
       dplyr::summarise(mean_par = mean(col_valor),
                 min_par = min(col_valor),
@@ -739,7 +739,7 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
                                hjust = 1,
                                vjust = 0.5))
     ggplot2::ggsave(filename = "fig_granulometria.png", plot = plot, width = width, height = height, dpi = 300)
-    summ_data_plot <- data_plot %>% 
+    summ_data_plot <- data_plot %>%
       dplyr::group_by (col_grupo, col_pars) %>%
       dplyr::summarise(mean_par = mean(col_valor),
                 min_par = min(col_valor),
@@ -776,7 +776,7 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
             aspect.ratio = aspect_ratio,
             legend.key.size = unit(1 / 2, "picas"))
     ggsave(filename = paste0("fig_granulometria_", col_grupo, ".png"), plot = plot, width = 10, height = 5, dpi = 300)
-     summ_data_plot <- data_plot %>% 
+     summ_data_plot <- data_plot %>%
       dplyr::group_by (col_grupo, col_pars) %>%
       dplyr::summarise(mean_par = mean(col_valor),
                 min_par = min(col_valor),
