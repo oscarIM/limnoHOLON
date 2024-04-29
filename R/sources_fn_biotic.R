@@ -681,6 +681,7 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
 #' @import patchwork
 #' @import vegan
 #' @import scales
+#' @import ggpubr
 #' @return gráfico  con los indices de diversidad calculados por sitios y/o factor.
 #' @export fn_plot_div_index
 #' @examples
@@ -745,15 +746,13 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
           stringr::str_detect(col_N, "4") ~ 6,
           stringr::str_detect(col_N, "5") ~ 7,
           TRUE ~ as.numeric(col_N)))
-  } else {
-    data_plot <- data_plot
-  }
+    }
   if (length(sitios_ord) <= 10) {
     angle <- 0
   } else {
     angle <- 90
   }
-  #comienza setting para basic plot, sin col, factor ni orden, etc
+  #comienza setting para basic plot, sin col, factor ni orden, etc. AGREGAR REPLICA??
   if (is.null(col_factor)) {
     data_index <-  data_plot %>%
       dplyr::group_by(col_sitio, col_taxa) %>%
