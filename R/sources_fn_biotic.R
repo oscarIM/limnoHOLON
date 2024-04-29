@@ -76,7 +76,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
     dplyr::select(all_of(vars)) %>%
     dplyr::rename_at(vars, ~ c( "col_sitio", "taxa_grupo", "col_taxa", "col_N"))
   #setting some vars#
-  if (taxa_id == "ictiofauna") {
+  if (str_detect(taxa_id, "ictiofauna|macrofita")) {
     n_taxa <- data_plot %>%
       dplyr::pull(col_taxa) %>%
       unique() %>%
@@ -99,6 +99,11 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
     ord_sitio == "desc" ~ paste0(code_sitio, rev(sitios_tmp)),
     TRUE ~ NA_character_
   )
+  if (length(sitios_ord) <= 10) {
+    angle <- 0
+  } else {
+    angle <- 90
+  }
   # flujo si col_zonas == NULL hay una columna de zona, se indica/determina la zona y se crear un dataplot dependiendo si es o no un ouputd_id == "macrofita"
   if (is.null(col_factor)) {
     if (str_detect(taxa_id, "(?i)macrofita")) {
@@ -126,15 +131,15 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
       plot <- ggplot() +
         geom_col(data = data_plot, aes(x = col_sitio, y = col_N, fill = col_taxa), position = "dodge") +
         labs(
-          x = "Sitio",
-          y = "Densidad cualitativa"
-        ) +
-        scale_fill_manual("Especie", values = color) +
-        guides(fill = guide_legend(ncol = 2)) +
-        facet_grid(scales = "free_y", switch = "y", rows = vars(taxa_grupo)) +
-        theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
-        theme_light()
-      ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
+          x = "Estaciones",
+          y = paste0("Densidad cualitativa (", unidad, ")"))
+      ) +
+  scale_fill_manual("Especie", values = color) +
+  guides(fill = guide_legend(ncol = 2)) +
+  facet_grid(scales = "free_y", switch = "y", rows = vars(taxa_grupo)) +
+  theme(axis.text.x = element_text(angle = angle, hjust = 0.5)) +
+  theme_light()
+ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
     } else {
       data_plot <- data_plot %>%
         dplyr::mutate(
@@ -165,12 +170,13 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         scale_fill_manual(taxa_grupo, values = color) +
         guides(fill = guide_legend(ncol = 1)) +
         facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label)) +
-        theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
+        theme(axis.text.x = element_text(angle = angle, hjust = 0.5)) +
         theme_light()
       ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
     }
   }
   if (!is.null(col_factor))  {
+    col_factor <- data %>% dplyr::pull({{col_factor}})
     if (is.null(ord_factor)) {
       order_factor <- data_plot %>%
         dplyr::pull(col_factor) %>%
@@ -179,9 +185,9 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
     } else {
       order_factor <- ord_factor
     }
-    col_factor <- data %>% dplyr::pull({{col_factor}})
+
     data_plot <- data_plot %>% dplyr::mutate(col_factor = factor(col_factor, levels = order_factor))
-    if (stringr::str_detect(taxa_id, "(?i)macrofita")) {
+    if (stringr::str_detect(taxa_id, "(?i)macrofitas")) {
       #formatear datos con presencia col_zonas, con orden y para macrofitas y no macrofitas
       data_plot <- data_plot %>%
         dplyr::mutate(
@@ -201,13 +207,14 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
           taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))))
       color <- colorRampPalette(brewer.pal(9, "Paired"))(n_taxa)
       plot <- ggplot() +
-        geom_col(data = data_plot, aes(x = col_sitio, y = col_N, fill = taxa_grupo), position = "dodge") +
-        labs(x = "Estaciones", y = "Densidad cualitativa") +
-        scale_fill_manual(stringr::str_to_sentence(taxa_grupo), values = color) +
-        guides(fill = guide_legend(ncol = 1)) +
-        facet_grid(scales = "free", switch = "y", cols = vars(col_factor)) +
-        #facet_grid(scales = "free", switch = "y", rows = vars(taxa_grupo), cols = vars(col_zonas)) +
-        theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
+        geom_col(data = data_plot, aes(x = col_sitio, y = col_N, fill = col_taxa), position = "dodge") +
+        labs(x = "Estaciones", y = paste0("Densidad cualitativa (", unidad, ")")) +
+        scale_fill_manual(stringr::str_to_sentence(col_taxa), values = color) +
+
+        #facet_grid(scales = "free", switch = "y", cols = vars(col_factor)) +
+        facet_grid(scales = "free", switch = "y", rows = vars(taxa_grupo), cols = vars(col_factor)) +
+        guides(fill = guide_legend(ncol = 2)) +
+        theme(axis.text.x = element_text(angle = angle, hjust = 0.5)) +
         theme_light()
       ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, "_by_factor.png"), plot = plot, width = width, height = height, dpi = 300)
     } else {
@@ -243,6 +250,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
     }
   }
 }
+
 
 
 #' @title fn_plot_pie
