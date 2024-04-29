@@ -133,11 +133,11 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         labs(
           x = "Estaciones",
           y = paste0("Densidad cualitativa (", unidad, ")")) +
-  scale_fill_manual("Especie", values = color) +
-  guides(fill = guide_legend(ncol = 2)) +
-  facet_grid(scales = "free_y", switch = "y", rows = vars(taxa_grupo)) +
-  theme(axis.text.x = element_text(angle = angle, hjust = 0.5)) +
-  theme_light()
+        scale_fill_manual("Especie", values = color) +
+        guides(fill = guide_legend(ncol = 2)) +
+        facet_grid(scales = "free_y", switch = "y", rows = vars(taxa_grupo)) +
+        theme_light() +
+        theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
 ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
     } else {
       data_plot <- data_plot %>%
@@ -169,8 +169,8 @@ ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = pl
         scale_fill_manual(taxa_grupo, values = color) +
         guides(fill = guide_legend(ncol = 1)) +
         facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label)) +
-        theme(axis.text.x = element_text(angle = angle, hjust = 0.5)) +
-        theme_light()
+        theme_light() +
+        theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
       ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
     }
   }
@@ -213,8 +213,8 @@ ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = pl
         #facet_grid(scales = "free", switch = "y", cols = vars(col_factor)) +
         facet_grid(scales = "free", switch = "y", rows = vars(taxa_grupo), cols = vars(col_factor)) +
         guides(fill = guide_legend(ncol = 2)) +
+        theme_light() +
         theme(axis.text.x = element_text(angle = angle, hjust = 0.5)) +
-        theme_light()
       ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, "_by_factor.png"), plot = plot, width = width, height = height, dpi = 300)
     } else {
       #formatear datos con presencia col_zonas, sin orden y para todo menos macrofitas
@@ -243,7 +243,8 @@ ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = pl
         scale_fill_manual(taxa_grupo, values = color) +
         guides(fill = guide_legend(ncol = 1)) +
         facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label), cols = vars(col_factor)) +
-        theme_light()
+        theme_light() +
+        theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
       ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, "_by_factor.png"), plot = plot, width = width, height = height, dpi = 300)
 
     }
