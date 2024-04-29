@@ -37,10 +37,8 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
   order_type <- c("Físico", "Químico", "Nutriente", "Metal", "Orgánicos e inorgánicos", "Biológico")
   if (matriz == "sedimento") {
     data_plot <- data_plot %>% dplyr::filter(col_pars %!in% pars_gran)
-  } else {
-    data_plot <- data_plot
-  }
-  summ_pars <- data_plot %>%
+    }
+    summ_pars <- data_plot %>%
     dplyr::group_by(col_pars) %>%
     dplyr::summarise(
       Nobs = n(),
@@ -540,9 +538,7 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
     dplyr::pull(col_pars)
   if (stringr::str_detect(string = matriz, pattern = "(?i)sedimento?")) {
     selected_pars <- setdiff(selected_pars, pars_gran)
-  } else {
-    selected_pars <- selected_pars
-  }
+    }
   data_pca <- data_plot %>%
     dplyr::filter(col_pars %in% selected_pars) %>%
     dplyr::left_join(., data_pars, by = c("col_pars" = "Param"))
@@ -756,9 +752,10 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
         unique() %>%
         sort()
     }
-    data_plot <- data_plot %>% dplyr::mutate(col_pars = factor(col_pars, levels = pars_gran),
-                                             col_sitio = factor(col_sitio, levels = sitios_ord),
-                                             col_grupo = factor(col_grupo, levels = order_grupo)
+    data_plot <- data_plot %>%
+      dplyr::mutate(col_pars = factor(col_pars, levels = pars_gran),
+                    col_sitio = factor(col_sitio, levels = sitios_ord),
+                    col_grupo = factor(col_grupo, levels = order_grupo)
     )
     plot <- ggplot(data = data_plot, aes(x = as.factor(col_sitio), y = col_valor, fill = col_pars)) +
       geom_col(position = "stack") +
@@ -777,10 +774,10 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
             legend.key.size = unit(1 / 2, "picas"))
     ggsave(filename = paste0("fig_granulometria_", col_grupo, ".png"), plot = plot, width = 10, height = 5, dpi = 300)
      summ_data_plot <- data_plot %>%
-      dplyr::group_by (col_grupo, col_pars) %>%
+      dplyr::group_by(col_grupo, col_pars) %>%
       dplyr::summarise(mean_par = mean(col_valor),
                 min_par = min(col_valor),
-                max_par =max(col_valor))
+                max_par = max(col_valor))
     readr::write_tsv(x = summ_data_plot, "data_from_granulometry.tsv")
   }
   #if (!is.null(col_grupo) && length(col_grupo) == 2) {
