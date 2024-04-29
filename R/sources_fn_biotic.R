@@ -132,8 +132,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         geom_col(data = data_plot, aes(x = col_sitio, y = col_N, fill = col_taxa), position = "dodge") +
         labs(
           x = "Estaciones",
-          y = paste0("Densidad cualitativa (", unidad, ")"))
-      ) +
+          y = paste0("Densidad cualitativa (", unidad, ")")) +
   scale_fill_manual("Especie", values = color) +
   guides(fill = guide_legend(ncol = 2)) +
   facet_grid(scales = "free_y", switch = "y", rows = vars(taxa_grupo)) +
