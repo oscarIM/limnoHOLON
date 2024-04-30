@@ -147,31 +147,31 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
           col_sitio = factor(col_sitio, levels = sitios_ord),
           taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
           S = if_else(col_N >= 1, 1, 0)
-        )
-      data_plot <- data_plot %>%
-        dplyr::group_by(taxa_grupo, col_sitio) %>%
-        dplyr::summarise(
-          N = sum(col_N, na.rm = TRUE),
-          S = sum(S, na.rm = TRUE)) %>%
-        tidyr::pivot_longer(cols = c("N", "S"), names_to = "vars", values_to = "values") %>%
-        dplyr::group_by(vars) %>%
-        dplyr::group_split()
-      data_plot <- purrr::map(data_plot, ~ dplyr::arrange(., desc(values)))
-      data_plot <- dplyr::bind_rows(data_plot) %>%
-        dplyr::mutate(label = dplyr::case_when(
-          vars == "N" ~ paste0("Abundancia relativa (", unidad, ")"),
-          vars == "S" ~ "Número de taxa (S)"
-        ))
-      color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Paired"))(n_taxa)
-      plot <- ggplot() +
-        geom_col(data = data_plot, aes(x = col_sitio, y = values, fill = fct_inorder(taxa_grupo)), position = "dodge") +
-        labs(x = "Estaciones",y = "Valores") +
-        scale_fill_manual(taxa_grupo, values = color) +
-        guides(fill = guide_legend(ncol = 1)) +
-        facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label)) +
-        theme_light() +
-        theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
-      ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
+        ) %>% dplyr::filter(S > 0) %>%
+        data_plot <- data_plot %>%
+          dplyr::group_by(taxa_grupo, col_sitio) %>%
+          dplyr::summarise(
+            N = sum(col_N, na.rm = TRUE),
+            S = n_distinct(col_taxa)) %>%
+          tidyr::pivot_longer(cols = c("N", "S"), names_to = "vars", values_to = "values") %>%
+          dplyr::group_by(vars) %>%
+          dplyr::group_split()
+        data_plot <- purrr::map(data_plot, ~ dplyr::arrange(., desc(values)))
+        data_plot <- dplyr::bind_rows(data_plot) %>%
+          dplyr::mutate(label = dplyr::case_when(
+            vars == "N" ~ paste0("Abundancia relativa (", unidad, ")"),
+            vars == "S" ~ "Número de taxa (S)"
+          ))
+        color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Paired"))(n_taxa)
+        plot <- ggplot() +
+          geom_col(data = data_plot, aes(x = col_sitio, y = values, fill = fct_inorder(taxa_grupo)), position = "dodge") +
+          labs(x = "Estaciones",y = "Valores") +
+          scale_fill_manual(taxa_grupo, values = color) +
+          guides(fill = guide_legend(ncol = 1)) +
+          facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label)) +
+          theme_light() +
+          theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
+        ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
     }
   }
   if (!is.null(col_factor))  {
@@ -222,10 +222,11 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         col_sitio = factor(col_sitio, levels = sitios_ord),
         taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
         S = if_else(col_N >= 1, 1, 0)) %>%
+        dplyr::filter(S > 0) %>%
         dplyr::group_by(col_taxa, col_sitio, col_factor) %>%
         dplyr::summarise(
           N = sum(col_N, na.rm = TRUE),
-          S = sum(S, na.rm = TRUE)) %>%
+          S = n_distinct(col_taxa)) %>%
         tidyr::pivot_longer(cols = c("N", "S"), names_to = "vars", values_to = "values") %>%
         dplyr::group_by(vars) %>%
         dplyr::group_split()
@@ -252,10 +253,11 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         col_sitio = factor(col_sitio, levels = sitios_ord),
         taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
         S = if_else(col_N >= 1, 1, 0)) %>%
+        dplyr::filter(S > 0) %>%
         dplyr::group_by(taxa_grupo, col_sitio, col_factor) %>%
         dplyr::summarise(
           N = sum(col_N, na.rm = TRUE),
-          S = sum(S, na.rm = TRUE)) %>%
+          S = n_distinct(col_taxa)) %>%
         tidyr::pivot_longer(cols = c("N", "S"), names_to = "vars", values_to = "values") %>%
         dplyr::group_by(vars) %>%
         dplyr::group_split()
@@ -278,6 +280,8 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
     }
   }
 }
+
+
 
 
 
