@@ -832,6 +832,7 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
                                        vjust = 0.5)) +
       labs(y = "Valores", x = "Estaciones")
     ggsave(filename = paste0("plot_div_index_",taxa_id, ".png"), plot = plot,device = "png",width = width, height = height, dpi = 300)
+    readr::write_tsv(summ_index, file = "data_summ_index.tsv")
   }
   if (!is.null(col_factor)) {
     col_factor <- data %>% pull({{col_factor}})
@@ -902,5 +903,6 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
     ggsave(filename = paste0("plot_div_index_1_",taxa_id, ".png"), panel_1, width = width, height = height, dpi = 300)
     panel_2 <- list_plots[[3]]/list_plots[[4]] + patchwork::plot_annotation(tag_levels = list(c('a', 'b'), '1'), tag_suffix = ")") + patchwork::plot_layout(axis_titles = "collect")
     ggsave(filename = paste0("plot_div_index_2_",taxa_id, ".png"), panel_2, width = width, height = height, dpi = 300)
+    readr::write_tsv(summ_index, file = "data_summ_index.tsv")
   }
 }
