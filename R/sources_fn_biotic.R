@@ -184,7 +184,6 @@ ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = pl
     } else {
       order_factor <- ord_factor
     }
-
     data_plot <- data_plot %>% dplyr::mutate(col_factor = factor(col_factor, levels = order_factor))
     if (stringr::str_detect(taxa_id, "(?i)macrofitas")) {
       #formatear datos con presencia col_zonas, con orden y para macrofitas y no macrofitas
@@ -216,7 +215,36 @@ ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = pl
         theme_light() +
         theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
       ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, "_by_factor.png"), plot = plot, width = width, height = height, dpi = 300)
-    } else {
+      } else if (stringr::str_detect(taxa_id, "(?i)ictiof")) {
+        data_plot <- data_plot %>% dplyr::mutate(
+          col_N = tidyr::replace_na(col_N, 0),
+          col_taxa = factor(col_taxa, levels = unique(col_taxa)),
+          col_sitio = factor(col_sitio, levels = sitios_ord),
+          taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
+          S = if_else(col_N >= 1, 1, 0)) %>%
+          dplyr::group_by(taxa_grupo, col_sitio, col_factor) %>%
+          dplyr::summarise(
+            N = sum(col_N, na.rm = TRUE),
+            S = sum(S, na.rm = TRUE)) %>%
+          tidyr::pivot_longer(cols = c("N", "S"), names_to = "vars", values_to = "values") %>%
+          dplyr::group_by(vars) %>%
+          dplyr::group_split()
+        data_plot <- purrr::map(data_plot, ~ dplyr::arrange(., desc(values)))
+        data_plot <- dplyr::bind_rows(data_plot) %>%
+          dplyr::mutate(label = dplyr::case_when(
+            vars == "N" ~ paste0("Abundancia relativa (", unidad, ")"),
+            vars == "S" ~ "Número de taxa (S)"))
+        color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Paired"))(n_taxa)
+     plot <- ggplot() +
+       geom_col(data = data_plot, aes(x = col_sitio, y = values, fill = fct_inorder(col_taxa)), position = "dodge") +
+       labs(x = "Estaciones", y = "Valores") +
+       scale_fill_manual(taxa_grupo, values = color) +
+       guides(fill = guide_legend(ncol = 1)) +
+       facet_grid(scales = "free", space = "free_x", switch = "y", rows = vars(label), cols = vars(col_factor)) +
+       theme_light() +
+       theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
+     ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, "_by_factor.png"), plot = plot, width = width, height = height, dpi = 300)
+     } else {
       #formatear datos con presencia col_zonas, sin orden y para todo menos macrofitas
       data_plot <- data_plot %>% dplyr::mutate(
         col_N = tidyr::replace_na(col_N, 0),
