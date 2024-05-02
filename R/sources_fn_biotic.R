@@ -660,7 +660,7 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
     sco_sites <- scores(NMDS1)[[1]]
     data_nmds <- bind_cols(sco_sites, data_nmds)
     formula <- paste("sco_sites", "~", "col_factor")
-    list_test <- purrr::map(formula, ~adonis2(as.formula(.), data = data_nmds, method = dist))
+    list_test <- purrr::map(formula, ~adonis2(as.formula(.), data = data_nmds, method = "euc"))
     names(list_test) <- title_factor
     sig_factor <- bind_rows(list_test,.id = "factor") %>%
       dplyr::rename(p = ncol(.))
