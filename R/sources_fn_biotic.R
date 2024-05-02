@@ -91,7 +91,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
     dplyr::pull(col_sitio) %>%
     stringr::str_extract_all(string = ., "\\d+",simplify = T) %>%
     as.numeric() %>%
-    unique()%>%
+    unique() %>%
     sort()
 
   sitios_ord <- dplyr::case_when(
@@ -146,10 +146,11 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
           col_taxa = factor(col_taxa, levels = unique(col_taxa)),
           col_sitio = factor(col_sitio, levels = sitios_ord),
           taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
-          S = if_else(col_N >= 1, 1, 0)
-        ) %>% dplyr::filter(S > 0) %>%
-        data_plot <- data_plot %>%
-          dplyr::group_by(taxa_grupo, col_sitio) %>%
+          S = if_else(col_N >= 1, 1, 0)) %>%
+        dplyr::filter(S > 0)
+     #just to cut
+       data_plot <- data_plot %>%
+         dplyr::group_by(taxa_grupo, col_sitio) %>%
           dplyr::summarise(
             N = sum(col_N, na.rm = TRUE),
             S = n_distinct(col_taxa)) %>%
@@ -222,7 +223,9 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         col_sitio = factor(col_sitio, levels = sitios_ord),
         taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
         S = if_else(col_N >= 1, 1, 0)) %>%
-        dplyr::filter(S > 0) %>%
+        dplyr::filter(S > 0)
+      #just to cut
+      data_plot <- data_plot %>%
         dplyr::group_by(col_taxa, col_sitio, col_factor) %>%
         dplyr::summarise(
           N = sum(col_N, na.rm = TRUE),
@@ -253,7 +256,9 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         col_sitio = factor(col_sitio, levels = sitios_ord),
         taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
         S = if_else(col_N >= 1, 1, 0)) %>%
-        dplyr::filter(S > 0) %>%
+        dplyr::filter(S > 0)
+       #just to cut
+      data_plot <- data_plot %>%
         dplyr::group_by(taxa_grupo, col_sitio, col_factor) %>%
         dplyr::summarise(
           N = sum(col_N, na.rm = TRUE),
@@ -280,11 +285,6 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
     }
   }
 }
-
-
-
-
-
 
 #' @title fn_plot_pie
 #' @description función para graficar la composición porcentual de taxones por grupos taxonómicos en gráficos de tortas.
