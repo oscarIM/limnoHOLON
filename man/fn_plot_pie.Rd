@@ -39,7 +39,7 @@ función para graficar la composición porcentual de taxones por grupos taxonóm
 }
 \examples{
 \dontrun{
-# Para gráfico sin variable o factor de agrupamiento 
+# Para gráfico sin variable o factor de agrupamiento
 data <- read_tsv("data_fitoplancton.tsv")
 taxa_id <- "fitoplancton"
 col_N <- "N"

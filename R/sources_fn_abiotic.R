@@ -68,8 +68,8 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
 #' @param matriz string que indica el nombre de la "matriz" de datos que se esta analizando. Sirve principalmente como ID para las salidas y para diferenciar entre sedimentos y aguas.
 #' @param data_pars "dataframe" que contenga los parámetros (sus siglas) tal como aparecen en el "dataframe" de entrada, junto a una columna que indique a que tipo de parámetro pertenece (i.e. Físico, Químico, Nutriente, Metal, Orgánico e inorgánico y Biológico).Las columnas se tienen que llamar: Param y cat_pars
 #' @param ord_sitio string que indica el orden en que se quiere que aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estación o punto de muestreo). Por defecto, toma valor "asc" (órden ascendente)
-#' @param col_grupo string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.
-#' @param ord_grupo string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
+#' @param col_factor string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.
+#' @param ord_factor string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
 #' @param width ancho del gráfico. Por defecto, toma valor 8
 #' @param height alto del gráfico. Por defecto, toma valor 6
 #' @param aspect_ratio relación alto-ancho. Por defecto, toma valor 1.
@@ -104,13 +104,13 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
 #' code_sitio <- "P-"
 #' ord_sitio <- "asc"# "desc o asc"
 #' data_pars <- readr::read_tsv("tabla_pars_master.tsv")
-#' col_grupo <- "zonas"
+#' col_factor <- "zonas"
 #' width <- 9
 #' height <- 8
-#' fn_plot_bar_abiotic(data = data,col_pars = col_pars,col_sitio = col_sitio,col_valor = col_valor,col_grupo = col_grupo,aspect_ratio = 1,col_unidad = col_unidad,code_sitio = code_sitio,matriz = matriz,data_pars = data_pars,ord_sitio = ord_sitio,width = width,height = height)
+#' fn_plot_bar_abiotic(data = data,col_pars = col_pars,col_sitio = col_sitio,col_valor = col_valor,col_factor = col_factor,aspect_ratio = 1,col_unidad = col_unidad,code_sitio = code_sitio,matriz = matriz,data_pars = data_pars,ord_sitio = ord_sitio,width = width,height = height)
 #' }
 
-fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, col_unidad, code_sitio, matriz, data_pars, ord_sitio = "asc", width = 8, height = 6, ord_grupo = NULL, aspect_ratio = 1) {
+fn_plot_bar_abiotic  <- function(data, col_pars, col_sitio, col_valor, col_factor = NULL, col_unidad, code_sitio, matriz, data_pars, ord_sitio = "asc", width = 8, height = 6, ord_factor = NULL, aspect_ratio = 1) {
   options(scipen = 999)
   # setting vars#
   pars_gran <- c("LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN")
@@ -118,14 +118,14 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
   data_plot <- data %>%
     dplyr::select(all_of(vars)) %>%
     dplyr::rename_at(vars, ~c("col_sitio", "col_pars", "col_unidad", "col_valor"))
-  if (!is.null(col_grupo) && length(col_grupo) == 1) {
-    grupo <- data %>% dplyr::pull({{ col_grupo }})
-    data_plot <- data_plot %>% dplyr::mutate(col_grupo = grupo)
+  if (!is.null(col_factor) && length(col_factor) == 1) {
+    grupo <- data %>% dplyr::pull({{col_factor }})
+    data_plot <- data_plot %>% dplyr::mutate(col_factor = grupo)
   }
-  if (!is.null(col_grupo) && length(col_grupo) == 2) {
+  if (!is.null(col_factor) && length(col_factor) == 2) {
     grupos <- data %>%
-      dplyr::select(all_of(col_grupo)) %>%
-      dplyr::rename(col_grupo1 = 1, col_grupo2 = 2)
+      dplyr::select(all_of(col_factor)) %>%
+      dplyr::rename(col_factor1 = 1,col_factor2 = 2)
     data_plot <- dplyr::bind_cols(data_plot, grupos)
   }
   cols_type <- c("#66C2A5", "#C6B18B", "#D58EC4", "#F8D348", "#A89BB0", "#B7D84C")
@@ -158,10 +158,10 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
   )
   if (length(sitios_ord) <= 10) {
     angle <- 0
-    } else {
-      angle <- 90
-      }
-  if (is.null(col_grupo)) {
+  } else {
+    angle <- 90
+  }
+  if (is.null(col_factor)) {
     data_plot <- data_plot %>%
       dplyr::mutate(
         col_sitio = factor(col_sitio, levels = sitios_ord),
@@ -192,23 +192,22 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         text = element_text(size = 10, family = "Arial"),
         strip.text = element_text(size = 6, family = "Arial"),
         axis.text.x = element_text(angle = angle,
-                                       hjust = 1,
-                                       vjust = 0.5)
+                                   hjust = 1,
+                                   vjust = 0.5)
 
       )
     ggplot2::ggsave(filename = paste0("bar_pars_", ord_sitio, "_", matriz, ".png"), plot = plot, width = width, height = height, dpi = 300)
     summ_data_plot <- data_plot %>%
-      dplyr::group_by (col_grupo, col_pars) %>%
+      dplyr::group_by(col_pars) %>%
       dplyr::summarise(mean_par = mean(col_valor),
-                min_par = min(col_valor),
-                max_par =max(col_valor))
+                       min_par = min(col_valor),
+                       max_par = max(col_valor))
 
     readr::write_tsv(x = summ_data_plot, "data_from_bar_plot.tsv")
-
   }
-  if (!is.null(col_grupo) && length(col_grupo) == 1) {
+  if (!is.null(col_factor) && length(col_factor) == 1) {
     if (!is.null(ord_grupo)) {
-      order_grupo <- ord_grupo
+      order_grupo <- ord_factor
     } else {
       order_grupo <- data_plot %>%
         dplyr::pull(col_grupo) %>%
@@ -220,7 +219,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
         col_sitio = factor(col_sitio, levels = sitios_ord),
         label = paste0(col_pars, " (", col_unidad, ")"),
         cats_pars = factor(cats_pars, levels = order_type),
-        col_grupo = factor(col_grupo, levels = order_grupo)
+        col_factor = factor(col_factor, levels = order_grupo)
       ) %>%
       dplyr::mutate(label = stringr::str_replace(label, "pH \\(-\\)|pH \\(unidad\\)", replacement = "pH"))
     data_plot <- data_plot %>%
@@ -229,7 +228,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
     fn_plot_aux <- function(data) {
       plot <- ggplot(data, aes(x = col_sitio, y = col_valor, fill = cats_pars)) +
         geom_bar(stat = "identity", position = "dodge", show.legend = F) +
-        facet_grid(label ~ col_grupo, scales = "free", switch = "y") +
+        facet_grid(label ~col_factor, scales = "free", switch = "y") +
         scale_fill_manual(values = cols_type) +
         scale_y_continuous(breaks = waiver(), n.breaks = 5) +
         labs(
@@ -244,12 +243,12 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
           aspect.ratio = aspect_ratio
         )
 
-      ggsave(filename = paste0("bar_pars_", unique(data$cats_pars), "_", col_grupo, "_", ord_sitio, "_", matriz, ".png"), plot = plot, width = width, height = height, dpi = 300)
+      ggsave(filename = paste0("bar_pars_", unique(data$cats_pars), "_",col_factor, "_", ord_sitio, "_", matriz, ".png"), plot = plot, width = width, height = height, dpi = 300)
       summ_data_plot <- data_plot %>%
-      dplyr::group_by (col_grupo, col_pars) %>%
-      dplyr::summarise(mean_par = mean(col_valor),
-                min_par = min(col_valor),
-                max_par =max(col_valor))
+        dplyr::group_by(col_factor, col_pars) %>%
+        dplyr::summarise(mean_par = mean(col_valor),
+                         min_par = min(col_valor),
+                         max_par = max(col_valor))
       readr::write_tsv(x = summ_data_plot, "data_from_bar_plot.tsv")
     }
     df_list <- data_plot %>%
@@ -258,14 +257,14 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
       setNames(purrr::map(., ~ paste0(unique(.[["cats_pars"]]))))
     purrr::walk(df_list, ~ fn_plot_aux(.))
   }
-  if (!is.null(col_grupo) && length(col_grupo) == 2) {
+  if (!is.null(col_factor) && length(col_factor) == 2) {
     data_plot <- data_plot %>%
       dplyr::mutate(
         col_sitio = factor(col_sitio, levels = sitios_ord),
         label = paste0(col_pars, " (", col_unidad, ")"),
         cats_pars = factor(cats_pars, levels = order_type),
-        col_grupo1 = factor(col_grupo1, levels = sort(unique(col_grupo1))),
-        col_grupo2 = factor(col_grupo2, levels = sort(unique(col_grupo2)))
+        col_factor1 = factor(col_factor1, levels = sort(unique(col_factor1))),
+        col_factor2 = factor(col_factor2, levels = sort(unique(col_factor2)))
       ) %>%
       dplyr::mutate(label = stringr::str_replace(label, "pH \\(-\\)|pH \\(unidad\\)", replacement = "pH"))
     data_plot <- data_plot %>%
@@ -285,7 +284,7 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
       col <- cols_type[col]
       plot <- ggplot(data, aes(x = col_sitio, y = col_valor)) +
         geom_bar(stat = "identity", position = "dodge", fill = col) +
-        facet_grid(label ~ col_grupo2 + col_grupo1, scales = "free_y", switch = "y") +
+        facet_grid(label ~col_factor2 +col_factor1, scales = "free_y", switch = "y") +
         # scale_fill_manual(values = cols_pars) +
         scale_y_continuous(breaks = waiver(), n.breaks = 5) +
         labs(
@@ -298,8 +297,8 @@ fn_plot_bar_abiotic <- function(data, col_pars, col_sitio, col_valor, col_grupo 
           text = element_text(size = 10, family = "Arial"),
           aspect.ratio = aspect_ratio,
           axis.text.x = element_text(angle = angle,
-                                       hjust = 1,
-                                       vjust = 0.5)
+                                     hjust = 1,
+                                     vjust = 0.5)
         )
       ggsave(filename = paste0("bar_pars_both_gr_", ord_sitio, "_", matriz, "_", unique(data$cats_pars), ".png"), plot = plot, width = width, height = height, dpi = 300)
     }

@@ -16,7 +16,8 @@ fn_plot_bar_biotic(
   taxa_id,
   code_sitio,
   width = 12,
-  height = 12
+  height = 12,
+  unidad
 )
 }
 \arguments{
@@ -52,7 +53,7 @@ función para graficar de barras para la abundancia de las especies/taxones de u
 }
 \examples{
 \dontrun{
-# Para gráfico sin variable o factor de agrupamiento 
+# Para gráfico sin variable o factor de agrupamiento
 data <- read_tsv("data_fitoplancton.tsv")
 col_taxa <- "Taxa"
 taxa_grupo <- "Clase"
@@ -64,10 +65,10 @@ taxa_id <- "fitoplancton"
 width <- 12
 height <- 12
 fn_plot_bar_biotic(data = data, col_taxa = col_taxa, taxa_grupo = taxa_grupo,col_N = col_N, col_sitio = col_sitio, ord_sitio = ord_sitio, code_sitio = code_sitio, taxa_id = taxa_id, width = width, height = height)
-# Para gráfico con 1 variable o factor de agrupamiento, en orden alfanumérico. 
+# Para gráfico con 1 variable o factor de agrupamiento, en orden alfanumérico.
 data <- read_tsv("data_fitoplancton.tsv")
 #se necesita que la variable o factor este en el dataframe
-data_grupos <- read_tsv("data_grupos.tsv") 
+data_grupos <- read_tsv("data_grupos.tsv")
 data <- left_join(data, data_grupos, by = c("Sitio" = "Sitio"))
 col_taxa <- "Taxa"
 taxa_grupo <- "Clase"
@@ -80,10 +81,10 @@ taxa_id <- "fitoplancton"
 width <- 12
 height <- 12
 fn_plot_bar_biotic(data = data, col_taxa = col_taxa, taxa_grupo = taxa_grupo,col_N = col_N, col_sitio = col_sitio, ord_sitio = ord_sitio, code_sitio = code_sitio, col_zonas = col_zonas, taxa_id = taxa_id, width = width, height = height)
-# Para gráfico con 1 variable o factor de agrupamiento, en algún orden definido. 
+# Para gráfico con 1 variable o factor de agrupamiento, en algún orden definido.
 data <- read_tsv("data_fitoplancton.tsv")
 #se necesita que la variable o factor este en el dataframe
-data_grupos <- read_tsv("data_grupos.tsv") 
+data_grupos <- read_tsv("data_grupos.tsv")
 data <- left_join(data, data_grupos, by = c("Sitio" = "Sitio"))
 col_taxa <- "Taxa"
 taxa_grupo <- "Clase"

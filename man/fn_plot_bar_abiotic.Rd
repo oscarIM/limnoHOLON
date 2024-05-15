@@ -9,7 +9,7 @@ fn_plot_bar_abiotic(
   col_pars,
   col_sitio,
   col_valor,
-  col_grupo = NULL,
+  col_factor = NULL,
   col_unidad,
   code_sitio,
   matriz,
@@ -17,7 +17,7 @@ fn_plot_bar_abiotic(
   ord_sitio = "asc",
   width = 8,
   height = 6,
-  ord_grupo = NULL,
+  ord_factor = NULL,
   aspect_ratio = 1
 )
 }
@@ -30,7 +30,7 @@ fn_plot_bar_abiotic(
 
 \item{col_valor}{string que indica el nombre de la columna que tiene el valor de los parámetros.}
 
-\item{col_grupo}{string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.}
+\item{col_factor}{string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.}
 
 \item{code_sitio}{string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.}
 
@@ -44,7 +44,7 @@ fn_plot_bar_abiotic(
 
 \item{height}{alto del gráfico. Por defecto, toma valor 6}
 
-\item{ord_grupo}{string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.}
+\item{ord_factor}{string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.}
 
 \item{aspect_ratio}{relación alto-ancho. Por defecto, toma valor 1.}
 }
@@ -79,9 +79,9 @@ matriz <- "agua"
 code_sitio <- "P-"
 ord_sitio <- "asc"# "desc o asc"
 data_pars <- readr::read_tsv("tabla_pars_master.tsv")
-col_grupo <- "zonas"
+col_factor <- "zonas"
 width <- 9
 height <- 8
-fn_plot_bar_abiotic(data = data,col_pars = col_pars,col_sitio = col_sitio,col_valor = col_valor,col_grupo = col_grupo,aspect_ratio = 1,col_unidad = col_unidad,code_sitio = code_sitio,matriz = matriz,data_pars = data_pars,ord_sitio = ord_sitio,width = width,height = height)
+fn_plot_bar_abiotic(data = data,col_pars = col_pars,col_sitio = col_sitio,col_valor = col_valor,col_factor = col_factor,aspect_ratio = 1,col_unidad = col_unidad,code_sitio = code_sitio,matriz = matriz,data_pars = data_pars,ord_sitio = ord_sitio,width = width,height = height)
 }
 }
