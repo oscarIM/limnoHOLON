@@ -725,7 +725,7 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
     plot <- ggplot() +
       geom_col(data = data_plot, aes(x = as.factor(col_sitio), y = col_valor, fill = col_pars)) +
       # facet_grid(~ zona, scales = "free") +
-      labs(x = "Estaciónes", y = "Tamaño de grano (%)") +
+      labs(x = "Estaciones", y = "Tamaño de grano (%)") +
       theme_bw() +
       scale_fill_manual("Tamaño", values = col_grano) +
       theme(text = element_text(family = "Arial"),
