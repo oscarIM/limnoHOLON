@@ -734,7 +734,7 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
                                vjust = 0.5))
     ggplot2::ggsave(filename = "fig_granulometria.png", plot = plot, width = width, height = height, dpi = 300)
     summ_data_plot <- data_plot %>%
-      dplyr::group_by (col_grupo, col_pars) %>%
+      dplyr::group_by (col_pars) %>%
       dplyr::summarise(mean_par = mean(col_valor),
                 min_par = min(col_valor),
                 max_par =max(col_valor))
