@@ -38,7 +38,7 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
   if (matriz == "sedimento") {
     data_plot <- data_plot %>% dplyr::filter(col_pars %!in% pars_gran)
     }
-    summ_pars <- data_plot %>%
+  summ_pars <- data_plot %>%
     dplyr::group_by(col_pars) %>%
     dplyr::summarise(
       Nobs = n(),
@@ -47,8 +47,7 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
       prom = mean(col_valor),
       desvest = sd(col_valor),
       cv_num = abs(desvest / prom),
-      "cv%" = abs(scales::label_percent()(desvest / prom))
-    ) %>%
+      "cv%" = scales::label_percent()(abs(desvest / prom)))%>%
     dplyr::rename(Sigla = col_pars) %>%
     dplyr::mutate_at(vars(3:6), list(~ round(., round)))
   table_export <- summ_pars %>% dplyr::select(-cv_num)
