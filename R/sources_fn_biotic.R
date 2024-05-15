@@ -146,7 +146,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
           col_taxa = factor(col_taxa, levels = unique(col_taxa)),
           col_sitio = factor(col_sitio, levels = sitios_ord),
           taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
-          S = if_else(col_N >= 1, 1, 0)) %>%
+          S = if_else(col_N > 0, 1, 0)) %>%
         dplyr::filter(S > 0)
      #just to cut
        data_plot <- data_plot %>%
@@ -222,7 +222,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         col_taxa = factor(col_taxa, levels = unique(col_taxa)),
         col_sitio = factor(col_sitio, levels = sitios_ord),
         taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
-        S = if_else(col_N >= 1, 1, 0)) %>%
+        S = if_else(col_N > 0, 1, 0)) %>%
         dplyr::filter(S > 0)
       #just to cut
       data_plot <- data_plot %>%
@@ -255,7 +255,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         col_taxa = factor(col_taxa, levels = unique(col_taxa)),
         col_sitio = factor(col_sitio, levels = sitios_ord),
         taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
-        S = if_else(col_N >= 1, 1, 0)) %>%
+        S = if_else(col_N > 0, 1, 0)) %>%
         dplyr::filter(S > 0)
        #just to cut
       data_plot <- data_plot %>%
