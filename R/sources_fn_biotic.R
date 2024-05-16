@@ -496,7 +496,7 @@ fn_plot_pie <- function(data, taxa_grupo, col_N, cumsum_cut = 90, n_size = 5, wi
 #' width <- 6
 #' fn_plot_nmds(data = data,col_sitio = col_sitio, col_taxa = col_taxa,col_factor = col_factor, col_N = col_N,col_replica = col_replica,ord_factor = ord_factor, dist = dist, taxa_id = taxa_id, height = height, width = width,title_factor = title_factor)
 #' }
-fn_plot_nmds2 <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_replica = NULL, col_factor = NULL, ord_factor = NULL, taxa_id, height = 6, width = 7, title_factor = NULL){
+fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_replica = NULL, col_factor = NULL, ord_factor = NULL, taxa_id, height = 6, width = 7, title_factor = NULL){
   options(scipen = 999)
   # setting dataframe base, with out replica neither factor#
   vars <- c(col_sitio, col_taxa, col_N)
