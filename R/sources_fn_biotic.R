@@ -496,7 +496,7 @@ fn_plot_pie <- function(data, taxa_grupo, col_N, cumsum_cut = 90, n_size = 5, wi
 #' width <- 6
 #' fn_plot_nmds(data = data,col_sitio = col_sitio, col_taxa = col_taxa,col_factor = col_factor, col_N = col_N,col_replica = col_replica,ord_factor = ord_factor, dist = dist, taxa_id = taxa_id, height = height, width = width,title_factor = title_factor)
 #' }
-fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_replica = NULL, col_factor = NULL, ord_factor = NULL, taxa_id, height = 6, width = 7, title_factor = NULL){
+fn_plot_nmds2 <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_replica = NULL, col_factor = NULL, ord_factor = NULL, taxa_id, height = 6, width = 7, title_factor = NULL){
   options(scipen = 999)
   # setting dataframe base, with out replica neither factor#
   vars <- c(col_sitio, col_taxa, col_N)
@@ -568,15 +568,64 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
     legend("bottomleft", paste0("Stress = ", round(NMDS1$stress, 3)), bty = "n", cex = 0.5, text.font = 3)
     dev.off()
   }
+  if (!is.null(col_replica) && is.null(col_factor)) {
+    labels <- data_plot %>%
+      dplyr::select(col_sitio,  col_replica) %>%
+      dplyr::distinct()
+    data_nmds <-  data_plot %>%
+      dplyr::group_by(col_sitio,col_taxa, col_replica) %>%
+      dplyr::summarise(col_N = sum(col_N, na.rm = TRUE)) %>%
+      tidyr::pivot_wider(names_from = col_taxa, values_from = col_N, values_fill = 0) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-c(col_sitio, col_replica)) %>%
+      as.data.frame()# %>%
+    #    #dplyr::select(which(colSums(.) / sum(.) > 0.01))
+    data_nmds <- bind_cols(labels, data_nmds) %>% na.omit()
+    begin <- ncol(labels) + 1
+    NMDS1 <- metaMDS(data_nmds[, begin:ncol(data_nmds)], k = 2, trymax = 5000, distance = dist, trace = FALSE)
+    sco_sites <- scores(NMDS1)[[1]]
+    data_nmds <- bind_cols(sco_sites, data_nmds)
+    png(filename = paste0("NMDS_", taxa_id, ".png"), width = width,height = height, units = "in", res = 300,family = "Arial")
+    ordiplot(NMDS1,type = "n",
+             main = paste0("NMDS de ", str_to_sentence(taxa_id)))
+    orditorp(NMDS1,
+             display = "sites",
+             label = paste0(data_nmds[["col_sitio"]], " — ", data_nmds[["col_replica"]]),
+             cex = 0.5,
+             air = 0.005)
+    #ordiellipse(NMDS1,
+    #            groups = data_nmds[["col_factor"]],
+    #            kind = "sd",
+    #            draw = "polygon",
+    #            col = color[names(color)],
+    #            lwd = 0.3,
+    #            label = F,
+    #            cex = 0.6,
+    #            font = 3,
+    #            alpha = 0.2)
+    orditorp(NMDS1,
+             display = "species",
+             col = "gray",
+             cex = 0.55,
+             air = -1,
+             font = 3)
+    abline(h = 0,
+           v = 0,
+           lty = 3,
+           col = "gray0")
+    legend("bottomleft", paste0("Stress = ", round(NMDS1$stress, 3)), bty = "n", cex = 0.5, text.font = 3)
+    #legend('topright', title = title_factor, legend = names(color), col = color, pch = 16)
+    dev.off()
+  }
   if (is.null(col_replica) && !is.null(col_factor)) {
     if (is.null(ord_factor)) {
       ord <- data_plot %>%
         dplyr::pull(col_factor) %>%
         unique() %>%
         sort()
-      } else {
-        ord <- ord_factor
-        }
+    } else {
+      ord <- ord_factor
+    }
     labels <- data_plot %>%
       dplyr::select(col_sitio, col_factor) %>%
       dplyr::distinct()
@@ -587,7 +636,7 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
       dplyr::ungroup() %>%
       dplyr::select(-c(col_sitio, col_factor)) %>%
       as.data.frame()# %>%
-      #    #dplyr::select(which(colSums(.) / sum(.) > 0.01))
+    #    #dplyr::select(which(colSums(.) / sum(.) > 0.01))
     data_nmds <- dplyr::bind_cols(labels, data_nmds) %>% na.omit()
     begin <- ncol(labels) + 1
     NMDS1 <- metaMDS(data_nmds[, begin:ncol(data_nmds)], k = 2, trymax = 5000, distance = dist, trace = FALSE)
@@ -601,15 +650,15 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
     factor <- sig_factor$factor[1]
     color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Dark2"))(length(unique(data_nmds$col_factor)))
     names(color) <- ord
-  png(filename = paste0("NMDS_with_factor_", taxa_id, ".png"), width = width, height = height,units = "in",
+    png(filename = paste0("NMDS_with_factor_", taxa_id, ".png"), width = width, height = height,units = "in",
         res = 300, family = "Arial")
     ordiplot(NMDS1,type = "n", main = paste0("NMDS ",str_to_sentence(taxa_id), " (PERMANOVA R² = ", round(sig_factor$R2[1], 2),"; P = ", round(sig_factor$p[1],3),")"), cex.main = 0.9)
     mtext(paste0("Factor Permanova: ", title_factor), side = 3, line = -4, cex = 0.9, outer = TRUE)
     orditorp(NMDS1,
-                 display = "sites",
-                 label = data_nmds[["col_sitio"]],
-                 cex = 0.5,
-                 air = 0.005)
+             display = "sites",
+             label = data_nmds[["col_sitio"]],
+             cex = 0.5,
+             air = 0.005)
     ordiellipse(NMDS1,
                 groups = data_nmds[["col_factor"]],
                 kind = "sd",
@@ -640,9 +689,9 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
         dplyr::pull(col_factor) %>%
         unique() %>%
         sort()
-      } else {
-        ord <- ord_factor
-        }
+    } else {
+      ord <- ord_factor
+    }
     labels <- data_plot %>%
       dplyr::select(col_sitio, col_factor, col_replica) %>%
       dplyr::distinct()
@@ -701,6 +750,7 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
     dev.off()
   }
 }
+
 
 #' @title fn_plot_div_index
 #' @description función para graficar indices de diversidad a lo largo de estaciones o sitios de muestreo
