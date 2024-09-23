@@ -193,7 +193,7 @@ fn_plot_bar_abiotic  <- function(data, col_pars, col_sitio, col_valor, col_facto
         strip.text = element_text(size = 6, family = "Arial"),
         axis.text.x = element_text(angle = angle,
                                    hjust = 1,
-                                   vjust = 0.5)
+                                   vjust = 1)
 
       )
     ggplot2::ggsave(filename = paste0("bar_pars_", ord_sitio, "_", matriz, ".png"), plot = plot, width = width, height = height, dpi = 300)
