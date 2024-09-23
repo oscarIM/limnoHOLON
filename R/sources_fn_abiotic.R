@@ -168,7 +168,7 @@ fn_plot_bar_abiotic  <- function(data, col_pars, col_sitio, col_valor, col_facto
         label = paste0(col_pars, " (", col_unidad, ")"),
         cats_pars = factor(cats_pars, levels = order_type)
       ) %>%
-      dplyr::mutate(label = stringr::str_replace(label, "pH \\(-\\)|pH \\(unidad\\)", replacement = "pH"))
+      dplyr::mutate(label = stringr::str_replace(label, "pH \\(-\\)|pH \\((?i)unidad\\)", replacement = "pH"))
     plot <- ggplot2::ggplot(data_plot, aes(x = col_sitio, y = col_valor, fill = cats_pars)) +
       geom_bar(stat = "identity", position = "dodge") +
       facet_wrap(~ reorder(label, match(cats_pars, order_type)),
