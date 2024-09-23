@@ -730,7 +730,7 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
       scale_fill_manual("Tamaño", values = col_grano) +
       theme(text = element_text(family = "Arial"),
             axis.text.x = element_text(angle = angle,
-                               hjust = 1,
+                               hjust = 0.5,
                                vjust = 0.5))
     ggplot2::ggsave(filename = "fig_granulometria.png", plot = plot, width = width, height = height, dpi = 300)
     summ_data_plot <- data_plot %>%
@@ -761,13 +761,12 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
       labs(x = "Estaciones",
            y = "Tamaño de grano (%)") +
       scale_fill_manual("Tamaño", values = col_grano) +
-      theme(axis.text.x = element_text(angle = angle, hjust = 0.5), legend.position = "right") +
-      guides(fill = guide_legend(ncol = 1, byrow = TRUE)) +
+            guides(fill = guide_legend(ncol = 1, byrow = TRUE)) +
       theme_bw() +
       theme(strip.placement = "outside",
             strip.background = element_rect(fill = "gray95"),
             text = element_text(size = 10, family = "Arial"),
-            axis.text.x = element_text(angle = angle, vjust = 0.5, hjust = 1),
+            axis.text.x = element_text(angle = angle, vjust = 0.5, hjust = 0.5),
             aspect.ratio = aspect_ratio,
             legend.key.size = unit(1 / 2, "picas"))
     ggsave(filename = paste0("fig_granulometria_", col_grupo, ".png"), plot = plot, width = 10, height = 5, dpi = 300)
