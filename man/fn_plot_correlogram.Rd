@@ -8,6 +8,7 @@ fn_plot_correlogram(
   data,
   col_pars,
   col_sitio,
+  col_factor = NULL,
   matriz,
   code_sitio,
   data_pars,

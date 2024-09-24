@@ -10,7 +10,7 @@ fn_plot_pca(
   col_sitio,
   col_valor,
   col_grupo = NULL,
-  ord_grupo = NULL,
+  ord_factor = NULL,
   matriz,
   data_pars,
   width = 6,
@@ -29,7 +29,7 @@ fn_plot_pca(
 
 \item{col_grupo}{string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.}
 
-\item{ord_grupo}{string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.}
+\item{ord_factor}{string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.}
 
 \item{matriz}{string que indica el nombre de la "matriz" de datos que se esta analizando. Sirve principalmente como ID para las salidas y para diferenciar entre sedimentos y aguas.}
 
@@ -71,9 +71,9 @@ matriz <- "agua"
 code_sitio <- "P-"
 data_pars <- readr::read_tsv("tabla_pars_master.tsv")
 col_grupo <- "zonas"
-ord_grupo <- c("Q5","Q3","Q2","Q1","L","Q4")
+ord_factor <- c("Q5","Q3","Q2","Q1","L","Q4")
 width <- 9
 height <- 8
-fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height,matriz = matriz,col_grupo = col_grupo,ord_grupo = ord_grupo)
+fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height,matriz = matriz,col_grupo = col_grupo,ord_factor = ord_factor)
 }
 }

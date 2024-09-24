@@ -12,7 +12,7 @@ fn_plot_granulometria(
   code_sitio,
   ord_sitio = "asc",
   col_grupo = NULL,
-  ord_grupo = NULL,
+  ord_factor = NULL,
   width = 8,
   height = 6,
   aspect_ratio = 1
@@ -33,7 +33,7 @@ fn_plot_granulometria(
 
 \item{col_grupo}{string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.}
 
-\item{ord_grupo}{string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.}
+\item{ord_factor}{string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.}
 
 \item{width}{ancho del gráfico. Por defecto, toma valor 8}
 
