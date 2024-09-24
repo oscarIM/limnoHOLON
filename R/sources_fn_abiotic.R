@@ -31,6 +31,10 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
   pars_gran <- c("LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN")
   patterns <- c("(?i)param", "(?i)resultado|(?i)valor")
   new_names <- c("col_pars", "col_valor")
+  ###usar la siguiente expresion =
+  #dplyr::rename(
+  #  col_pars = !!sym(col_pars),
+  #  col_valor = !!sym(col_valor),
   data_plot <- data_plot %>%
     dplyr::select(matches(patterns)) %>%
     dplyr::rename_at(vars(matches(patterns)), ~new_names)
@@ -852,4 +856,88 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
   #    )
   #  ggsave(filename = paste0("fig_granulometria_", col_grupo[1], "_", col_grupo[2], ".png"), plot = plot, width = 10, height = 5, dpi = 300)
   #}
+}
+
+#' @title fn_glm
+#' @description función para ajustar modelo glm para evaluar efecto de un factor(es) sobre la concenytraciób de parámetros fisicoquiímicos.
+#' @param data archivo entrada que tiene que tener, al menos, las columnas: sitio, parámetros (nombre o sigla), valor de parámetros. Tiene que estar en formato "long". Se recomida usar csv o tsv como formatos.
+#' @param col_pars string que indica el nombre de la columna en data que tiene los parámetros
+#' @param col_valor string que indica el nombre de la columna que tiene el valor de los parámetros.
+#' @param col_factor string que indica el factor para ajustar modelo glm
+
+#' @import tidyverse
+#' @return tablas y gráfios resultantes del modelo glm
+#' @export fn_glm
+#' @examples
+#' \dontrun{
+#' # figura sin grupos
+#' data <- readr::read_tsv("data.tsv")
+#' col_pars <- "Param"
+#' col_valor <- "Resultado"
+#' col_factor <- "Campaña"
+#' fn_glm(data = data, col_factor = col_factor, col_pars = col_pars,col_valor = col_valor)
+#' }
+fn_glm <- function(data, col_pars, col_valor, col_factor) {
+  vars <- c(col_pars, col_valor, col_factor)
+  # Selecciona y renombra las columnas dinámicamente
+  data <- data %>%
+    dplyr::select(all_of(vars)) %>%
+    dplyr::rename(
+      col_pars = !!sym(col_pars),
+      col_valor = !!sym(col_valor),
+      !!!setNames(col_factor, col_factor)
+    )
+  selected_pars <- data %>%
+    dplyr::group_by(col_pars) %>%
+    dplyr::summarise(
+      prom = mean(col_valor, na.rm = TRUE),
+      desvest = sd(col_valor, na.rm = TRUE),
+      cv_num = desvest / prom
+    ) %>%
+    dplyr::filter(cv_num > 0) %>%
+    dplyr::pull(col_pars)
+  # Filtrar y dividir los datos por grupo
+  data_glm <- data %>%
+    dplyr::filter(col_pars %in% selected_pars) %>%
+    dplyr::group_by(col_pars) %>%
+    dplyr::group_split() %>%
+    purrr::set_names(purrr::map(., ~ unique(.x$col_pars)))
+
+  # Construir la fórmula del modelo GLM
+  response <- "col_valor"
+  predictors <- col_factor  # Utiliza todos los factores proporcionados
+  formula_str <- paste(response, "~", paste(predictors, collapse = " + "))
+  formula <- as.formula(formula_str)
+
+  # Ajustar el modelo GLM para cada grupo de datos
+  models <- purrr::map(data_glm, ~ glm(formula = formula, data = ., na.action = na.omit, family = quasipoisson(link = "log")))
+
+  # Crear directorio para resultados
+  if (!dir.exists("res_glm/")) {
+    dir.create("res_glm/")
+  }
+  # Guardar gráficos de los modelos GLM
+  purrr::iwalk(models, ~ {
+    pdf(file = paste0("res_glm/", .y, ".pdf"))
+    par(mfrow = c(2, 2), oma = c(0, 0, 2, 0))
+    plot(.x)
+    dev.off()
+  })
+
+  # Generar tablas de ANOVA
+  anovas <- purrr::map(models, anova, test = "Chisq")
+  glm_table <- purrr::map_dfr(anovas, as.data.frame, .id = "Parámetros")
+  glm_table <- glm_table %>%
+    dplyr::mutate(efecto = rownames(glm_table)) %>%
+    dplyr::relocate(efecto)
+  rownames(glm_table) <- NULL
+
+  # Limpiar y guardar la tabla
+  glm_table <- glm_table %>%
+    dplyr::mutate(efecto = str_remove(efecto, "\\.\\.\\.[0-9]+")) %>%
+    dplyr::filter(efecto != "NULL") %>%
+    dplyr::mutate(Sig = ifelse(is.na(`Pr(>Chi)`) | `Pr(>Chi)` > 0.05, "", "+"))
+
+  write.table(glm_table, file = "table_aldo_format.glm.csv", sep = ";", na = "NA", dec = ",", row.names = FALSE, col.names = TRUE)
+  write_tsv(x = glm_table, file = "table_glm_correct_format.tsv")
 }
