@@ -604,7 +604,9 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_factor = NULL,
       scale_color_manual(name = "Tipo parámetro", values = cols_type, breaks = names(cols_type)) +
       guides(color = guide_legend(title.position = "top", override.aes = list(label = " "))) +
       geom_point(data = scores, mapping = aes(x = xvar, y = yvar)) +
-      geom_text(data = scores, mapping = aes(x = xvar, y = yvar, label = col_sitio), nudge_y = 0.1, family = "Arial")
+      geom_text(data = scores, mapping = aes(x = xvar, y = yvar, label = col_sitio), nudge_y = 0.1, family = "Arial") +
+      scale_x_continuous(expand = c(0.1, 0.1)) +
+      scale_y_continuous(expand = c(0.1, 0.1))
     ggsave(filename = paste0("fig_pca_", matriz, ".png"), plot = plot, device = "png", width = width, height = height)
   } else {
     to_pca <- data_pca %>%
@@ -667,7 +669,8 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_factor = NULL,
       geom_point(data = scores, mapping = aes(x = xvar, y = yvar), show.legend = F) +
       geom_text(data = scores, mapping = aes(x = xvar, y = yvar, label = col_sitio), nudge_y = 0.1, size = 2.5) +
       theme(text = element_text(family = "Arial")) +
-      scale_x_continuous(expand = c(0.1, 0.1))
+      scale_x_continuous(expand = c(0.1, 0.1)) +
+      scale_y_continuous(expand = c(0.1, 0.1))
     #+
     # xlim(-3,3)+
     # ylim(-3,3)
