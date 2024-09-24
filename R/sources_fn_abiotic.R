@@ -239,7 +239,9 @@ fn_plot_bar_abiotic  <- function(data, col_pars, col_sitio, col_valor, col_facto
         theme_bw() +
         theme(
           text = element_text(size = 10, family = "Arial"),
-          axis.text.x = element_text(angle = angle, vjust = 0.5, hjust = 1),
+          axis.text.x = element_text(angle = angle,
+                                     vjust = 0.5,
+                                     hjust = 0.5),
           aspect.ratio = aspect_ratio
         )
 
@@ -297,7 +299,7 @@ fn_plot_bar_abiotic  <- function(data, col_pars, col_sitio, col_valor, col_facto
           text = element_text(size = 10, family = "Arial"),
           aspect.ratio = aspect_ratio,
           axis.text.x = element_text(angle = angle,
-                                     hjust = 1,
+                                     hjust = 0.5,
                                      vjust = 0.5)
         )
       ggsave(filename = paste0("bar_pars_both_gr_", ord_sitio, "_", matriz, "_", unique(data$cats_pars), ".png"), plot = plot, width = width, height = height, dpi = 300)
@@ -766,10 +768,12 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
       theme(strip.placement = "outside",
             strip.background = element_rect(fill = "gray95"),
             text = element_text(size = 10, family = "Arial"),
-            axis.text.x = element_text(angle = angle, vjust = 0.5, hjust = 0.5),
+            axis.text.x = element_text(angle = angle,
+                                       vjust = 0.5,
+                                       hjust = 0.5),
             aspect.ratio = aspect_ratio,
             legend.key.size = unit(1 / 2, "picas"))
-    ggsave(filename = paste0("fig_granulometria_", col_grupo, ".png"), plot = plot, width = 10, height = 5, dpi = 300)
+    ggsave(filename = paste0("fig_granulometria_", col_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
      summ_data_plot <- data_plot %>%
       dplyr::group_by(col_grupo, col_pars) %>%
       dplyr::summarise(mean_par = mean(col_valor),
