@@ -502,7 +502,7 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, col_factor = NULL, ma
 #' height <- 8
 #' fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height,matriz = matriz,col_grupo = col_grupo,ord_factor = ord_factor)
 #' }
-fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, ord_factor = NULL, matriz, data_pars, width = 6, height = 6, dist = "euc") {
+fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_factor = NULL, ord_factor = NULL, matriz, data_pars, width = 6, height = 6, dist = "euc") {
   # aux fn: stolen from ggbiplot#
   get_data_pca_plot <- function(pca_obj) {
     choices <- 1:2
@@ -542,9 +542,9 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
   vars <- c(col_sitio, col_pars, col_valor)
   data_plot <- data %>% select(all_of(vars)) %>%
     dplyr::rename_at(vars, ~c("col_sitio", "col_pars", "col_valor"))
-   if (!is.null(col_grupo)) {
-    grupo <- data %>% pull({{ col_grupo }})
-    data_plot <- data_plot %>% mutate(col_grupo = grupo)
+   if (!is.null(col_factor)) {
+    grupo <- data %>% pull({{ col_factor }})
+    data_plot <- data_plot %>% mutate(col_factor = grupo)
   }
   selected_pars <- data_plot %>%
     dplyr::group_by(col_pars) %>%
@@ -562,7 +562,7 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
     dplyr::filter(col_pars %in% selected_pars) %>%
     dplyr::left_join(., data_pars, by = c("col_pars" = "Param"))
   # begin pca plots
-  if (is.null(col_grupo)) {
+  if (is.null(col_factor)) {
     to_pca <- data_pca %>%
       dplyr::select(col_pars, col_valor, col_sitio) %>%
       tidyr::pivot_wider(names_from = col_pars, values_from = col_valor)
@@ -608,16 +608,16 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
     ggsave(filename = paste0("fig_pca_", matriz, ".png"), plot = plot, device = "png", width = width, height = height)
   } else {
     to_pca <- data_pca %>%
-      dplyr::select(col_pars, col_valor, col_sitio, col_grupo) %>%
+      dplyr::select(col_pars, col_valor, col_sitio, col_factor) %>%
       tidyr::pivot_wider(names_from = col_pars, values_from = col_valor)
-    grupo <- data %>% pull({{ col_grupo }})
+    grupo <- data %>% pull({{col_factor}})
     begin <- data_pca %>%
-      dplyr::select(col_sitio, col_grupo) %>%
+      dplyr::select(col_sitio, col_factor) %>%
       ncol(.) + 1
     pca <- prcomp(to_pca[begin:ncol(to_pca)], scale = T)
     sco <- scores(pca)
     # to_pca$factor_col_grupo <- as.factor(to_pca[[col_grupo]])
-    test <- adonis2(sco ~ as.factor(col_grupo), data = to_pca, method = dist)
+    test <- adonis2(sco ~ as.factor(col_factor), data = to_pca, method = dist)
     prop_pca <- pca$sdev^2 / sum(pca$sdev^2)
     tmp_data <- get_data_pca_plot(pca_obj = pca)
     directions <- tmp_data$directions
@@ -632,13 +632,13 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
       order_grupo <- ord_factor
     } else {
       order_grupo <- scores %>%
-        dplyr::pull(col_grupo) %>%
+        dplyr::pull(col_factor) %>%
         unique() %>%
         sort()
     }
     names(col_pca) <- unique(order_grupo)
     ## cambiar esta mierda#
-    scores$gr <- factor(scores$col_grupo, levels = order_grupo)
+    scores$gr <- factor(scores$col_factor, levels = order_grupo)
     plot <- ggplot(data = scores, mapping = aes(x = xvar, y = yvar, fill = gr, group = gr)) +
       stat_ellipse(level = 0.68, geom = "polygon") +
       # ggforce::geom_mark_ellipse(expand = unit(0.2,"mm"),linewidth = 0) +
@@ -648,10 +648,10 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
         x = paste0("Primera Componente Principal (", percent(prop_pca[1]), ")", sep = ""),
         y = paste0("Segunda Componente Principal (", percent(prop_pca[2]), ")", sep = ""),
         title = paste0("Permanova R² = ", round(test[[3]][1], 2), ", valor-p = ", round(test[[5]][1], 5)),
-        subtitle = paste0("Factor Permanova : ", str_to_sentence(col_grupo))
+        subtitle = paste0("Factor Permanova : ", str_to_sentence(col_factor))
       ) +
       theme_bw() +
-      scale_fill_manual(name = str_to_sentence(col_grupo), values = alpha(col_pca, 0.4), labels = names(col_pca)) +
+      scale_fill_manual(name = str_to_sentence(col_factor), values = alpha(col_pca, 0.4), labels = names(col_pca)) +
       geom_segment(
         data = directions,
         mapping = aes(x = 0, y = 0, xend = xvar, yend = yvar, color = cats_pars),
@@ -670,7 +670,7 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
     #+
     # xlim(-3,3)+
     # ylim(-3,3)
-    ggsave(filename = paste0("fig_pca_", matriz, "_", col_grupo, ".png"), plot = plot, device = "png", width = width, height = height)
+    ggsave(filename = paste0("fig_pca_", matriz, "_", col_factor, ".png"), plot = plot, device = "png", width = width, height = height)
   }
 }
 
