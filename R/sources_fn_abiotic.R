@@ -542,9 +542,9 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_factor = NULL,
   vars <- c(col_sitio, col_pars, col_valor)
   data_plot <- data %>% select(all_of(vars)) %>%
     dplyr::rename_at(vars, ~c("col_sitio", "col_pars", "col_valor"))
-   if (!is.null(col_factor)) {
-    grupo <- data %>% pull({{ col_factor }})
-    data_plot <- data_plot %>% mutate(col_factor = grupo)
+  if (!is.null(col_factor)) {
+    grupo <- data %>% dplyr::pull({{ col_factor }})
+    data_plot <- data_plot %>% dplyr::mutate(col_factor = grupo)
   }
   selected_pars <- data_plot %>%
     dplyr::group_by(col_pars) %>%
@@ -557,7 +557,7 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_factor = NULL,
     dplyr::pull(col_pars)
   if (stringr::str_detect(string = matriz, pattern = "(?i)sedimento?")) {
     selected_pars <- setdiff(selected_pars, pars_gran)
-    }
+  }
   data_pca <- data_plot %>%
     dplyr::filter(col_pars %in% selected_pars) %>%
     dplyr::left_join(., data_pars, by = c("col_pars" = "Param"))
@@ -627,7 +627,7 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_factor = NULL,
     # scores$gr <- grupos
     directions$gr <- "constante"
     # stat_ellipse((level = 0.68, geom = "polygon"))
-    col_pca <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(length(unique(scores$col_grupo)))
+    col_pca <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(length(unique(scores$col_factor)))
     if (!is.null(ord_factor)) {
       order_grupo <- ord_factor
     } else {
