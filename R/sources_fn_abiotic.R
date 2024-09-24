@@ -337,14 +337,18 @@ fn_plot_bar_abiotic  <- function(data, col_pars, col_sitio, col_valor, col_facto
 #' height <- 9
 #' fn_plot_correlogram(data = data, col_pars = col_pars, col_sitio = col_sitio, matriz = matriz, code_sitio, code_sitio, data_pars = data_pars, width = width,height = width)
 #' }
-fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, data_pars, width = 6, height = 6) {
+
+fn_plot_correlogram <- function(data, col_pars, col_sitio, col_factor = NULL, matriz, code_sitio, data_pars, width = 6, height = 6) {
   # setting vars#
   vars <- c(col_sitio, col_pars, col_valor)
+  if (!is.null(col_factor)) {
+    vars <- c(vars, col_factor)
+  }
   pars_gran <- c("LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN")
   order_type <- c("Físico", "Químico", "Nutriente", "Metal", "Orgánicos e inorgánicos", "Biológico")
   data <- data %>%
     dplyr::select(all_of(vars)) %>%
-    dplyr::rename_at(vars, ~c("col_sitio", "col_pars", "col_valor"))
+    dplyr::rename_at(vars, ~c("col_sitio", "col_pars", "col_valor", if (!is.null(col_factor)) "col_factor"))
   # setting base dataframe#
   selected_pars <- data %>%
     dplyr::group_by(col_pars) %>%
@@ -358,14 +362,25 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, d
   if (stringr::str_detect(string = matriz, pattern = "(?i)sedimento?")) {
     selected_pars <- setdiff(selected_pars, pars_gran)
   }
-  data_plot <- dplyr::left_join(data, data_pars, by = c("col_pars" = "Param")) %>%
-    dplyr::slice(order(factor(cats_pars, levels = order_type))) %>%
-    dplyr::filter(col_pars %in% selected_pars) %>%
-    dplyr::select(c(col_pars, col_valor, col_sitio)) %>%
-    dplyr::distinct() %>%
-    tidyr::pivot_wider(names_from = col_pars, values_from = col_valor) %>%
-    dplyr::select(-c(col_sitio)) %>%
-    as.data.frame() # %>%
+  if (is.na(col_factor)) {
+    data_plot <- dplyr::left_join(data, data_pars, by = c("col_pars" = "Param")) %>%
+      dplyr::slice(order(factor(cats_pars, levels = order_type))) %>%
+      dplyr::filter(col_pars %in% selected_pars) %>%
+      dplyr::select(c(col_pars, col_valor, col_sitio)) %>%
+      dplyr::distinct() %>%
+      tidyr::pivot_wider(names_from = col_pars, values_from = col_valor) %>%
+      dplyr::select(-c(col_sitio)) %>%
+      as.data.frame() # %>%
+
+  } else {
+    data_plot <- dplyr::left_join(data, data_pars, by = c("col_pars" = "Param")) %>%
+      dplyr::slice(order(factor(cats_pars, levels = order_type))) %>%
+      dplyr::filter(col_pars %in% selected_pars) %>%
+      dplyr::select(c(col_pars, col_valor,col_factor, col_sitio)) %>%
+      tidyr::pivot_wider(names_from = col_pars, values_from = col_valor) %>%
+      as.data.frame() %>%
+      dplyr::select(-c(col_sitio, col_factor))
+  }
   n_sitios <- data %>%
     distinct(col_sitio) %>%
     nrow()
@@ -375,7 +390,7 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, d
   sitios_tmp <- str_extract_all(data$col_sitio, "\\d+", simplify = T) %>%
     as.numeric() %>%
     unique()
-  rownames(data_plot) <- paste0(code_sitio, sitios_tmp)
+  #rownames(data_plot) <- paste0(code_sitio, sitios_tmp)
   # correlation r matrix#
   coor_r <- rstatix::cor_mat(data_plot,
                              method = "spearman",
