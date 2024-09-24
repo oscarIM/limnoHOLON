@@ -627,7 +627,7 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_factor = NULL,
     # scores$gr <- grupos
     directions$gr <- "constante"
     # stat_ellipse((level = 0.68, geom = "polygon"))
-    col_pca <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(length(unique(scores$col_factor)))
+    col_pca <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Accent"))(length(unique(scores$col_factor)))
     if (!is.null(ord_factor)) {
       order_grupo <- ord_factor
     } else {
