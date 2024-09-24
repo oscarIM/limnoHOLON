@@ -119,7 +119,7 @@ fn_plot_bar_abiotic  <- function(data, col_pars, col_sitio, col_valor, col_facto
     dplyr::select(all_of(vars)) %>%
     dplyr::rename_at(vars, ~c("col_sitio", "col_pars", "col_unidad", "col_valor"))
   if (!is.null(col_factor) && length(col_factor) == 1) {
-    grupo <- data %>% dplyr::pull({{col_factor }})
+    grupo <- data %>% dplyr::pull({{col_factor}})
     data_plot <- data_plot %>% dplyr::mutate(col_factor = grupo)
   }
   if (!is.null(col_factor) && length(col_factor) == 2) {
@@ -206,7 +206,7 @@ fn_plot_bar_abiotic  <- function(data, col_pars, col_sitio, col_valor, col_facto
     readr::write_tsv(x = summ_data_plot, "data_from_bar_plot.tsv")
   }
   if (!is.null(col_factor) && length(col_factor) == 1) {
-    if (!is.null(ord_grupo)) {
+    if (!is.null(ord_factor)) {
       order_grupo <- ord_factor
     } else {
       order_grupo <- data_plot %>%
@@ -443,7 +443,7 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, d
 #' @param matriz string que indica el nombre de la "matriz" de datos que se esta analizando. Sirve principalmente como ID para las salidas y para diferenciar entre sedimentos y aguas.
 #' @param data_pars "dataframe" que contenga los parámetros (sus siglas) tal como aparecen en el "dataframe" de entrada, junto a un columna que indique a que tipo de parámetro pertenece (i.e. Físico, Químico, Nutriente, Metal, Orgánico e inorgánico y Biológico).Las columnas se tienen que llamar: Param y cat_pars
 #' @param col_grupo string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.
-#' @param ord_grupo string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
+#' @param ord_factor string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
 #' @param width ancho del gráfico. Por defecto, toma valor 6
 #' @param height alto del gráfico. Por defecto, toma valor 6
 #' @param dist cadena de texto que indica la distancia a usar para el calculo de la disimilitud para Permanova ("euc", "bray"). Por defecto, toma valor "euc".
@@ -476,12 +476,12 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, matriz, code_sitio, d
 #' code_sitio <- "P-"
 #' data_pars <- readr::read_tsv("tabla_pars_master.tsv")
 #' col_grupo <- "zonas"
-#' ord_grupo <- c("Q5","Q3","Q2","Q1","L","Q4")
+#' ord_factor <- c("Q5","Q3","Q2","Q1","L","Q4")
 #' width <- 9
 #' height <- 8
-#' fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height,matriz = matriz,col_grupo = col_grupo,ord_grupo = ord_grupo)
+#' fn_plot_pca(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor, data_pars = data_pars,width = width, height = height,matriz = matriz,col_grupo = col_grupo,ord_factor = ord_factor)
 #' }
-fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, ord_grupo = NULL, matriz, data_pars, width = 6, height = 6, dist = "euc") {
+fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, ord_factor = NULL, matriz, data_pars, width = 6, height = 6, dist = "euc") {
   # aux fn: stolen from ggbiplot#
   get_data_pca_plot <- function(pca_obj) {
     choices <- 1:2
@@ -607,8 +607,8 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
     directions$gr <- "constante"
     # stat_ellipse((level = 0.68, geom = "polygon"))
     col_pca <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(length(unique(scores$col_grupo)))
-    if (!is.null(ord_grupo)) {
-      order_grupo <- ord_grupo
+    if (!is.null(ord_factor)) {
+      order_grupo <- ord_factor
     } else {
       order_grupo <- scores %>%
         dplyr::pull(col_grupo) %>%
@@ -662,7 +662,7 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
 #' @param code_sitio string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.
 #' @param col_valor string que indica el nombre de la columna que tiene el valor de los parámetros.
 #' @param col_grupo string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.
-#' @param ord_grupo string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
+#' @param ord_factor string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
 #' @param width ancho del gráfico. Por defecto, toma valor 8
 #' @param height alto del gráfico. Por defecto, toma valor 6
 #' @param aspect_ratio relación alto-ancho. Por defecto, toma valor 1.
@@ -684,7 +684,7 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_grupo = NULL, 
 #' height <- 4
 #' fn_plot_granulometria(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor,ord_sitio = ord_sitio, width = 8,height = 6, aspect_ratio = 1, code_sitio = code_sitio)
 #' }
-fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sitio, ord_sitio = "asc", col_grupo = NULL, ord_grupo = NULL, width = 8, height = 6, aspect_ratio = 1) {
+fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sitio, ord_sitio = "asc", col_grupo = NULL, ord_factor = NULL, width = 8, height = 6, aspect_ratio = 1) {
   # setting vars#
   pars_gran <- c("LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN")
   vars <- c(col_sitio, col_pars, col_valor)
@@ -742,8 +742,8 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
     readr::write_tsv(x = summ_data_plot, "data_from_granulometry.tsv")
   }
   if (!is.null(col_grupo) && length(col_grupo) == 1) {
-    if (!is.null(ord_grupo)) {
-      order_grupo <- ord_grupo
+    if (!is.null(ord_factor)) {
+      order_grupo <- ord_factor
     } else {
       order_grupo <- data_plot %>%
         dplyr::pull(col_grupo) %>%
