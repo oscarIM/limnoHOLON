@@ -666,7 +666,8 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_factor = NULL,
       guides(color = guide_legend(override.aes = list(label = " "))) +
       geom_point(data = scores, mapping = aes(x = xvar, y = yvar), show.legend = F) +
       geom_text(data = scores, mapping = aes(x = xvar, y = yvar, label = col_sitio), nudge_y = 0.1, size = 2.5) +
-      theme(text = element_text(family = "Arial"))
+      theme(text = element_text(family = "Arial")) +
+      coord_cartesian(xlim = c(min(scores$xvar) - 0.5, max(scores$xvar) + 0.5))
     #+
     # xlim(-3,3)+
     # ylim(-3,3)
