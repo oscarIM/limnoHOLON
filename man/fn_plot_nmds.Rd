@@ -77,7 +77,7 @@ width <- 6
 title_factor <- "Area"
 fn_plot_nmds(data = data,col_sitio = col_sitio, col_taxa = col_taxa,col_factor = col_factor, col_N = col_N, dist = dist, taxa_id = taxa_id, height = height, width = width,title_factor = title_factor)
 # plot con factor de agrupamiento: hace permanova y colorea elipses, con orden en la leyenda según orden preferido y con réplica#
-# fake data
+fake data
 data <- read_tsv("data_fitoplancton.tsv")
 data <- data \%>\% mutate(grupo = if_else(Sitio \%in\% c("P-1", "P-2", "P3"), "area1", "area2"))
 col_sitio <- "Sitio"

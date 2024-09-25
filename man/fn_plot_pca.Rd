@@ -9,7 +9,7 @@ fn_plot_pca(
   col_pars,
   col_sitio,
   col_valor,
-  col_grupo = NULL,
+  col_factor = NULL,
   ord_factor = NULL,
   matriz,
   data_pars,
@@ -27,8 +27,6 @@ fn_plot_pca(
 
 \item{col_valor}{string que indica el nombre de la columna que tiene el valor de los parámetros.}
 
-\item{col_grupo}{string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.}
-
 \item{ord_factor}{string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.}
 
 \item{matriz}{string que indica el nombre de la "matriz" de datos que se esta analizando. Sirve principalmente como ID para las salidas y para diferenciar entre sedimentos y aguas.}
@@ -42,6 +40,8 @@ fn_plot_pca(
 \item{dist}{cadena de texto que indica la distancia a usar para el calculo de la disimilitud para Permanova ("euc", "bray"). Por defecto, toma valor "euc".}
 
 \item{code_sitio}{string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.}
+
+\item{col_grupo}{string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.}
 }
 \value{
 gráfico pca

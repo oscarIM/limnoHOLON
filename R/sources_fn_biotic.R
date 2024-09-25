@@ -366,13 +366,13 @@ fn_plot_pie <- function(data, taxa_grupo, col_N, cumsum_cut = 90, n_size = 5, wi
   n_low <- filter(sum_taxa, n <= n_size)
 
   data_list_high <- data_plot %>%
-    filter(taxa_grupo %in% n_high$taxa_grupo) %>%
-    group_split(taxa_grupo) %>%
-    setNames(map(., ~ unique(as.character(.$taxa_grupo))))
+    dplyr::filter(taxa_grupo %in% n_high$taxa_grupo) %>%
+    dplyr::group_split(taxa_grupo) %>%
+    setNames(purrr::map(., ~ unique(as.character(.$taxa_grupo))))
   data_list_low <- data_plot %>%
-    filter(taxa_grupo %in% n_low$taxa_grupo) %>%
-    group_split(taxa_grupo) %>%
-    setNames(map(., ~ unique(as.character(.$taxa_grupo))))
+    dplyr::filter(taxa_grupo %in% n_low$taxa_grupo) %>%
+    dplyr::group_split(taxa_grupo) %>%
+    setNames(purrr::map(., ~ unique(as.character(.$taxa_grupo))))
 
   num_rows_high <- map_int(data_list_high, ~ n_distinct(.$col_taxa))
   data_list_high <- data_list_high[order(num_rows_high, decreasing = TRUE)]
@@ -480,7 +480,7 @@ fn_plot_pie <- function(data, taxa_grupo, col_N, cumsum_cut = 90, n_size = 5, wi
 #' title_factor <- "Area"
 #' fn_plot_nmds(data = data,col_sitio = col_sitio, col_taxa = col_taxa,col_factor = col_factor, col_N = col_N, dist = dist, taxa_id = taxa_id, height = height, width = width,title_factor = title_factor)
 #' # plot con factor de agrupamiento: hace permanova y colorea elipses, con orden en la leyenda según orden preferido y con réplica#
-#' # fake data
+#' fake data
 #' data <- read_tsv("data_fitoplancton.tsv")
 #' data <- data %>% mutate(grupo = if_else(Sitio %in% c("P-1", "P-2", "P3"), "area1", "area2"))
 #' col_sitio <- "Sitio"
@@ -537,12 +537,12 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
       dplyr::distinct()
     data_nmds <-  data_plot %>%
       dplyr::group_by(col_sitio, col_taxa) %>%
-      dplyr::summarise(col_N = sum(col_N, na.rm = TRUE)) %>%
+      dplyr::summarise(col_N = sum(col_N, na.rm = TRUE), .groups = "drop") %>%
       tidyr::pivot_wider(names_from = col_taxa, values_from = col_N, values_fill = 0) %>%
       dplyr::ungroup() %>%
       dplyr::select(-c(col_sitio)) %>%
       as.data.frame()
-    data_nmds <- bind_cols(labels, data_nmds) %>% na.omit()
+    data_nmds <- dplyr::bind_cols(labels, data_nmds) %>% na.omit()
     begin <- ncol(labels) + 1
     NMDS1 <- metaMDS(data_nmds[, begin:ncol(data_nmds)], k = 2, trymax = 5000, distance = dist, trace = FALSE)
     sco_sites <- scores(NMDS1)[[1]]
@@ -574,7 +574,7 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
       dplyr::distinct()
     data_nmds <-  data_plot %>%
       dplyr::group_by(col_sitio,col_taxa, col_replica) %>%
-      dplyr::summarise(col_N = sum(col_N, na.rm = TRUE)) %>%
+      dplyr::summarise(col_N = sum(col_N, na.rm = TRUE), .groups = "drop") %>%
       tidyr::pivot_wider(names_from = col_taxa, values_from = col_N, values_fill = 0) %>%
       dplyr::ungroup() %>%
       dplyr::select(-c(col_sitio, col_replica)) %>%
@@ -590,7 +590,7 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
              main = paste0("NMDS de ", str_to_sentence(taxa_id)))
     orditorp(NMDS1,
              display = "sites",
-             label = paste0(data_nmds[["col_sitio"]], " — ", data_nmds[["col_replica"]]),
+             label = paste0(data_nmds[["col_sitio"]], "—", data_nmds[["col_replica"]]),
              cex = 0.5,
              air = 0.005)
     #ordiellipse(NMDS1,
@@ -631,7 +631,7 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
       dplyr::distinct()
     data_nmds <-  data_plot %>%
       dplyr::group_by(col_sitio,col_taxa, col_factor) %>%
-      dplyr::summarise(col_N = sum(col_N, na.rm = TRUE)) %>%
+      dplyr::summarise(col_N = sum(col_N, na.rm = TRUE), .groups = "drop") %>%
       tidyr::pivot_wider(names_from = col_taxa, values_from = col_N, values_fill = 0) %>%
       dplyr::ungroup() %>%
       dplyr::select(-c(col_sitio, col_factor)) %>%
@@ -697,17 +697,17 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
       dplyr::distinct()
     data_nmds <-  data_plot %>%
       dplyr::group_by(col_sitio,col_taxa, col_factor, col_replica) %>%
-      dplyr::summarise(col_N = sum(col_N, na.rm = TRUE)) %>%
+      dplyr::summarise(col_N = sum(col_N, na.rm = TRUE), .groups = "drop") %>%
       tidyr::pivot_wider(names_from = col_taxa, values_from = col_N, values_fill = 0) %>%
       dplyr::ungroup() %>%
       dplyr::select(-c(col_sitio, col_factor, col_replica)) %>%
       as.data.frame()# %>%
     #    #dplyr::select(which(colSums(.) / sum(.) > 0.01))
-    data_nmds <- bind_cols(labels, data_nmds) %>% na.omit()
+    data_nmds <- dplyr::bind_cols(labels, data_nmds) %>% na.omit()
     begin <- ncol(labels) + 1
     NMDS1 <- metaMDS(data_nmds[, begin:ncol(data_nmds)], k = 2, trymax = 5000, distance = dist, trace = FALSE)
     sco_sites <- scores(NMDS1)[[1]]
-    data_nmds <- bind_cols(sco_sites, data_nmds)
+    data_nmds <- dplyr::bind_cols(sco_sites, data_nmds)
     formula <- paste("sco_sites", "~", "col_factor")
     list_test <- purrr::map(formula, ~adonis2(as.formula(.), data = data_nmds, method = "euc"))
     names(list_test) <- title_factor
@@ -716,13 +716,13 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
     factor <- sig_factor$factor[1]
     color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Dark2"))(length(unique(data_nmds$col_factor)))
     names(color) <- ord
-    png(filename = paste0("NMDS_with_factor_", taxa_id, ".png"), width = width,height = height,units = "in",
-        res = 300, family = "Arial")
+    png(filename = paste0("NMDS_with_factor_", taxa_id, ".png"), width = width,height = height,units = "in", res = 300, family = "Arial")
+
     ordiplot(NMDS1,type = "n", main = paste0("NMDS ",str_to_sentence(taxa_id), " (PERMANOVA R² = ", round(sig_factor$R2[1], 2),"; P = ", round(sig_factor$p[1],3),")"), cex.main = 0.9)
     mtext(paste0("Factor Permanova: ", title_factor), side = 3, line = -4, cex = 0.9, outer = TRUE)
     orditorp(NMDS1,
              display = "sites",
-             label = paste0(data_nmds[["col_sitio"]], " — ", data_nmds[["col_replica"]]),
+             label = paste0(data_nmds[["col_sitio"]], "—", data_nmds[["col_replica"]]),
              cex = 0.5,
              air = 0.005)
     ordiellipse(NMDS1,
@@ -745,13 +745,12 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
            v = 0,
            lty = 3,
            col = "gray0")
+    ordispider(NMDS1, groups = data_nmds[["col_factor"]], col =  color[names(color)])
     legend("bottomleft", paste0("Stress = ", round(NMDS1$stress, 3)), bty = "n", cex = 0.5, text.font = 3)
     legend('topright', title = title_factor, legend = names(color), col = color, pch = 16)
     dev.off()
   }
 }
-
-
 #' @title fn_plot_div_index
 #' @description función para graficar indices de diversidad a lo largo de estaciones o sitios de muestreo
 #' @param data archivo entrada que tiene que tener, al menos, las columnas que contengan a los taxones, N y sitios de muestreo. Tiene que estar en formato "long". Se recomida usar csv o tsv como formatos.
@@ -837,7 +836,7 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
           stringr::str_detect(col_N, "4") ~ 6,
           stringr::str_detect(col_N, "5") ~ 7,
           TRUE ~ as.numeric(col_N)))
-    }
+  }
   if (length(sitios_ord) <= 10) {
     angle <- 0
   } else {
@@ -878,7 +877,7 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
       theme_bw() +
       theme(strip.background = element_rect(fill = "gray95"),
             axis.text.x = element_text(angle = angle,
-                                       hjust = 1,
+                                       hjust = 0.5,
                                        vjust = 0.5)) +
       labs(y = "Valores", x = "Estaciones")
     ggsave(filename = paste0("plot_div_index_",taxa_id, ".png"), plot = plot,device = "png",width = width, height = height, dpi = 300)
@@ -892,13 +891,13 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
         dplyr::pull(col_factor) %>%
         unique() %>%
         sort()
-      } else {
-        ord <- ord_factor
-      }
+    } else {
+      ord <- ord_factor
+    }
     data_plot <- data_plot %>% mutate(col_factor = factor(col_factor, levels = ord))
     data_index <-  data_plot %>%
       dplyr::group_by(col_factor, col_sitio, col_taxa) %>%
-      dplyr::summarise(col_N = fun(col_N, na.rm = TRUE)) %>%
+      dplyr::summarise(col_N = fun(col_N, na.rm = TRUE), .groups = "drop") %>%
       tidyr::pivot_wider(names_from = col_taxa, values_from = col_N, values_fill = 0) %>%
       dplyr::ungroup()
     index_labels <- data_index %>% dplyr::select(col_factor, col_sitio)
@@ -927,7 +926,15 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
       )
     }) %>%
       tidyr::separate(., col = Test, into = c("vars", "factor"), sep = " by ", remove = FALSE)
-    titles <- paste0("Kruskal-Wallis: ", signif(allres_test[["ChiSquare"]], 4), "; valor-p: ", signif(allres_test[["p_value"]], 4))
+    create_p_string <- function(p_value) {
+      if (p_value < 0.05) {
+        return("valor-p < 0.05")
+      } else {
+        return(paste("valor-p =", format(p_value, scientific = FALSE, digits = 4)))
+      }
+    }
+    p_strings <- sapply(allres_test$p_value, create_p_string)
+    titles <- paste0("Kruskal-Wallis: ", signif(allres_test[["ChiSquare"]], 4), "; ", p_strings)
     x_axis <- "col_sitio"
     fn_plot <- function(data, x_axis, var, title){
       #data <- data %>% dplyr::mutate(Zona = factor(Zona, levels = zonas_ord))
@@ -944,7 +951,7 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
         theme_bw() +
         theme(strip.background = element_rect(fill = "gray95"),
               axis.text.x = element_text(angle = angle,
-                                         hjust = 1,
+                                         hjust = 0.5,
                                          vjust = 0.5)) +
         ggtitle(title)
     }
@@ -954,5 +961,214 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
     panel_2 <- list_plots[[3]]/list_plots[[4]] + patchwork::plot_annotation(tag_levels = list(c('a', 'b'), '1'), tag_suffix = ")") + patchwork::plot_layout(axis_titles = "collect")
     ggsave(filename = paste0("plot_div_index_2_",taxa_id, ".png"), panel_2, width = width, height = height, dpi = 300)
     readr::write_tsv(summ_index, file = "data_summ_index.tsv")
+  }
+}
+
+
+#' @title fn_plot_treemap
+#' @description función para graficar abundancia de taxones por taxa por sitios o zonas en forma de treemap
+#' @param data archivo entrada que tiene que tener, al menos, las columnas que contengan a los taxones, N y sitios de muestreo. Tiene que estar en formato "long". Se recomida usar csv o tsv como formatos.
+#' @param col_N cadena de texto que indica el nombre de la columna que contiene el N (abundancia) en la base de datos de entrada.
+#' @param col_sitio cadena de texto que indica el nombre de la columna que contiene los sitios de muestreo en la base de datos de entrada.
+#' @param col_taxa cadena de texto que indica el nombre de la columna que contiene los taxones (generalmente se llama especie, taxa, sigla) en la base de datos de entrada.
+#' @param col_zona cadena de texto que indica el nombre de la columna que contiene al factor de agrupamiento (zonas, campañas, etc) en la base de datos de entrada. Por defecto, Nulo.
+#' @param col_facet cadena de texto que indica el nombre de la columna que indica la variable para hacer el facet. Si no se proporciona orden , asume el orden  de la variable en el dataframae
+#' @param taxa_id cadena de texto que indica el nombre del "grupo funcional" al cual pertenecen los taxones ("fitoplancton", "zooplancton", "macrofitas", "perifiton", "ictiofauna",etc.).
+#' @param height alto del gráfico. Por defecto, toma valor 10.
+#' @param width ancho del gráfico. Por defecto, toma valor 8.
+#' @import rlang
+#' @import tidyverse
+#' @import treemapify
+#' @return gráfico treemap.
+#' @export fn_plot_treemap
+#' @examples
+#' \dontrun{
+#' data <- read_tsv("data_fitoplancton_integrado.tsv")
+#' col_N <- "N"
+#' col_facet <- "Campaña"
+#' col_sitio <- "Sitio"
+#' ord_facet <- c("Verano 2024", "Invierno 2024")
+#' taxa_id <- "fitoplancton"
+#' taxa_group <- "Clase"
+#' width <- 8
+#' height <- 10
+#' fn_plot_treemap(data = data,col_facet = col_facet,ord_facet = ord_facet,col_sitio = col_sitio,col_N = col_N,taxa_id = taxa_id,taxa_group = taxa_group,width = width,height = height)
+#' }
+fn_plot_treemap <- function(data, col_sitio = NULL, col_N, col_facet = NULL, ord_facet = NULL, col_zonas = NULL, taxa_id, taxa_group, width = 8, height = 10) {
+  options(scipen = 999)
+  # setting vars#
+  vars <- c(taxa_group, col_N, col_facet, col_zonas, col_sitio)
+  # Selecciona y renombra las columnas dinámicamente
+  data_plot <- data %>%
+    dplyr::select(all_of(vars)) %>%
+    dplyr::rename(
+      taxa_group = !!sym(taxa_group),
+      col_N = !!sym(col_N),
+      !!!if (!is.null(col_zonas)) setNames(col_zonas, "col_zonas") else NULL,
+      !!!if (!is.null(col_facet)) setNames(col_facet, "col_facet") else NULL,
+      !!!if (!is.null(col_sitio)) setNames(col_sitio, "col_sitio") else NULL
+    )
+  gr_vars <- names(data_plot)
+  gr_vars <- setdiff(gr_vars, "col_N")
+  data_plot <- data_plot %>%
+    dplyr::group_by(dplyr::across(all_of(gr_vars))) %>%
+    dplyr::summarise(col_N = mean(col_N), .groups = "drop") %>%
+    dplyr::ungroup()
+  ord_class <- data_plot %>%
+    dplyr::group_by(taxa_group) %>%
+    dplyr::summarise(total = sum(col_N), .groups = "drop") %>%
+    dplyr::arrange(desc(total)) %>%
+    dplyr::pull(taxa_group)
+  data_plot <- data_plot %>% dplyr::mutate(taxa_group = factor(taxa_group, levels = ord_class))
+  # if (!is.null(col_facet)) {
+  #  data_plot <- data_plot %>%
+  #    dplyr::mutate(col_facet = factor(col_facet, levels = ord_facet))
+  # }
+  #write_csv(data_plot, file = paste0("data_plot_treemap_",output_id, ".csv"))
+  full_cols <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(24)
+  names(full_cols) <- c("Bacillariophyceae", "Insecta", "Chlorophyceae", "Zygnematophyceae", "Fragilariophyceae",   "Cyanophyceae", "Coscinodiscophyceae", "Malacostraca", "Clitellata", "Entognatha", "Gastropoda", "Dinophyceae",  "Adenophorea", "Bivalvia", "Ostracoda", "Trebouxiophyceae", "Euglenophyceae", "Arachnida", "Copepoda","Chrysophyceae", "Branchiopoda", "Cryptophyceae", "Rhabditophora", "Ulvophyceae")
+  class <- as.character(unique(data_plot$taxa_group))
+  col <- full_cols[class]
+  if (any(stringr::str_detect(string = gr_vars,pattern = "sitio"))) {
+    plot <- ggplot(data = data_plot,mapping =  aes(area = col_N, fill = taxa_group, subgroup = as.factor(col_sitio)), label = as.character(col_sitio)) +
+      geom_treemap() +
+      facet_wrap(~factor(col_facet, levels = ord_facet), ncol = 1, scales = "free") +
+      geom_treemap(color = "white") +
+      geom_treemap_subgroup_border(color = "gray40", size = 1.5) +
+      geom_treemap_subgroup_text(place = "centre", size = 8) +
+      theme_void() +
+      #scale_fill_paletteer_d("palettetown::bayleef")
+      scale_fill_manual(taxa_group, values = col) +
+      guides(fill = guide_legend(ncol = 1))
+    ggsave(filename = paste0("treemap_", taxa_id, "_by_", taxa_group, ".png"), plot = plot, width = width , height = height, dpi = 300)
+  }
+  if (any(stringr::str_detect(string = gr_vars,pattern = "zona"))){
+    plot <- ggplot(data_plot, aes(area = col_N, fill = taxa_group, subgroup = as.factor(col_zonas)), label = as.character(col_zonas)) +
+      geom_treemap() +
+      facet_wrap(~factor(col_facet, levels = ord_facet), ncol = 1, scales = "free")+
+      geom_treemap(color = "white") +
+      geom_treemap_subgroup_border(color = "gray40", size = 1.5) +
+      geom_treemap_subgroup_text(place = "centre", size = 8) +
+      theme_void() +
+      #scale_fill_paletteer_d("palettetown::bayleef")
+      scale_fill_manual(taxa_group, values = col) +
+      guides(fill = guide_legend(ncol = 1))
+    ggsave(filename = paste0("treemap_", taxa_id, "_by_", taxa_group, ".png"), plot = plot, width = width , height = height, dpi = 300)
+  }
+}
+
+#' @title fn_plot_spec_rich
+#' @description función para graficar riqueza de taxones por taxa por sitios o zonas en grafico de barra
+#' @param data archivo entrada que tiene que tener, al menos, las columnas que contengan a los taxones, N y sitios de muestreo. Tiene que estar en formato "long". Se recomida usar csv o tsv como formatos.
+#' @param col_N cadena de texto que indica el nombre de la columna que contiene el N (abundancia) en la base de datos de entrada.
+#' @param col_sitio cadena de texto que indica el nombre de la columna que contiene los sitios de muestreo en la base de datos de entrada. Puede ser null
+#' @param col_taxa cadena de texto que indica el nombre de la columna que contiene los taxones (generalmente se llama especie, taxa, sigla) en la base de datos de entrada.
+#' @param col_zona cadena de texto que indica el nombre de la columna que contiene al factor de agrupamiento (zonas, campañas, etc) en la base de datos de entrada. Por defecto, Nulo.
+#' @param col_facet cadena de texto que indica el nombre de la columna que indica la variable para hacer el facet. Si no se proporciona orden , asume el orden  de la variable en el dataframae
+#' @param taxa_id cadena de texto que indica el nombre del "grupo funcional" al cual pertenecen los taxones ("fitoplancton", "zooplancton", "macrofitas", "perifiton", "ictiofauna",etc.).
+#' @param height alto del gráfico. Por defecto, toma valor 6.
+#' @param width ancho del gráfico. Por defecto, toma valor 8.
+#' @import rlang
+#' @import tidyverse
+#' @return gráfico de barras
+#' @export fn_plot_spec_rich
+#' @examples
+#' \dontrun{
+#' data <- read_tsv("data_fitoplancton_integrado.tsv")
+#' col_N <- "N"
+#' col_facet <- "Campaña"
+#' col_sitio <- "Sitio"
+#' ord_sitio <- paste0("P-", seq(1,6))
+#' ord_facet <- c("Verano 2024", "Invierno 2024")
+#' taxa_id <- "fitoplancton"
+#' taxa_group <- "Clase"
+#' col_taxa <- "Taxa"
+#' width <- 8
+#' height <- 8
+#' fn_plot_spec_rich(data = data, taxa_group = taxa_group,col_taxa = col_taxa,col_N = col_N,col_facet = col_facet,ord_facet = ord_facet,col_sitio = col_sitio,ord_sitio = ord_sitio,taxa_id = taxa_id,height = height, width = width)
+#' }
+fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_facet =NULL, col_zonas = NULL, ord_zonas = NULL , col_sitio = NULL, ord_sitio = NULL, taxa_id, height = 6, width = 8) {
+  options(scipen = 999)
+  # setting vars#
+  vars <- c(taxa_group, col_taxa,col_N, col_facet, col_zonas, col_sitio)
+  # Selecciona y renombra las columnas dinámicamente
+  data_plot <- data %>%
+    dplyr::select(all_of(vars)) %>%
+    dplyr::rename(
+      taxa_group = !!sym(taxa_group),
+      col_N = !!sym(col_N),
+      col_taxa = !! sym(col_taxa),
+      !!!if (!is.null(col_zonas)) setNames(col_zonas, "col_zonas") else NULL,
+      !!!if (!is.null(col_facet)) setNames(col_facet, "col_facet") else NULL,
+      !!!if (!is.null(col_sitio)) setNames(col_sitio, "col_sitio") else NULL
+    )
+
+  if (!is.null(col_facet)) {
+    data_plot <- data_plot %>%
+      dplyr::mutate(col_facet = factor(col_facet, levels = ord_facet))
+  }
+  if (!is.null(col_zonas)) {
+    data_plot <- data_plot %>%
+      dplyr::mutate(col_zonas = factor(col_zonas, levels = ord_zonas))
+  }
+  if (!is.null(col_sitio)) {
+    data_plot <- data_plot %>%
+      dplyr::mutate(col_sitio = factor(col_sitio, levels = ord_sitio))
+  }
+
+  gr_vars <- names(data_plot)
+  gr_vars <- setdiff(gr_vars, "col_N")
+
+  data_plot <- data_plot %>%
+    dplyr::group_by(dplyr::across(all_of(gr_vars))) %>%
+    dplyr::filter(col_N > 0) %>%
+    dplyr::summarise(riqueza = n_distinct(col_taxa), .groups = "drop") %>%
+    dplyr::ungroup()
+
+  ord_class <- data_plot %>%
+    dplyr::group_by(taxa_group) %>%
+    dplyr::summarise(total = sum(riqueza), .groups = "drop") %>%
+    dplyr::arrange(desc(total)) %>%
+    dplyr::pull(taxa_group)
+  data_plot <- data_plot %>% dplyr::mutate(taxa_group = factor(taxa_group, levels = ord_class))
+  full_cols <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(24)
+  names(full_cols) <- c("Bacillariophyceae", "Insecta", "Chlorophyceae", "Zygnematophyceae", "Fragilariophyceae",   "Cyanophyceae", "Coscinodiscophyceae", "Malacostraca", "Clitellata", "Entognatha", "Gastropoda", "Dinophyceae",  "Adenophorea", "Bivalvia", "Ostracoda", "Trebouxiophyceae", "Euglenophyceae", "Arachnida", "Copepoda","Chrysophyceae", "Branchiopoda", "Cryptophyceae", "Rhabditophora","Ulvophyceae")
+  class <- as.character(unique(data_plot$taxa_group))
+  col <- full_cols[class]
+
+  if (any(stringr::str_detect(string = gr_vars,pattern = "sitio"))) {
+    if (length(ord_sitio) <= 10) {
+      angle <- 0
+    } else {
+      angle <- 90
+    }
+    plot <- ggplot2::ggplot(data_plot, aes(x = as.factor(col_sitio), y =  riqueza, fill = taxa_group)) +
+      geom_col() +
+      scale_fill_manual(values = col) +
+      guides(fill = guide_legend(ncol = 1)) +
+      facet_grid(~col_facet) +
+      labs(title = paste0("Riqueza de taxones de ", taxa_id, " por estaciones y campañas de muestreo"),
+           fill = "Clase",
+           x = "Estaciones",
+           y = "Riqueza de taxones (S)") +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = angle, hjust = 0.5, vjust = 0.5),
+            text = element_text(family = "Arial"))
+    ggsave(filename = paste0("plot_riqueza_",taxa_id ,".png"),plot = plot,width = width,height = height,dpi = 300)
+  }
+  if (any(stringr::str_detect(string = gr_vars,pattern = "zona"))) {
+    plot <- ggplot2::ggplot(data_plot, aes(x = as.factor(col_zonas), y =  riqueza, fill = taxa_group)) +
+      geom_col() +
+      scale_fill_manual(values = col) +
+      guides(fill = guide_legend(ncol = 1)) +
+      facet_grid(~col_facet) +
+      labs(title = paste0("Riqueza de taxones de ",taxa_id, " por zonas y campañas de muestreo"),
+           fill = "Clase",
+           x = "Campañas",
+           y = "Riqueza de taxones (S)") +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            text = element_text(family = "Arial"))
+    ggsave(filename = paste0("plot_riqueza_",taxa_id ,".png"), plot = plot, width = width, height = height, dpi = 300)
   }
 }
