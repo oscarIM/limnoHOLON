@@ -1025,8 +1025,8 @@ fn_plot_treemap <- function(data, col_sitio = NULL, col_N, col_facet = NULL, ord
   #    dplyr::mutate(col_facet = factor(col_facet, levels = ord_facet))
   # }
   #write_csv(data_plot, file = paste0("data_plot_treemap_",output_id, ".csv"))
-  full_cols <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(25)
-  names(full_cols) <- c("Bacillariophyceae", "Insecta", "Chlorophyceae", "Zygnematophyceae", "Fragilariophyceae",   "Cyanophyceae", "Coscinodiscophyceae", "Malacostraca", "Clitellata", "Entognatha", "Gastropoda", "Dinophyceae",  "Adenophorea", "Bivalvia", "Ostracoda", "Trebouxiophyceae", "Euglenophyceae", "Arachnida", "Copepoda","Chrysophyceae", "Branchiopoda", "Cryptophyceae", "Rhabditophora", "Ulvophyceae","Hexanauplia")
+  full_cols <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(27)
+  names(full_cols) <- c("Bacillariophyceae", "Insecta", "Chlorophyceae", "Zygnematophyceae", "Fragilariophyceae",   "Cyanophyceae", "Coscinodiscophyceae", "Malacostraca", "Clitellata", "Entognatha", "Gastropoda", "Dinophyceae",  "Adenophorea", "Bivalvia", "Ostracoda", "Trebouxiophyceae", "Euglenophyceae", "Arachnida", "Copepoda","Chrysophyceae", "Branchiopoda", "Cryptophyceae", "Rhabditophora", "Ulvophyceae","Hexanauplia", "Rhabdocoela", "Turbellaria")
   class <- as.character(unique(data_plot$taxa_group))
   col <- full_cols[class]
   if (any(stringr::str_detect(string = gr_vars,pattern = "sitio"))) {
@@ -1131,8 +1131,8 @@ fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_
     dplyr::arrange(desc(total)) %>%
     dplyr::pull(taxa_group)
   data_plot <- data_plot %>% dplyr::mutate(taxa_group = factor(taxa_group, levels = ord_class))
-  full_cols <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(25)
-  names(full_cols) <- c("Bacillariophyceae", "Insecta", "Chlorophyceae", "Zygnematophyceae", "Fragilariophyceae",   "Cyanophyceae", "Coscinodiscophyceae", "Malacostraca", "Clitellata", "Entognatha", "Gastropoda", "Dinophyceae",  "Adenophorea", "Bivalvia", "Ostracoda", "Trebouxiophyceae", "Euglenophyceae", "Arachnida", "Copepoda","Chrysophyceae", "Branchiopoda", "Cryptophyceae", "Rhabditophora", "Ulvophyceae","Hexanauplia")
+  full_cols <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(27)
+  names(full_cols) <- c("Bacillariophyceae", "Insecta", "Chlorophyceae", "Zygnematophyceae", "Fragilariophyceae",   "Cyanophyceae", "Coscinodiscophyceae", "Malacostraca", "Clitellata", "Entognatha", "Gastropoda", "Dinophyceae",  "Adenophorea", "Bivalvia", "Ostracoda", "Trebouxiophyceae", "Euglenophyceae", "Arachnida", "Copepoda","Chrysophyceae", "Branchiopoda", "Cryptophyceae", "Rhabditophora", "Ulvophyceae","Hexanauplia", "Rhabdocoela", "Turbellaria")
   class <- as.character(unique(data_plot$taxa_group))
   col <- full_cols[class]
 
