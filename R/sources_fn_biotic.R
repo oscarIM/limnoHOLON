@@ -1138,11 +1138,21 @@ fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_
     dplyr::arrange(desc(total)) %>%
     dplyr::pull(taxa_group)
   data_plot <- data_plot %>% dplyr::mutate(taxa_group = factor(taxa_group, levels = ord_class))
-  full_cols <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(27)
-  names(full_cols) <- c("Bacillariophyceae", "Insecta", "Chlorophyceae", "Zygnematophyceae", "Fragilariophyceae",   "Cyanophyceae", "Coscinodiscophyceae", "Malacostraca", "Clitellata", "Entognatha", "Gastropoda", "Dinophyceae",  "Adenophorea", "Bivalvia", "Ostracoda", "Trebouxiophyceae", "Euglenophyceae", "Arachnida", "Copepoda","Chrysophyceae", "Branchiopoda", "Cryptophyceae", "Rhabditophora", "Ulvophyceae","Hexanauplia", "Rhabdocoela", "Turbellaria")
-  class <- as.character(unique(data_plot$taxa_group))
-  col <- full_cols[class]
-
+  if (stringr::str_detect(string = taxa_id,pattern = "(?i)ictiofauna")) {
+    col <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(length(unique(data_plot$taxa_group)))
+    names(col) <- unique(data_plot$taxa_group)
+    title <-  paste0("Riqueza de especies de ", taxa_id, " por estaciones y campañas de muestreo")
+    fill = "Especie"
+    y <-  "Riqueza de especies (S)"
+  } else {
+    full_cols <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(27)
+    names(full_cols) <- c("Bacillariophyceae", "Insecta", "Chlorophyceae", "Zygnematophyceae", "Fragilariophyceae",   "Cyanophyceae", "Coscinodiscophyceae", "Malacostraca", "Clitellata", "Entognatha", "Gastropoda", "Dinophyceae",  "Adenophorea", "Bivalvia", "Ostracoda", "Trebouxiophyceae", "Euglenophyceae", "Arachnida", "Copepoda","Chrysophyceae", "Branchiopoda", "Cryptophyceae", "Rhabditophora", "Ulvophyceae","Hexanauplia", "Rhabdocoela", "Turbellaria")
+    class <- as.character(unique(data_plot$taxa_group))
+    col <- full_cols[class]
+    title <-  paste0("Riqueza de taxones de ", taxa_id, " por estaciones y campañas de muestreo")
+    fill <-  "Clase"
+    y <-  "Riqueza de taxones (S)"
+  }
   if (any(stringr::str_detect(string = gr_vars,pattern = "sitio"))) {
     if (length(ord_sitio) <= 10) {
       angle <- 0
@@ -1154,10 +1164,10 @@ fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_
       scale_fill_manual(values = col) +
       guides(fill = guide_legend(ncol = 1)) +
       facet_grid(~col_facet) +
-      labs(title = paste0("Riqueza de taxones de ", taxa_id, " por estaciones y campañas de muestreo"),
-           fill = "Clase",
+      labs(title =  title,
+           fill = fill,
            x = "Estaciones",
-           y = "Riqueza de taxones (S)") +
+           y = y) +
       theme_bw() +
       theme(axis.text.x = element_text(angle = angle, hjust = 0.5, vjust = 0.5),
             text = element_text(family = "Arial"))
@@ -1169,10 +1179,11 @@ fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_
       scale_fill_manual(values = col) +
       guides(fill = guide_legend(ncol = 1)) +
       facet_grid(~col_facet) +
+      #cambiar el title
       labs(title = paste0("Riqueza de taxones de ",taxa_id, " por zonas y campañas de muestreo"),
-           fill = "Clase",
+           fill = fill,
            x = "Campañas",
-           y = "Riqueza de taxones (S)") +
+           y = y) +
       theme_bw() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1),
             text = element_text(family = "Arial"))
