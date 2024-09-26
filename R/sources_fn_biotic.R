@@ -679,6 +679,7 @@ fn_plot_nmds <- function(data, col_sitio, col_taxa, col_N, dist = "bray", col_re
            v = 0,
            lty = 3,
            col = "gray0")
+    ordispider(NMDS1, groups = data_nmds[["col_factor"]], col =  color[names(color)])
     legend("bottomleft", paste0("Stress = ", round(NMDS1$stress, 3)), bty = "n", cex = 0.5, text.font = 3)
     legend('topright', title = title_factor, legend = names(color), col = color, pch = 16)
     dev.off()
