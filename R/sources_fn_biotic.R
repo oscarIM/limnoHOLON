@@ -1199,7 +1199,7 @@ fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_
 #' @import tidyverse
 #' @return heatmap de presencia
 #' @export fn_plot_heat_pres
-fn_plot_heat_pres <- function(data, col_taxa,col_N, col_facet=NULL, ord_facet = NULL, col_zonas = NULL, ord_zonas = NULL, col_sitio = NULL, ord_sitio = NULL) {
+fn_plot_heat_pres <- function(data, col_taxa,col_N, col_facet=NULL, ord_facet = NULL, col_zonas = NULL, ord_zonas = NULL, col_sitio = NULL, ord_sitio = NULL, width=10, height = 8) {
   vars <- c(col_taxa, col_N, col_facet, col_zonas, col_sitio)
   # Selecciona y renombra las columnas dinámicamente
   data_plot <- data %>%
