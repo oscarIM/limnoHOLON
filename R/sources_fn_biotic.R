@@ -1202,9 +1202,10 @@ fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_
 #' @export fn_plot_heat_pres
 fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, ord_facet = NULL, col_zonas = NULL, ord_zonas = NULL, col_sitio = NULL, ord_sitio = NULL, taxa_group = NULL, width =10, height = 8) {
   vars <- c(col_taxa, col_N, col_facet, col_zonas, col_sitio)
-#arreglar
+  #arreglar
   if (stringr::str_detect(taxa_id , "(?i)macrof")) {
-    title <-  paste0("Presencia de ", stringr::str_to_sentence(taxa_group), " durante campañas de monitoreo")
+    title <- paste0("Presencia de ", stringr::str_to_sentence(taxa_group), " durante campañas de monitoreo")
+    filename <- paste0("plot_heatmap_", taxa_group, ".png")
     data <- data %>%
       dplyr::mutate(
         N = dplyr::case_when(
@@ -1215,11 +1216,13 @@ fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, or
           stringr::str_detect(N, "3") ~ 5,
           stringr::str_detect(N, "4") ~ 6,
           stringr::str_detect(N, "5") ~ 7,
-          TRUE ~ as.numeric(N)))%>%
-    dplyr::mutate(
-      N = tidyr::replace_na(N, 0))
+          TRUE ~ as.numeric(N)
+        )
+      ) %>%
+      dplyr::mutate(N = tidyr::replace_na(N, 0))
   } else {
-    title <-  paste0("Presencia de ", stringr::str_to_sentence(taxa_id), " durante campañas de monitoreo")
+    title <- paste0("Presencia de ", stringr::str_to_sentence(taxa_id), " durante campañas de monitoreo")
+    filename <- paste0("plot_heatmap_", taxa_id, ".png")
   }
   data_plot <- data %>%
     dplyr::select(all_of(vars)) %>%
@@ -1236,9 +1239,9 @@ fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, or
 
   df_summary <- data_pres %>%
     dplyr::group_by(dplyr::across(all_of(gr_vars))) %>%
-    summarise(Presencia = sum(pres), .groups = "drop") %>%
-    mutate(Presencia = ifelse(Presencia > 0, 1, 0)) %>%
-    ungroup()
+    dplyr::summarise(Presencia = sum(pres), .groups = "drop") %>%
+    dplyr::mutate(Presencia = ifelse(Presencia > 0, 1, 0)) %>%
+    dplyr::ungroup()
 
   df_expanded <- df_summary %>%
     tidyr::complete(!!!rlang::syms(gr_vars), fill = list(Presencia = 0))
@@ -1258,7 +1261,7 @@ fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, or
 
   if (any(stringr::str_detect(string = gr_vars,pattern = "sitio"))) {
 
-    plot <- ggplot(df_expanded, aes(x = col_sitio, y = col_taxa)) +
+    plot <- ggplot(df_expanded, aes(x = as.factor(col_sitio), y = col_taxa)) +
       geom_tile(color = "gray10", width = .8, height = 0.8, aes(fill = as.factor(Presencia))) +
       scale_fill_manual(values = c("0" = "white", "1" = "black", na.value = 'white')) +
       facet_grid(~factor(col_facet, levels = ord_facet)) +
@@ -1271,8 +1274,7 @@ fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, or
             text = element_text(size = 8, family = "Arial"),
             axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5)) +
       coord_fixed()
-
-    ggsave(filename =  paste0("plot_heatmap_", taxa_id, ".png"), plot = plot,device = "png", width = width, height = height , dpi = 300)
+    ggsave(filename =  filename, plot = plot,device = "png", width = width, height = height , dpi = 300)
   }
   if (any(stringr::str_detect(string = gr_vars,pattern = "zona"))) {
     plot <- ggplot(df_expanded, aes(x = col_zonas, y = col_taxa)) +
@@ -1288,7 +1290,6 @@ fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, or
             text = element_text(size = 8, family = "Arial"),
             axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5)) +
       coord_fixed()
-
-    ggsave(filename =  paste0("plot_heatmap_", taxa_id, ".png"), plot = plot,device = "png", width = width, height = height , dpi = 300)
+    ggsave(filename =  filename, plot = plot,device = "png", width = width, height = height , dpi = 300)
   }
 }
