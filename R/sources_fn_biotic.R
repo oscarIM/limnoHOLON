@@ -1162,6 +1162,7 @@ fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_
     plot <- ggplot2::ggplot(data_plot, aes(x = as.factor(col_sitio), y =  riqueza, fill = taxa_group)) +
       geom_col() +
       scale_fill_manual(values = col) +
+      scale_y_continuous(breaks = function(x) floor(min(x)):ceiling(max(x))) +
       guides(fill = guide_legend(ncol = 1)) +
       facet_grid(~col_facet) +
       labs(title =  title,
@@ -1177,6 +1178,7 @@ fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_
     plot <- ggplot2::ggplot(data_plot, aes(x = as.factor(col_zonas), y =  riqueza, fill = taxa_group)) +
       geom_col() +
       scale_fill_manual(values = col) +
+      scale_y_continuous(breaks = function(x) floor(min(x)):ceiling(max(x))) +
       guides(fill = guide_legend(ncol = 1)) +
       facet_grid(~col_facet) +
       #cambiar el title
