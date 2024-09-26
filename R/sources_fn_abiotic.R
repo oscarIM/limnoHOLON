@@ -25,22 +25,15 @@
 fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
   options(scipen = 999)
   # setting vars and aux functions#
-  `%!in%` <- Negate(`%in%`)
-  vars  <- c(col_pars, col_valor)
-  data_plot <- data %>% select(all_of(vars))
   pars_gran <- c("LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN")
-  patterns <- c("(?i)param", "(?i)resultado|(?i)valor")
-  new_names <- c("col_pars", "col_valor")
-  ###usar la siguiente expresion =
-  #dplyr::rename(
-  #  col_pars = !!sym(col_pars),
-  #  col_valor = !!sym(col_valor),
-  data_plot <- data_plot %>%
-    dplyr::select(matches(patterns)) %>%
-    dplyr::rename_at(vars(matches(patterns)), ~new_names)
+  vars  <- c(col_pars, col_valor)
+  data_plot <- data %>% select(all_of(vars)) %>%
+    dplyr::rename(
+      col_pars = !!sym(col_pars),
+      col_valor = !!sym(col_valor))
   order_type <- c("Físico", "Químico", "Nutriente", "Metal", "Orgánicos e inorgánicos", "Biológico")
   if (matriz == "sedimento") {
-    data_plot <- data_plot %>% dplyr::filter(col_pars %!in% pars_gran)
+    data_plot <- data_plot %>% dplyr::filter(!col_pars %in% pars_gran)
     }
   summ_pars <- data_plot %>%
     dplyr::group_by(col_pars) %>%
@@ -51,7 +44,7 @@ fn_stats <- function(data, col_pars, col_valor, data_pars, matriz, round = 2) {
       prom = mean(col_valor),
       desvest = sd(col_valor),
       cv_num = abs(desvest / prom),
-      "cv%" = scales::label_percent()(abs(desvest / prom)))%>%
+      "cv%" = scales::label_percent()(abs(desvest / prom), accuracy = 0.01))%>%
     dplyr::rename(Sigla = col_pars) %>%
     dplyr::mutate_at(vars(3:6), list(~ round(., round)))
   table_export <- summ_pars %>% dplyr::select(-cv_num)
