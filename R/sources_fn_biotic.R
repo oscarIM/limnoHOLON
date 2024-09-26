@@ -1202,6 +1202,23 @@ fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_
 #' @export fn_plot_heat_pres
 fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, ord_facet = NULL, col_zonas = NULL, ord_zonas = NULL, col_sitio = NULL, ord_sitio = NULL, width =10, height = 8) {
   vars <- c(col_taxa, col_N, col_facet, col_zonas, col_sitio)
+#arreglar
+  if (stringr::str_detect(taxa_id , "(?i)macrof")) {
+    data <- data %>%
+      dplyr::mutate(
+        N = dplyr::case_when(
+          stringr::str_detect(N, "1") ~ 3,
+          stringr::str_detect(N, "\\+") ~ 2,
+          stringr::str_detect(N, "r") ~ 1,
+          stringr::str_detect(N, "2") ~ 4,
+          stringr::str_detect(N, "3") ~ 5,
+          stringr::str_detect(N, "4") ~ 6,
+          stringr::str_detect(N, "5") ~ 7,
+          TRUE ~ as.numeric(N)))%>%
+    dplyr::mutate(
+      N = tidyr::replace_na(N, 0))
+  }
+
 
   data_plot <- data %>%
     dplyr::select(all_of(vars)) %>%
