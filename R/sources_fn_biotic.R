@@ -1200,10 +1200,11 @@ fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_
 #' @import tidyverse
 #' @return heatmap de presencia
 #' @export fn_plot_heat_pres
-fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, ord_facet = NULL, col_zonas = NULL, ord_zonas = NULL, col_sitio = NULL, ord_sitio = NULL, width =10, height = 8) {
+fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, ord_facet = NULL, col_zonas = NULL, ord_zonas = NULL, col_sitio = NULL, ord_sitio = NULL, taxa_group = NULL, width =10, height = 8) {
   vars <- c(col_taxa, col_N, col_facet, col_zonas, col_sitio)
 #arreglar
   if (stringr::str_detect(taxa_id , "(?i)macrof")) {
+    title <-  paste0("Presencia de ", stringr::str_to_sentence(taxa_group), " durante campañas de monitoreo")
     data <- data %>%
       dplyr::mutate(
         N = dplyr::case_when(
@@ -1217,9 +1218,9 @@ fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, or
           TRUE ~ as.numeric(N)))%>%
     dplyr::mutate(
       N = tidyr::replace_na(N, 0))
+  } else {
+    title <-  paste0("Presencia de ", stringr::str_to_sentence(taxa_id), " durante campañas de monitoreo")
   }
-
-
   data_plot <- data %>%
     dplyr::select(all_of(vars)) %>%
     dplyr::rename(
@@ -1261,7 +1262,7 @@ fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, or
       geom_tile(color = "gray10", width = .8, height = 0.8, aes(fill = as.factor(Presencia))) +
       scale_fill_manual(values = c("0" = "white", "1" = "black", na.value = 'white')) +
       facet_grid(~factor(col_facet, levels = ord_facet)) +
-      labs(title = paste0("Presencia de ", taxa_id, " durante campañas de monitoreo"),
+      labs(title = title,
            fill = "Presencia",
            y = "Especies",
            x = "Estaciones") +
@@ -1278,7 +1279,7 @@ fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, or
       geom_tile(color = "gray10", width = .8, height = 0.8, aes(fill = as.factor(Presencia))) +
       scale_fill_manual(values = c("0" = "white", "1" = "black", na.value = 'white')) +
       facet_grid(~factor(col_facet, levels = ord_facet)) +
-      labs(title = paste0("Presencia de ", taxa_id, " durante campañas de monitoreo"),
+      labs(title = title,
            fill = "Presencia",
            y = "Especies",
            x = "Estaciones") +
