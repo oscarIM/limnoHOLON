@@ -1200,17 +1200,17 @@ fn_plot_spec_rich <- function(data, taxa_group, col_taxa, col_N, col_facet, ord_
 #' @import tidyverse
 #' @return heatmap de presencia
 #' @export fn_plot_heat_pres
-fn_plot_heat_pres <- function(data, col_taxa,col_N, col_facet=NULL, ord_facet = NULL, col_zonas = NULL, ord_zonas = NULL, col_sitio = NULL, ord_sitio = NULL, width=10, height = 8) {
+fn_plot_heat_pres <- function(data, col_taxa, taxa_id, col_N, col_facet=NULL, ord_facet = NULL, col_zonas = NULL, ord_zonas = NULL, col_sitio = NULL, ord_sitio = NULL, width =10, height = 8) {
   vars <- c(col_taxa, col_N, col_facet, col_zonas, col_sitio)
-  # Selecciona y renombra las columnas dinámicamente
+
   data_plot <- data %>%
     dplyr::select(all_of(vars)) %>%
     dplyr::rename(
       col_N = !!sym(col_N),
       col_taxa = !! sym(col_taxa),
-      !!!if (!is.null(col_zonas)) setNames(col_zonas, "col_zonas") else NULL,
-      !!!if (!is.null(col_facet)) setNames(col_facet, "col_facet") else NULL,
-      !!!if (!is.null(col_sitio)) setNames(col_sitio, "col_sitio") else NULL
+      if (!is.null(col_zonas)) setNames(col_zonas, "col_zonas") else NULL,
+      if (!is.null(col_facet)) setNames(col_facet, "col_facet") else NULL,
+      if (!is.null(col_sitio)) setNames(col_sitio, "col_sitio") else NULL
     )
   data_pres <- data_plot %>% dplyr::mutate(pres = ifelse(col_N > 0, 1 , 0))
   gr_vars <- names(data_pres)
@@ -1225,10 +1225,10 @@ fn_plot_heat_pres <- function(data, col_taxa,col_N, col_facet=NULL, ord_facet = 
   df_expanded <- df_summary %>%
     tidyr::complete(!!!rlang::syms(gr_vars), fill = list(Presencia = 0))
 
-  if (!is.null(col_facet)) {
-    df_expanded  <- df_expanded  %>%
-      dplyr::mutate(col_facet = factor(col_facet, levels = ord_facet))
-  }
+  # if (!is.null(col_facet)) {
+  #    df_expanded  <- df_expanded  %>%
+  #      dplyr::mutate(col_facet = factor(col_facet, levels = ord_facet))
+  # }
   if (!is.null(col_zonas)) {
     df_expanded  <- df_expanded %>%
       dplyr::mutate(col_zonas = factor(col_zonas, levels = ord_zonas))
@@ -1239,44 +1239,38 @@ fn_plot_heat_pres <- function(data, col_taxa,col_N, col_facet=NULL, ord_facet = 
   }
 
   if (any(stringr::str_detect(string = gr_vars,pattern = "sitio"))) {
+
     plot <- ggplot(df_expanded, aes(x = col_sitio, y = col_taxa)) +
-      geom_tile(color = "gray10", width = .8, height = 0.8, mapping = aes(fill = as.factor(Presencia))) +
+      geom_tile(color = "gray10", width = .8, height = 0.8, aes(fill = as.factor(Presencia))) +
       scale_fill_manual(values = c("0" = "white", "1" = "black", na.value = 'white')) +
-      #facet_grid(~campaña, scales = "free", space = "free") +
-      facet_grid(~col_facet) +
-      #  coord_fixed(ratio = 1) +
-      #remove x and y axis labels
-      labs(title = paste0("Presecia de ", taxa_id, " durante campañas de monitoreo"),
+      facet_grid(~factor(col_facet, levels = ord_facet)) +
+      labs(title = paste0("Presencia de ", taxa_id, " durante campañas de monitoreo"),
            fill = "Presencia",
            y = "Especies",
            x = "Estaciones") +
       theme_bw() +
       theme(panel.background = element_rect(fill = "white"),
             text = element_text(size = 8, family = "Arial"),
-            axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5)
-      ) +
+            axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5)) +
       coord_fixed()
-    ggsave(filename =  paste0("plot_heatmap_", taxa_id, ".png"), plot = plot,device = "png", width = width, height = height , dpi = 300)
 
+    ggsave(filename =  paste0("plot_heatmap_", taxa_id, ".png"), plot = plot,device = "png", width = width, height = height , dpi = 300)
   }
   if (any(stringr::str_detect(string = gr_vars,pattern = "zona"))) {
     plot <- ggplot(df_expanded, aes(x = col_zonas, y = col_taxa)) +
-      geom_tile(color = "gray10", width = .8, height = 0.8, mapping = aes(fill = as.factor(Presencia))) +
+      geom_tile(color = "gray10", width = .8, height = 0.8, aes(fill = as.factor(Presencia))) +
       scale_fill_manual(values = c("0" = "white", "1" = "black", na.value = 'white')) +
-      #facet_grid(~campaña, scales = "free", space = "free") +
-      facet_grid(~col_facet) +
-      #  coord_fixed(ratio = 1) +
-      #remove x and y axis labels
-      labs(title = paste0("Presecia de ", taxa_id, " durante campañas de monitoreo"),
+      facet_grid(~factor(col_facet, levels = ord_facet)) +
+      labs(title = paste0("Presencia de ", taxa_id, " durante campañas de monitoreo"),
            fill = "Presencia",
            y = "Especies",
            x = "Estaciones") +
       theme_bw() +
       theme(panel.background = element_rect(fill = "white"),
             text = element_text(size = 8, family = "Arial"),
-            axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5)
-      ) +
+            axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5)) +
       coord_fixed()
-    ggsave(filename =  paste0("plot_heatmap_", taxa_id, ".png"),plot = plot,device = "png",width = width, height = height , dpi = 300)
+
+    ggsave(filename =  paste0("plot_heatmap_", taxa_id, ".png"), plot = plot,device = "png", width = width, height = height , dpi = 300)
   }
-  }
+}
