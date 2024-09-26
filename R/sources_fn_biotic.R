@@ -1255,7 +1255,7 @@ fn_plot_heat_pres <- function(data, col_taxa,col_N, col_facet=NULL, ord_facet = 
             axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5)
       ) +
       coord_fixed()
-    ggsave(filename =  paste0("plot_heatmap_", taxa_id, ".png"),plot = plot,device = "png",width = width, height = height , dpi = 300)
+    ggsave(filename =  paste0("plot_heatmap_", taxa_id, ".png"), plot = plot,device = "png", width = width, height = height , dpi = 300)
 
   }
   if (any(stringr::str_detect(string = gr_vars,pattern = "zona"))) {
@@ -1277,7 +1277,5 @@ fn_plot_heat_pres <- function(data, col_taxa,col_N, col_facet=NULL, ord_facet = 
       ) +
       coord_fixed()
     ggsave(filename =  paste0("plot_heatmap_", taxa_id, ".png"),plot = plot,device = "png",width = width, height = height , dpi = 300)
-
   }
-
   }
