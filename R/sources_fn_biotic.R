@@ -1025,10 +1025,17 @@ fn_plot_treemap <- function(data, col_sitio = NULL, col_N, col_facet = NULL, ord
   #    dplyr::mutate(col_facet = factor(col_facet, levels = ord_facet))
   # }
   #write_csv(data_plot, file = paste0("data_plot_treemap_",output_id, ".csv"))
-  full_cols <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(27)
-  names(full_cols) <- c("Bacillariophyceae", "Insecta", "Chlorophyceae", "Zygnematophyceae", "Fragilariophyceae",   "Cyanophyceae", "Coscinodiscophyceae", "Malacostraca", "Clitellata", "Entognatha", "Gastropoda", "Dinophyceae",  "Adenophorea", "Bivalvia", "Ostracoda", "Trebouxiophyceae", "Euglenophyceae", "Arachnida", "Copepoda","Chrysophyceae", "Branchiopoda", "Cryptophyceae", "Rhabditophora", "Ulvophyceae","Hexanauplia", "Rhabdocoela", "Turbellaria")
-  class <- as.character(unique(data_plot$taxa_group))
-  col <- full_cols[class]
+  if (stringr::str_detect(string = taxa_id,pattern = "(?i)ictiofauna")) {
+    col <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(length(unique(data_plot$taxa_group)))
+    names(col) <- unique(data_plot$taxa_group)
+  } else {
+    full_cols <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(27)
+    names(full_cols) <- c("Bacillariophyceae", "Insecta", "Chlorophyceae", "Zygnematophyceae", "Fragilariophyceae",   "Cyanophyceae", "Coscinodiscophyceae", "Malacostraca", "Clitellata", "Entognatha", "Gastropoda", "Dinophyceae",  "Adenophorea", "Bivalvia", "Ostracoda", "Trebouxiophyceae", "Euglenophyceae", "Arachnida", "Copepoda","Chrysophyceae", "Branchiopoda", "Cryptophyceae", "Rhabditophora", "Ulvophyceae","Hexanauplia", "Rhabdocoela", "Turbellaria")
+    class <- as.character(unique(data_plot$taxa_group))
+    col <- full_cols[class]
+
+  }
+
   if (any(stringr::str_detect(string = gr_vars,pattern = "sitio"))) {
     plot <- ggplot(data = data_plot,mapping =  aes(area = col_N, fill = taxa_group, subgroup = as.factor(col_sitio)), label = as.character(col_sitio)) +
       geom_treemap() +
