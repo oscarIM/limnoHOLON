@@ -76,7 +76,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
     dplyr::select(all_of(vars)) %>%
     dplyr::rename_at(vars, ~ c( "col_sitio", "taxa_grupo", "col_taxa", "col_N"))
   #setting some vars#
-  if (str_detect(taxa_id, "ictiofauna|macrofita")) {
+  if (str_detect(taxa_id, "ictiofauna")) {
     n_taxa <- data_plot %>%
       dplyr::pull(col_taxa) %>%
       unique() %>%
@@ -139,7 +139,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
           theme_light() +
           theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
         ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
-    }
+        }
   if (!is.null(col_factor))  {
     col_factor <- data %>% dplyr::pull({{col_factor}})
     if (is.null(ord_factor)) {
@@ -151,8 +151,8 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
       order_factor <- ord_factor
     }
     data_plot <- data_plot %>% dplyr::mutate(col_factor = factor(col_factor, levels = order_factor))
-
-     if (stringr::str_detect(taxa_id, "(?i)ictiof")) {
+  }
+  if (stringr::str_detect(taxa_id, "(?i)ictiof")) {
       data_plot <- data_plot %>% dplyr::mutate(
         col_N = tidyr::replace_na(col_N, 0),
         col_taxa = factor(col_taxa, levels = unique(col_taxa)),
