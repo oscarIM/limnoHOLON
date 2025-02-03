@@ -139,8 +139,8 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
           theme_light() +
           theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
         ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
-        }
-  if (!is.null(col_factor))  {
+}
+  if (!is.null(col_factor)) {
     col_factor <- data %>% dplyr::pull({{col_factor}})
     if (is.null(ord_factor)) {
       order_factor <- data_plot %>%
@@ -151,8 +151,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
       order_factor <- ord_factor
     }
     data_plot <- data_plot %>% dplyr::mutate(col_factor = factor(col_factor, levels = order_factor))
-  }
-  if (stringr::str_detect(taxa_id, "(?i)ictiof")) {
+    if (stringr::str_detect(taxa_id, "(?i)ictiof")) {
       data_plot <- data_plot %>% dplyr::mutate(
         col_N = tidyr::replace_na(col_N, 0),
         col_taxa = factor(col_taxa, levels = unique(col_taxa)),
@@ -193,7 +192,7 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))),
         S = if_else(col_N > 0, 1, 0)) %>%
         dplyr::filter(S > 0)
-       #just to cut
+      #just to cut
       data_plot <- data_plot %>%
         dplyr::group_by(taxa_grupo, col_sitio, col_factor) %>%
         dplyr::summarise(
@@ -217,9 +216,9 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
         theme_light() +
         theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
       ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, "_by_factor.png"), plot = plot, width = width, height = height, dpi = 300)
-
     }
-}
+  }
+  }
 
 
 #' @title fn_plot_pie
