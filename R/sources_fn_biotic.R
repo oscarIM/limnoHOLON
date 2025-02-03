@@ -106,40 +106,40 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
   }
   # flujo si col_zonas == NULL hay una columna de zona, se indica/determina la zona y se crear un dataplot dependiendo si es o no un ouputd_id == "macrofita"
   if (is.null(col_factor)) {
-    if (str_detect(taxa_id, "(?i)macrofita")) {
+    #if (str_detect(taxa_id, "(?i)macrofita")) {
       # que hacer si no hay columna de zonas y es para macrofitas
-      data_plot <- data_plot %>%
-        dplyr::mutate(
-          col_N = case_when(
-            stringr::str_detect(col_N, "1") ~ 3,
-            stringr::str_detect(col_N, "\\+") ~ 2,
-            stringr::str_detect(col_N, "r") ~ 1,
-            stringr::str_detect(col_N, "2") ~ 4,
-            stringr::str_detect(col_N, "3") ~ 5,
-            stringr::str_detect(col_N, "4") ~ 6,
-            stringr::str_detect(col_N, "5") ~ 7,
-            TRUE ~ as.numeric(col_N)
-          )
-        ) %>%
-        dplyr::mutate(
-          col_N = tidyr::replace_na(col_N, 0),
-          col_taxa = factor(col_taxa, levels = unique(col_taxa)),
-          col_sitio = factor(col_sitio, levels = sitios_ord),
-          taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo)))
-        )
-      color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Paired"))(n_taxa)
-      plot <- ggplot() +
-        geom_col(data = data_plot, aes(x = col_sitio, y = col_N, fill = col_taxa), position = "dodge") +
-        labs(
-          x = "Estaciones",
-          y = paste0("Densidad cualitativa (", unidad, ")")) +
-        scale_fill_manual("Especie", values = color) +
-        guides(fill = guide_legend(ncol = 2)) +
-        facet_grid(scales = "free_y", switch = "y", rows = vars(taxa_grupo)) +
-        theme_light() +
-        theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
-      ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
-    } else {
+     # data_plot <- data_plot %>%
+      #  dplyr::mutate(
+       #   col_N = case_when(
+        #    stringr::str_detect(col_N, "1") ~ 3,
+         #   stringr::str_detect(col_N, "\\+") ~ 2,
+          #  stringr::str_detect(col_N, "r") ~ 1,
+           # stringr::str_detect(col_N, "2") ~ 4,
+            #stringr::str_detect(col_N, "3") ~ 5,
+            #stringr::str_detect(col_N, "4") ~ 6,
+            #stringr::str_detect(col_N, "5") ~ 7,
+            #TRUE ~ as.numeric(col_N)
+          #)
+        #) %>%
+#        data_plot <- data_plot %>% dplyr::mutate(
+#          col_N = tidyr::replace_na(col_N, 0),
+#          col_taxa = factor(col_taxa, levels = unique(col_taxa)),
+#          col_sitio = factor(col_sitio, levels = sitios_ord),
+#          taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo)))
+#        )
+#      color <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Paired"))(n_taxa)
+#      plot <- ggplot() +
+#        geom_col(data = data_plot, aes(x = col_sitio, y = col_N, fill = col_taxa), position = "dodge") +
+#        labs(
+#          x = "Estaciones",
+#          y = paste0("Densidad cualitativa (", unidad, ")")) +
+#        scale_fill_manual("Especie", values = color) +
+#        guides(fill = guide_legend(ncol = 2)) +
+#        facet_grid(scales = "free_y", switch = "y", rows = vars(taxa_grupo)) +
+#        theme_light() +
+#        theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
+#      ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, ".png"), plot = plot, width = width, height = height, dpi = 300)
+#    } else {
       data_plot <- data_plot %>%
         dplyr::mutate(
           col_N = tidyr::replace_na(col_N, 0),
@@ -186,37 +186,37 @@ fn_plot_bar_biotic <- function(data, col_sitio, col_N, col_factor = NULL, col_ta
       order_factor <- ord_factor
     }
     data_plot <- data_plot %>% dplyr::mutate(col_factor = factor(col_factor, levels = order_factor))
-    if (stringr::str_detect(taxa_id, "(?i)macrofitas")) {
+    #if (stringr::str_detect(taxa_id, "(?i)macrofitas")) {
       #formatear datos con presencia col_zonas, con orden y para macrofitas y no macrofitas
-      data_plot <- data_plot %>%
-        dplyr::mutate(
-          col_N = case_when(
-            stringr::str_detect(col_N, "1") ~ 3,
-            stringr::str_detect(col_N, "\\+") ~ 2,
-            stringr::str_detect(col_N, "r") ~ 1,
-            stringr::str_detect(col_N, "2") ~ 4,
-            stringr::str_detect(col_N, "3") ~ 5,
-            stringr::str_detect(col_N, "4") ~ 6,
-            stringr::str_detect(col_N, "5") ~ 7,
-            TRUE ~ as.numeric(col_N))) %>%
-        dplyr::mutate(
-          col_N = tidyr::replace_na(col_N, 0),
-          col_taxa = factor(col_taxa, levels = unique(col_taxa)),
-          col_sitio = factor(col_sitio, levels = sitios_ord),
-          taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))))
-      color <- colorRampPalette(brewer.pal(9, "Paired"))(n_taxa)
-      plot <- ggplot() +
-        geom_col(data = data_plot, aes(x = col_sitio, y = col_N, fill = col_taxa), position = "dodge") +
-        labs(x = "Estaciones", y = paste0("Densidad cualitativa (", unidad, ")")) +
-        scale_fill_manual(stringr::str_to_sentence(col_taxa), values = color) +
+    #  data_plot <- data_plot %>%
+     #   dplyr::mutate(
+    #      col_N = case_when(
+    #        stringr::str_detect(col_N, "1") ~ 3,
+    #        stringr::str_detect(col_N, "\\+") ~ 2,
+    #        stringr::str_detect(col_N, "r") ~ 1,
+    #        stringr::str_detect(col_N, "2") ~ 4,
+    #        stringr::str_detect(col_N, "3") ~ 5,
+    #        stringr::str_detect(col_N, "4") ~ 6,
+    #        stringr::str_detect(col_N, "5") ~ 7,
+    #        TRUE ~ as.numeric(col_N))) %>%
+    #    dplyr::mutate(
+    #      col_N = tidyr::replace_na(col_N, 0),
+    #      col_taxa = factor(col_taxa, levels = unique(col_taxa)),
+    #      col_sitio = factor(col_sitio, levels = sitios_ord),
+    #      taxa_grupo = factor(taxa_grupo, levels = sort(unique(taxa_grupo))))
+    #  color <- colorRampPalette(brewer.pal(9, "Paired"))(n_taxa)
+    #  plot <- ggplot() +
+    #    geom_col(data = data_plot, aes(x = col_sitio, y = col_N, fill = col_taxa), position = "dodge") +
+    #    labs(x = "Estaciones", y = paste0("Densidad cualitativa (", unidad, ")")) +
+    #    scale_fill_manual(stringr::str_to_sentence(col_taxa), values = color) +
 
         #facet_grid(scales = "free", switch = "y", cols = vars(col_factor)) +
-        facet_grid(scales = "free", switch = "y", rows = vars(taxa_grupo), cols = vars(col_factor)) +
-        guides(fill = guide_legend(ncol = 2)) +
-        theme_light() +
-        theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
-      ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, "_by_factor.png"), plot = plot, width = width, height = height, dpi = 300)
-    } else if (stringr::str_detect(taxa_id, "(?i)ictiof")) {
+    #    facet_grid(scales = "free", switch = "y", rows = vars(taxa_grupo), cols = vars(col_factor)) +
+     #   guides(fill = guide_legend(ncol = 2)) +
+    #    theme_light() +
+    #    theme(axis.text.x = element_text(angle = angle, hjust = 0.5))
+    #  ggsave(filename = paste0("bar_", taxa_id, "_by_", taxa_grupo, "_by_factor.png"), plot = plot, width = width, height = height, dpi = 300)
+     if (stringr::str_detect(taxa_id, "(?i)ictiof")) {
       data_plot <- data_plot %>% dplyr::mutate(
         col_N = tidyr::replace_na(col_N, 0),
         col_taxa = factor(col_taxa, levels = unique(col_taxa)),
