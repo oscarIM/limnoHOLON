@@ -359,7 +359,7 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, col_factor = NULL, ma
   if (stringr::str_detect(string = matriz, pattern = "(?i)sedimento?")) {
     selected_pars <- setdiff(selected_pars, pars_gran)
   }
-  if (is.na(col_factor)) {
+  if (is.null(col_factor)) {
     data_plot <- dplyr::left_join(data, data_pars, by = c("col_pars" = "Param")) %>%
       dplyr::slice(order(factor(cats_pars, levels = order_type))) %>%
       dplyr::filter(col_pars %in% selected_pars) %>%
