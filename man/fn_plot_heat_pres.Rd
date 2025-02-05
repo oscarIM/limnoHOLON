@@ -7,13 +7,17 @@
 fn_plot_heat_pres(
   data,
   col_taxa,
+  taxa_id,
   col_N,
   col_facet = NULL,
   ord_facet = NULL,
   col_zonas = NULL,
   ord_zonas = NULL,
   col_sitio = NULL,
-  ord_sitio = NULL
+  ord_sitio = NULL,
+  taxa_group = NULL,
+  width = 10,
+  height = 8
 )
 }
 \value{

@@ -332,14 +332,13 @@ fn_plot_bar_abiotic  <- function(data, col_pars, col_sitio, col_valor, col_facto
 #' col_sitio <- "Estacion"
 #' col_valor <- "Valor"
 #' matriz <- "sedimento"
-#' code_sitio <- "E-"
 #' data_pars <- readr::read_tsv("tabla_pars.tsv")
 #' width <- 8
 #' height <- 9
-#' fn_plot_correlogram(data = data, col_pars = col_pars, col_sitio = col_sitio, matriz = matriz, code_sitio, code_sitio, data_pars = data_pars, width = width,height = width)
+#' fn_plot_correlogram(data = data, col_pars = col_pars, col_sitio = col_sitio, matriz = matriz, code_sitio, data_pars = data_pars, width = width,height = width)
 #' }
 
-fn_plot_correlogram <- function(data, col_pars, col_sitio, col_factor = NULL, matriz, code_sitio, data_pars, width = 6, height = 6) {
+fn_plot_correlogram <- function(data, col_pars, col_sitio, col_factor = NULL, matriz, data_pars, width = 6, height = 6) {
   # setting vars#
   vars <- c(col_sitio, col_pars, col_valor)
   if (!is.null(col_factor)) {
@@ -491,7 +490,6 @@ fn_plot_correlogram <- function(data, col_pars, col_sitio, col_factor = NULL, ma
 #' col_sitio <- "Sitio"
 #' col_valor <- "Valor"
 #' matriz <- "agua"
-#' code_sitio <- "P-"
 #' data_pars <- readr::read_tsv("tabla_pars_master.tsv")
 #' col_grupo <- "zonas"
 #' ord_factor <- c("Q5","Q3","Q2","Q1","L","Q4")
@@ -680,8 +678,9 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_factor = NULL,
 #' @param data archivo entrada que tiene que tener, al menos, las columnas: sitio, parámetros (nombre o sigla), valor de parámetros. Tiene que estar en formato "long". Se recomida usar csv o tsv como formatos.
 #' @param col_pars string que indica el nombre de la columna en data que tiene los parámetros (su sigla).
 #' @param col_sitio string que indica el nombre de la columna que tiene los sitios de muestreo.
-#' @param ord_sitio string que indica el orden en que se quiere que aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estación o punto de muestreo).
+#' @param ord_sitio string que indica el orden en que se quiere que aparezcan los sitios en el gráfico (de forma ascendente o descendente o custom).
 #' @param code_sitio string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.
+#' @param sitios_custom string con las estaciones en un orden en particular, solo aplica si ord_sitio es "custom"
 #' @param col_valor string que indica el nombre de la columna que tiene el valor de los parámetros.
 #' @param col_grupo string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.
 #' @param ord_factor string que indica el orden en el que se quiera que aparezan en las leyendas y/o ejes los iteml del grupo. Solo tiene sentido si se usa col_grupo. Por defecto, Nulo.
@@ -706,7 +705,7 @@ fn_plot_pca <- function(data, col_pars, col_sitio, col_valor, col_factor = NULL,
 #' height <- 4
 #' fn_plot_granulometria(data = data,col_pars = col_pars,col_sitio = col_sitio, col_valor = col_valor,ord_sitio = ord_sitio, width = 8,height = 6, aspect_ratio = 1, code_sitio = code_sitio)
 #' }
-fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sitio, ord_sitio = "asc", col_grupo = NULL, ord_factor = NULL, width = 8, height = 6, aspect_ratio = 1) {
+fn_plot_granulometria <- function(data, col_pars, col_sitio, sitios_custom = NULL, col_valor, code_sitio, ord_sitio = "asc", col_grupo = NULL, ord_factor = NULL, width = 8, height = 6, aspect_ratio = 1) {
   # setting vars#
   pars_gran <- c("LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN")
   vars <- c(col_sitio, col_pars, col_valor)
@@ -720,15 +719,19 @@ fn_plot_granulometria <- function(data, col_pars, col_sitio, col_valor, code_sit
   if (length(intersect(all_pars, pars_gran)) == 0) {
     stop("Error, no hay variables de granos en el dataframe")
   }
-  sitios_tmp <- str_extract_all(data_plot[["col_sitio"]], "\\d+",simplify = T) %>%
-    as.numeric() %>%
-    unique() %>%
-    sort()
-  sitios_ord <- dplyr::case_when(
-    ord_sitio == "asc" ~ paste0(code_sitio, sitios_tmp),
-    ord_sitio == "desc" ~ paste0(code_sitio, rev(sitios_tmp)),
-    TRUE ~ NA_character_
-  )
+  if(ord_sitio == "custom") {
+    sitios_ord <- sitios_custom
+  } else {
+    sitios_tmp <- stringr::str_extract_all(data_plot$col_sitio, "\\d+", simplify = T) %>%
+      as.numeric() %>%
+      unique() %>%
+      sort()
+    sitios_ord <- dplyr::case_when(
+      ord_sitio == "asc" ~ paste0(code_sitio, sitios_tmp),
+      ord_sitio == "desc" ~ paste0(code_sitio, rev(sitios_tmp)),
+      TRUE ~ NA_character_
+    )
+  }
   if (length(sitios_ord) <= 10) {
     angle <- 0
   } else {

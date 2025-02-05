@@ -8,6 +8,7 @@ fn_plot_granulometria(
   data,
   col_pars,
   col_sitio,
+  sitios_custom = NULL,
   col_valor,
   code_sitio,
   ord_sitio = "asc",
@@ -25,11 +26,13 @@ fn_plot_granulometria(
 
 \item{col_sitio}{string que indica el nombre de la columna que tiene los sitios de muestreo.}
 
+\item{sitios_custom}{string con las estaciones en un orden en particular, solo aplica si ord_sitio es "custom"}
+
 \item{col_valor}{string que indica el nombre de la columna que tiene el valor de los parámetros.}
 
 \item{code_sitio}{string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.}
 
-\item{ord_sitio}{string que indica el orden en que se quiere que aparezcan los sitios en el gráfico (de forma ascendente o descendente de acuerdo al número de estación o punto de muestreo).}
+\item{ord_sitio}{string que indica el orden en que se quiere que aparezcan los sitios en el gráfico (de forma ascendente o descendente o custom).}
 
 \item{col_grupo}{string que indica el nombre del de la columna que contiene una variable de agrupamiento para el plot (e.g. zonas, campañas, etc.). Por defecto, Nulo.}
 

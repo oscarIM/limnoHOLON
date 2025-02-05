@@ -68,7 +68,6 @@ col_pars <- "Param"
 col_sitio <- "Sitio"
 col_valor <- "Valor"
 matriz <- "agua"
-code_sitio <- "P-"
 data_pars <- readr::read_tsv("tabla_pars_master.tsv")
 col_grupo <- "zonas"
 ord_factor <- c("Q5","Q3","Q2","Q1","L","Q4")

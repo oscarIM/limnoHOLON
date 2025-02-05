@@ -10,7 +10,6 @@ fn_plot_correlogram(
   col_sitio,
   col_factor = NULL,
   matriz,
-  code_sitio,
   data_pars,
   width = 6,
   height = 6
@@ -25,8 +24,6 @@ fn_plot_correlogram(
 
 \item{matriz}{string que indica el nombre de la "matriz" de datos que se esta analizando. Sirve principalmente como ID para las salidas y para diferenciar entre sedimentos y aguas.}
 
-\item{code_sitio}{string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.}
-
 \item{data_pars}{"dataframe" que contenga los parámetros (sus siglas) tal como aparecen en el "dataframe" de entrada, junto a un columna que indique a que tipo de parámetro pertenece (i.e. Físico, Químico, Nutriente, Metal, Orgánico e inorgánico y Biológico).Las columnas se tienen que llamar: Param y cat_pars}
 
 \item{width}{ancho del gráfico. Por defecto, toma valor 6}
@@ -34,6 +31,8 @@ fn_plot_correlogram(
 \item{height}{alto del gráfico. Por defecto, toma valor 6}
 
 \item{col_valor}{string que indica el nombre de la columna que tiene el valor de los parámetros.}
+
+\item{code_sitio}{string que indica el código (generalmente una letra seguida un guión) que utilizada para nombras las estaciones (eg. "E-", "P-", "D-"). Se esperan puntos de muestreos asignados de forma consecutiva y sin gaps.}
 }
 \value{
 gráfico de correlaciones de spearmann
@@ -48,10 +47,9 @@ col_pars <- "Param"
 col_sitio <- "Estacion"
 col_valor <- "Valor"
 matriz <- "sedimento"
-code_sitio <- "E-"
 data_pars <- readr::read_tsv("tabla_pars.tsv")
 width <- 8
 height <- 9
-fn_plot_correlogram(data = data, col_pars = col_pars, col_sitio = col_sitio, matriz = matriz, code_sitio, code_sitio, data_pars = data_pars, width = width,height = width)
+fn_plot_correlogram(data = data, col_pars = col_pars, col_sitio = col_sitio, matriz = matriz, code_sitio, data_pars = data_pars, width = width,height = width)
 }
 }
