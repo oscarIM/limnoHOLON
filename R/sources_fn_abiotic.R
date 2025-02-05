@@ -144,15 +144,19 @@ fn_plot_bar_abiotic  <- function(data, col_pars, col_sitio, col_valor, col_facto
   data_plot <- data_plot %>%
     dplyr::filter(col_pars %in% selected_pars)
   data_plot <- dplyr::left_join(data_plot, data_pars, by = c("col_pars" = "Param"))
-  sitios_tmp <- stringr::str_extract_all(data_plot$col_sitio, "\\d+", simplify = T) %>%
-    as.numeric() %>%
-    unique() %>%
-    sort()
-  sitios_ord <- dplyr::case_when(
-    ord_sitio == "asc" ~ paste0(code_sitio, sitios_tmp),
-    ord_sitio == "desc" ~ paste0(code_sitio, rev(sitios_tmp)),
-    TRUE ~ NA_character_
-  )
+  if(ord_sitio == "custom") {
+    sitios_ord <- sitios_custom
+  } else {
+    sitios_tmp <- stringr::str_extract_all(data_plot$col_sitio, "\\d+", simplify = T) %>%
+      as.numeric() %>%
+      unique() %>%
+      sort()
+    sitios_ord <- dplyr::case_when(
+      ord_sitio == "asc" ~ paste0(code_sitio, sitios_tmp),
+      ord_sitio == "desc" ~ paste0(code_sitio, rev(sitios_tmp)),
+      TRUE ~ NA_character_
+    )
+  }
   if (length(sitios_ord) <= 10) {
     angle <- 0
   } else {
