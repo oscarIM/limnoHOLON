@@ -378,7 +378,7 @@ plot_parameter_levels <- function(data,
       col_pars = !!sym(col_pars),
       col_value = !!sym(col_value),
       col_site = !!sym(col_site),
-      col_unit = !!sym(col_units),
+      col_units = !!sym(col_units),
       type_par = !!sym(type_par),
       !!!if (!is.null(col_facet)) setNames(col_facet, "col_facet") else NULL,
       !!!if (!is.null(col_group)) setNames(col_group, "col_group") else NULL
