@@ -425,10 +425,10 @@ plot_parameter_levels <- function(data,
   }
 
   #### ángulo etiquetas####
-  angle <- if (length(ord_sitio) <= 13) 0 else 90
+  angle <- if (length(ord_site) <= 13) 0 else 90
   data_plot <- data_plot %>%
     dplyr::mutate(
-      col_site = factor(col_site, levels = ord_sitio),
+      col_site = factor(col_site, levels = ord_site),
       type_par = factor(type_par, levels = order_type),
       col_facet = if ("col_facet" %in% names(.)) factor(col_facet, levels = ord_facet) else col_facet
     ) %>%
