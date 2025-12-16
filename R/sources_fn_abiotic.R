@@ -130,10 +130,10 @@ plot_parameter_levels <- function(data,
     type_data <- as.character(unique(data$type_par))
     title_par <- ifelse(type_data == "Metales", "metálicos", stringr::str_to_lower(type_data))
 
-    subt <- if (fuente_datos == "in situ") {
+    subt <- if (data_source == "in situ") {
       bquote("Parámetros medidos " * italic("in situ"))
     } else {
-      paste("Parámetros medidos", fuente_datos)
+      paste("Parámetros medidos", data_source)
     }
 
     # ---- generador de gráficos ----
@@ -162,7 +162,7 @@ plot_parameter_levels <- function(data,
         ) +
           ggplot2::geom_bar(
             stat = "identity",
-            position = position_dodge2(preserve = "single"),
+            position = ggplot2::position_dodge2(preserve = "single"),
             show.legend = FALSE,
             colour = "#80796BFF"
           ) +
@@ -171,7 +171,7 @@ plot_parameter_levels <- function(data,
             switch = "y",
             space = "free_x"
           ) +
-          ggh4x::facetted_pos_scales(y = list(label == "pH" ~ scale_y_continuous(limits = c(5, 9))))
+          ggh4x::facetted_pos_scales(y = list(label == "pH" ~ gglot2::scale_y_continuous(limits = c(5, 9))))
       } else if (is.null(col_group) && !is.null(col_facet)) {
         plot <- ggplot2::ggplot(data = data_sub, ggplot2::aes(
           x = factor(col_site),
@@ -180,7 +180,7 @@ plot_parameter_levels <- function(data,
         )) +
           ggplot2::geom_bar(
             stat = "identity",
-            position = position_dodge2(preserve = "single"),
+            position = ggplot2::position_dodge2(preserve = "single"),
             show.legend = FALSE
           ) +
           ggplot2::scale_fill_manual(values = cols_type) +
@@ -189,7 +189,7 @@ plot_parameter_levels <- function(data,
             switch = "y",
             space = "free_x"
           ) +
-          ggh4x::facetted_pos_scales(y = list(label == "pH" ~ scale_y_continuous(limits = c(5, 9))))
+          ggh4x::facetted_pos_scales(y = list(label == "pH" ~ ggplot2::scale_y_continuous(limits = c(5, 9))))
       } else if (!is.null(col_group) && is.null(col_facet)) {
         # Con agrupación, sin facetas
         plot <- ggplot2::ggplot(data = data_sub, ggplot2::aes(
@@ -334,13 +334,13 @@ plot_parameter_levels <- function(data,
       if (is.null(ref_data)) {
         plot <- plot + ggplot2::guides(color = "none")
       }
-      fuente_datos_clean <- stringr::str_replace(string = data_source, pattern = " ", replacement = "_")
+      data_source_clean <- stringr::str_replace(string = data_source, pattern = " ", replacement = "_")
       sufijo <- if (!is.null(idx)) paste0("_", idx) else ""
 
       file_name <- if (is.null(col_facet)) {
-        glue::glue("bar_pars_{unique(data_sub$type_par)}{sufijo}_{matrix}_{fuente_datos_clean}.png")
+        glue::glue("bar_pars_{unique(data_sub$type_par)}{sufijo}_{matrix}_{data_source_clean}.png")
       } else {
-        glue::glue("bar_pars_{unique(data_sub$type_par)}{sufijo}_{col_facet}_{matrix}_{fuente_datos_clean}.png")
+        glue::glue("bar_pars_{unique(data_sub$type_par)}{sufijo}_{col_facet}_{matrix}_{data_source_clean}.png")
       }
       ggplot2::ggsave(
         filename = file_name,
