@@ -7,7 +7,7 @@
 #' @param matrix Cadena que indica la matriz (por ejemplo, "agua", "sedimento") y controla el filtrado de parámetros granulométricos.
 #' @param round Número de decimales para redondear los estadísticos (por defecto 2).
 #' @param output_name Nombre de archivo de salida (CSV) donde se guardará la tabla de resultados (se genera también un TSV adicional).
-#' @importFrom dplyr select rename filter group_by summarise mutate mutate_at all_of case_when vars
+#' @importFrom dplyr select rename filter group_by summarise mutate mutate_at all_of case_when vars n
 #' @importFrom rlang sym
 #' @importFrom scales percent
 #' @importFrom knitr kable
@@ -56,7 +56,7 @@ get_summ_stats <- function(data,
   summ_pars <- data_plot %>%
     dplyr::group_by(col_pars) %>%
     dplyr::summarise(
-      Nobs = n(),
+      Nobs = dplyr::n(),
       min = min(col_value, na.rm = TRUE),
       max = max(col_value, na.rm = TRUE),
       prom = mean(col_value, na.rm = TRUE),
