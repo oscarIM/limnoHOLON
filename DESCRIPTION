@@ -10,4 +10,27 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
-Suggests: knitr, rmarkdown
+Suggests: 
+    rmarkdown
+Imports: 
+    dbscan,
+    dplyr,
+    ggh4x,
+    ggplot2,
+    ggpubr,
+    ggsci,
+    glue,
+    grDevices,
+    janitor,
+    knitr,
+    purrr,
+    RColorBrewer,
+    readr,
+    rlang,
+    rstatix,
+    scales,
+    stats,
+    stringr,
+    tidyr,
+    utils,
+    vegan
