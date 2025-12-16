@@ -7,7 +7,7 @@
 #' @param matrix Cadena que indica la matriz (por ejemplo, "agua", "sedimento") y controla el filtrado de parámetros granulométricos.
 #' @param round Número de decimales para redondear los estadísticos (por defecto 2).
 #' @param output_name Nombre de archivo de salida (CSV) donde se guardará la tabla de resultados (se genera también un TSV adicional).
-#' @importFrom dplyr select rename filter group_by summarise mutate mutate_at all_of case_when
+#' @importFrom dplyr select rename filter group_by summarise mutate mutate_at all_of case_when vars
 #' @importFrom rlang sym
 #' @importFrom scales percent
 #' @importFrom knitr kable
@@ -42,7 +42,7 @@ get_summ_stats <- function(data,
   )
   vars <- c(col_pars, col_value, col_bld)
   data_plot <- data %>%
-    select(all_of(vars)) %>%
+    dplyr::select(dplyr::all_of(vars)) %>%
     dplyr::rename(
       col_pars = !!sym(col_pars),
       col_value = !!sym(col_value),
@@ -74,7 +74,7 @@ get_summ_stats <- function(data,
     ) %>%
     dplyr::select(-c(cv_num, n_bld, prop_bld)) %>%
     dplyr::rename(Sigla = col_pars) %>%
-    dplyr::mutate_at(vars(3:6), list(~ round(., round)))
+    dplyr::mutate_at(dplyr::vars(3:6), list(~ round(., round)))
   print(knitr::kable(summ_pars, format = "markdown", align = "c", caption = "Tabla parámetros"))
   write.table(summ_pars, file = output_name, sep = ";", na = "NA", dec = ",", row.names = F, col.names = T)
   file <- stringr::str_replace(string = output_name, pattern = ".csv", replacement = ".tsv")
