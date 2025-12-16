@@ -38,7 +38,7 @@ plot_parameter_levels(
 
 \item{col_units}{Nombre de la columna (cadena) con la unidad del parámetro.}
 
-\item{matrix}{Cadena que describe la matriz (por ejemplo, "agua", "sedimento").}
+\item{matrix}{Cadena que describe la matrix (por ejemplo, "agua", "sedimento").}
 
 \item{type_par}{Nombre de la columna (cadena) que clasifica los parámetros por tipo.}
 

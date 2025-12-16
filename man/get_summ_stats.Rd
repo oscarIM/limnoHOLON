@@ -23,7 +23,7 @@ get_summ_stats(
 
 \item{col_bld}{Nombre de la columna (como cadena) que indica registros bajo el límite de detección (BLD).}
 
-\item{matrix}{Cadena que indica la matriz (por ejemplo, "agua", "sedimento") y controla el filtrado de parámetros granulométricos.}
+\item{matrix}{Cadena que indica la matrix (por ejemplo, "agua", "sedimento") y controla el filtrado de parámetros granulométricos.}
 
 \item{round}{Número de decimales para redondear los estadísticos (por defecto 2).}
 
@@ -37,8 +37,8 @@ Calcula estadísticos descriptivos por parámetro
 data <- readr::read_tsv("data_sedimento_inv_2025_clean.tsv")
 col_pars <- "Sigla"
 col_value <- "Valor"
-matriz <- "sedimento"
+matrix <- "sedimento"
 round <- 4
-fn_stats(data = data, col_pars = col_pars, col_value = col_value, data_pars = data_pars, matriz = matriz, round = round)
+fn_stats(data = data, col_pars = col_pars, col_value = col_value, data_pars = data_pars, matrix = matrix, round = round)
 }
 }

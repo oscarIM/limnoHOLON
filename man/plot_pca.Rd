@@ -10,7 +10,7 @@ plot_pca(
   col_site,
   col_value,
   type_par,
-  matriz,
+  matrix,
   col_rep = NULL,
   col_factor = NULL,
   ord_factor = NULL,
@@ -31,7 +31,7 @@ plot_pca(
 
 \item{type_par}{String. Columna que clasifica el tipo de parámetro (para colorear flechas).}
 
-\item{matriz}{String. Tipo de matriz (ej. "Agua", "Sedimento").}
+\item{matrix}{String. Tipo de matrix (ej. "Agua", "Sedimento").}
 
 \item{col_rep}{String (Opcional). Columna de réplicas o variable que induzcan a réplicas.}
 

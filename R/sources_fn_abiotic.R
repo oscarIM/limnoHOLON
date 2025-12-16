@@ -4,7 +4,7 @@
 #' @param col_pars Nombre de la columna (como cadena) que identifica el parámetro.
 #' @param col_value Nombre de la columna (como cadena) con los valores numéricos.
 #' @param col_bld Nombre de la columna (como cadena) que indica registros bajo el límite de detección (BLD).
-#' @param matrix Cadena que indica la matriz (por ejemplo, "agua", "sedimento") y controla el filtrado de parámetros granulométricos.
+#' @param matrix Cadena que indica la matrix (por ejemplo, "agua", "sedimento") y controla el filtrado de parámetros granulométricos.
 #' @param round Número de decimales para redondear los estadísticos (por defecto 2).
 #' @param output_name Nombre de archivo de salida (CSV) donde se guardará la tabla de resultados (se genera también un TSV adicional).
 #' @importFrom dplyr select rename filter group_by summarise mutate mutate_at all_of case_when vars n
@@ -20,9 +20,9 @@
 #' data <- readr::read_tsv("data_sedimento_inv_2025_clean.tsv")
 #' col_pars <- "Sigla"
 #' col_value <- "Valor"
-#' matriz <- "sedimento"
+#' matrix <- "sedimento"
 #' round <- 4
-#' fn_stats(data = data, col_pars = col_pars, col_value = col_value, data_pars = data_pars, matriz = matriz, round = round)
+#' fn_stats(data = data, col_pars = col_pars, col_value = col_value, data_pars = data_pars, matrix = matrix, round = round)
 #' }
 get_summ_stats <- function(data,
                            col_pars,
@@ -91,7 +91,7 @@ get_summ_stats <- function(data,
 #' @param ord_facet Vector con el orden deseado de los niveles de la faceta (opcional).
 #' @param col_units Nombre de la columna (cadena) con la unidad del parámetro.
 #' @param ord_site Vector con el orden deseado de los sitios en el eje x.
-#' @param matrix Cadena que describe la matriz (por ejemplo, "agua", "sedimento").
+#' @param matrix Cadena que describe la matrix (por ejemplo, "agua", "sedimento").
 #' @param type_par Nombre de la columna (cadena) que clasifica los parámetros por tipo.
 #' @param col_group Nombre de la columna (cadena) con el grupo (estrato, réplica, etc.) para colorear barras (opcional). En caso de ser estratos, tienen que ser ,"Supreficie", "Medio" y/o "Fondo".
 #' @param legend_name Título de la leyenda asociada a `col_group` (opcional).
@@ -246,13 +246,6 @@ plot_parameter_levels <- function(data,
           axis.text.x = element_text(angle = angle, vjust = 0.5, hjust = 0.5)
         )
 
-      # if (!is.null(legend_name)) {
-      #  if (stringr::str_detect(string = legend_name, pattern = "(?i)(especies?|organismos?)")) {
-      #    plot <- plot +
-      #      ggplot2::theme(legend.text = element_text(face = "italic"))
-      #  }
-      # }
-
       if (!is.null(ref_data)) {
         ### ACA HAY QUE FILTRAR
         normas_tbl <- ref_data %>%
@@ -297,7 +290,7 @@ plot_parameter_levels <- function(data,
         plot <- plot +
           ggplot2::geom_hline(
             data = data_sub, na.rm = TRUE,
-            aes(
+            ggplot2aes(
               yintercept = limite,
               color = nombre_norma,
               group = col_pars,
@@ -345,9 +338,9 @@ plot_parameter_levels <- function(data,
       sufijo <- if (!is.null(idx)) paste0("_", idx) else ""
 
       file_name <- if (is.null(col_facet)) {
-        glue::glue("bar_pars_{unique(data_sub$type_par)}{sufijo}_{matriz}_{fuente_datos_clean}.png")
+        glue::glue("bar_pars_{unique(data_sub$type_par)}{sufijo}_{matrix}_{fuente_datos_clean}.png")
       } else {
-        glue::glue("bar_pars_{unique(data_sub$type_par)}{sufijo}_{col_facet}_{matriz}_{fuente_datos_clean}.png")
+        glue::glue("bar_pars_{unique(data_sub$type_par)}{sufijo}_{col_facet}_{matrix}_{fuente_datos_clean}.png")
       }
       ggplot2::ggsave(
         filename = file_name,
@@ -401,7 +394,7 @@ plot_parameter_levels <- function(data,
     dplyr::filter(cv_num > 0) %>%
     dplyr::pull(col_pars)
 
-  if (stringr::str_detect(string = matriz, pattern = "(?i)sedimento?")) {
+  if (stringr::str_detect(string = matrix, pattern = "(?i)sedimento?")) {
     selected_pars <- setdiff(selected_pars, pars_gran)
   }
 
@@ -464,7 +457,7 @@ plot_parameter_levels <- function(data,
 #' @param col_value String. Nombre de la columna que contiene los valores numéricos.
 #' @param col_group String (Opcional). Nombre de la columna para agrupación adicional. Por defecto NULL.
 #' @param col_factor String (Opcional). Nombre de una columna de factor extra. Por defecto NULL.
-#' @param matriz String. Tipo de matriz (ej. "Agua", "Sedimento"). Si contiene "sedimento", se excluyen parámetros granulométricos.
+#' @param matrix String. Tipo de matrix (ej. "Agua", "Sedimento"). Si contiene "sedimento", se excluyen parámetros granulométricos.
 #' @param output_name String. Nombre archivo de salida.
 #' @param width Numérico. Ancho de la imagen guardada en pulgadas. Por defecto 6.
 #' @param height Numérico. Alto de la imagen guardada en pulgadas. Por defecto 6.
@@ -487,14 +480,14 @@ plot_parameter_levels <- function(data,
 #'   col_pars = "PARAMETRO",
 #'   col_site = "ESTACION",
 #'   col_value = "RESULTADO",
-#'   matriz = "Agua de Mar"
+#'   matrix = "Agua de Mar"
 #' )
 #' }
 plot_correlogram <- function(data,
                              col_pars,
                              col_site,
                              col_value,
-                             matriz,
+                             matrix,
                              col_group = NULL,
                              col_factor = NULL,
                              width = 6,
@@ -543,7 +536,7 @@ plot_correlogram <- function(data,
     dplyr::pull(col_pars)
 
   # Lógica específica para sedimentos
-  if (stringr::str_detect(string = matriz, pattern = "(?i)sedimento?")) {
+  if (stringr::str_detect(string = matrix, pattern = "(?i)sedimento?")) {
     selected_pars <- setdiff(selected_pars, pars_gran)
   }
 
@@ -556,7 +549,7 @@ plot_correlogram <- function(data,
       values_from = "col_value"
     )
 
-  # Extraer matriz numérica y escalar
+  # Extraer matrix numérica y escalar
   # Identificamos columnas que NO son numéricas (metadata)
   # En este punto, 'col_site' es la única columna no parámetro seguro
   cols_metadata <- "col_site"
@@ -632,7 +625,7 @@ plot_correlogram <- function(data,
       x = "",
       y = "",
       title = "Correlación de Spearman entre parámetros",
-      subtitle = glue::glue("Matriz: {matriz}")
+      subtitle = glue::glue("matrix: {matrix}")
     ) +
     ggplot2::theme_minimal(base_family = "Arial") +
     ggplot2::theme(
@@ -671,7 +664,7 @@ plot_correlogram <- function(data,
 #' @param col_rep String (Opcional). Columna de réplicas o variable que induzcan a réplicas.
 #' @param col_factor String (Opcional). Columna para agrupar y calcular PERMANOVA.
 #' @param ord_factor Vector (Opcional). Orden específico para los niveles de `col_factor`.
-#' @param matriz String. Tipo de matriz (ej. "Agua", "Sedimento").
+#' @param matrix String. Tipo de matrix (ej. "Agua", "Sedimento").
 #' @param dist String. Método de distancia para `vegan::adonis2` (por defecto "euc" -> euclidean).
 #' @param width Numérico. Ancho de la imagen.
 #' @param height Numérico. Alto de la imagen.
@@ -694,7 +687,7 @@ plot_pca <- function(data,
                      col_site,
                      col_value,
                      type_par,
-                     matriz,
+                     matrix,
                      col_rep = NULL,
                      col_factor = NULL,
                      ord_factor = NULL,
@@ -741,7 +734,7 @@ plot_pca <- function(data,
       !!!if (!is.null(col_rep)) stats::setNames(col_rep, "col_rep") else NULL
     )
 
-  # 3. Filtrado por Varianza (CV > 0) y Matriz
+  # 3. Filtrado por Varianza (CV > 0) y matrix
   selected_pars <- data_clean %>%
     dplyr::group_by(col_pars) %>%
     dplyr::summarise(
@@ -753,7 +746,7 @@ plot_pca <- function(data,
     dplyr::filter(cv_num > 0) %>%
     dplyr::pull(col_pars)
 
-  if (stringr::str_detect(matriz, "(?i)sedimento?")) {
+  if (stringr::str_detect(matrix, "(?i)sedimento?")) {
     selected_pars <- setdiff(selected_pars, pars_gran)
   }
 
@@ -764,7 +757,7 @@ plot_pca <- function(data,
   current_types <- unique(data_pca_ready$type_par)
   cols_type_plot <- cols_type_final[names(cols_type_final) %in% current_types]
 
-  # 4. Preparación de Matriz Ancha para PCA
+  # 4. Preparación de matrix Ancha para PCA
   # Identificar columnas de metadatos (que no son valores ni parámetros)
   id_cols <- c("col_site")
   if (!is.null(col_rep)) id_cols <- c(id_cols, "col_rep")
@@ -776,7 +769,7 @@ plot_pca <- function(data,
     # Eliminar columnas con NAs porque prcomp no las soporta bien
     dplyr::select(dplyr::where(~ !any(is.na(.))))
 
-  # Separar metadatos y matriz numérica
+  # Separar metadatos y matrix numérica
   metadata <- to_pca_wide %>% dplyr::select(dplyr::any_of(id_cols))
   matrix_num <- to_pca_wide %>% dplyr::select(-dplyr::any_of(id_cols))
 
@@ -852,7 +845,7 @@ plot_pca <- function(data,
 
     # Títulos y Ejes
     ggplot2::labs(
-      title = glue::glue("Análisis multivariado (PCA) para parámetros medidos en {matriz}"),
+      title = glue::glue("Análisis multivariado (PCA) para parámetros medidos en {matrix}"),
       subtitle = subtitle_text,
       x = glue::glue("PC1 ({scales::percent(prop_pca[1])})"),
       y = glue::glue("PC2 ({scales::percent(prop_pca[2])})")
@@ -1521,7 +1514,7 @@ plot_granulometria <- function(data,
 #' @param col_site String. Nombre de la columna de sitios.
 #' @param col_year String. Nombre de la columna de año.
 #' @param col_units String. Nombre de la columna de unidades.
-#' @param matriz String. Nombre de la matriz (para títulos).
+#' @param matrix String. Nombre de la matrix (para títulos).
 #' @param col_group String (Opcional). Columna para agrupación adicional (ej. Estrato).
 #' @param ord_site Vector (Opcional). Orden de los sitios.
 #' @param output_name String. Nombre del archivo de salida.
@@ -1549,7 +1542,7 @@ line_plot_by_time <- function(data,
                               col_x,
                               col_site,
                               col_year,
-                              matriz,
+                              matrix,
                               col_units,
                               col_group = NULL,
                               ord_site = NULL,
@@ -1661,7 +1654,7 @@ line_plot_by_time <- function(data,
   # Títulos dinámicos
   min_y <- min(data_plot$col_year, na.rm = TRUE)
   max_y <- max(data_plot$col_year, na.rm = TRUE)
-  title_main <- glue::glue("Concentración de parámetros en {matriz}")
+  title_main <- glue::glue("Concentración de parámetros en {matrix}")
   subtitle_main <- glue::glue("Periodo: {min_y}–{max_y}")
 
   # 4. Lógica de Graficado (Ramificación) -------------------------------------
@@ -1703,8 +1696,8 @@ line_plot_by_time <- function(data,
       dplyr::select(dplyr::all_of(cols_curr)) %>%
       rlang::set_names(cols_orig)
 
-    matriz_safe <- stringr::str_replace_all(matriz, " ", "_")
-    file_annot <- glue::glue("data_{matriz_safe}_PROMNA_annotated.csv")
+    matrix_safe <- stringr::str_replace_all(matrix, " ", "_")
+    file_annot <- glue::glue("data_{matrix_safe}_PROMNA_annotated.csv")
 
     # Guardamos CSV auxiliar
     tryCatch(readr::write_csv(csv_out, file_annot), error = function(e) warning("No se pudo guardar CSV anotado"))

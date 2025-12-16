@@ -9,7 +9,7 @@ plot_correlogram(
   col_pars,
   col_site,
   col_value,
-  matriz,
+  matrix,
   col_group = NULL,
   col_factor = NULL,
   width = 6,
@@ -26,7 +26,7 @@ plot_correlogram(
 
 \item{col_value}{String. Nombre de la columna que contiene los valores numéricos.}
 
-\item{matriz}{String. Tipo de matriz (ej. "Agua", "Sedimento"). Si contiene "sedimento", se excluyen parámetros granulométricos.}
+\item{matrix}{String. Tipo de matrix (ej. "Agua", "Sedimento"). Si contiene "sedimento", se excluyen parámetros granulométricos.}
 
 \item{col_group}{String (Opcional). Nombre de la columna para agrupación adicional. Por defecto NULL.}
 
@@ -53,7 +53,7 @@ plot_correlogram(
   col_pars = "PARAMETRO",
   col_site = "ESTACION",
   col_value = "RESULTADO",
-  matriz = "Agua de Mar"
+  matrix = "Agua de Mar"
 )
 }
 }

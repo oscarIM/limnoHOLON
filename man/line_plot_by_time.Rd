@@ -11,7 +11,7 @@ line_plot_by_time(
   col_x,
   col_site,
   col_year,
-  matriz,
+  matrix,
   col_units,
   col_group = NULL,
   ord_site = NULL,
@@ -38,7 +38,7 @@ line_plot_by_time(
 
 \item{col_year}{String. Nombre de la columna de año.}
 
-\item{matriz}{String. Nombre de la matriz (para títulos).}
+\item{matrix}{String. Nombre de la matrix (para títulos).}
 
 \item{col_units}{String. Nombre de la columna de unidades.}
 
