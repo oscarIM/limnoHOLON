@@ -290,7 +290,7 @@ plot_parameter_levels <- function(data,
         plot <- plot +
           ggplot2::geom_hline(
             data = data_sub, na.rm = TRUE,
-            ggplot2aes(
+            ggplot2::aes(
               yintercept = limite,
               color = nombre_norma,
               group = col_pars,
