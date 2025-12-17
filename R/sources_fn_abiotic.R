@@ -480,7 +480,8 @@ plot_parameter_levels <- function(data,
 #'   col_pars = "PARAMETRO",
 #'   col_site = "ESTACION",
 #'   col_value = "RESULTADO",
-#'   matrix = "Agua de Mar"
+#'   matrix = "Agua de Mar",
+#'   output_name = "correlograma_spearman.png"
 #' )
 #' }
 plot_correlogram <- function(data,
@@ -492,6 +493,7 @@ plot_correlogram <- function(data,
                              col_factor = NULL,
                              width = 6,
                              height = 6,
+                             output_name = "correlograma_spearman.png",
                              save_rds = FALSE) {
   op <- options(scipen = 999)
   on.exit(options(op))
@@ -543,11 +545,7 @@ plot_correlogram <- function(data,
   # 4. Preparación de datos para correlación
   data_plot <- data_clean %>%
     dplyr::filter(col_pars %in% selected_pars) %>%
-    tidyr::pivot_wider(
-      id_cols = c("col_site"), # Aseguramos que pivotamos correctamente por sitio
-      names_from = "col_pars",
-      values_from = "col_value"
-    )
+    tidyr::pivot_wider(names_from = col_pars, values_from = col_value)
 
   # Extraer matrix numérica y escalar
   # Identificamos columnas que NO son numéricas (metadata)
@@ -625,7 +623,7 @@ plot_correlogram <- function(data,
       x = "",
       y = "",
       title = "Correlación de Spearman entre parámetros",
-      subtitle = glue::glue("matrix: {matrix}")
+      subtitle = glue::glue("matriz: {matrix}")
     ) +
     ggplot2::theme_minimal(base_family = "Arial") +
     ggplot2::theme(

@@ -14,6 +14,7 @@ plot_correlogram(
   col_factor = NULL,
   width = 6,
   height = 6,
+  output_name = "correlograma_spearman.png",
   save_rds = FALSE
 )
 }
@@ -36,9 +37,9 @@ plot_correlogram(
 
 \item{height}{Numérico. Alto de la imagen guardada en pulgadas. Por defecto 6.}
 
-\item{save_rds}{Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.}
-
 \item{output_name}{String. Nombre archivo de salida.}
+
+\item{save_rds}{Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.}
 }
 \value{
 Un objeto ggplot2 con el correlograma. También guarda un archivo PNG en el directorio de trabajo.
@@ -53,7 +54,8 @@ plot_correlogram(
   col_pars = "PARAMETRO",
   col_site = "ESTACION",
   col_value = "RESULTADO",
-  matrix = "Agua de Mar"
+  matrix = "Agua de Mar",
+  output_name = "correlograma_spearman.png"
 )
 }
 }
