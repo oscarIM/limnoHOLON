@@ -12,7 +12,7 @@ plot_granulometria(
   col_factor = NULL,
   col_rep = NULL,
   ord_site = NULL,
-  ord_factor = NULL,
+  levels_factor = NULL,
   width = 8,
   height = 6,
   output_name = "plot_granulometria.png",
@@ -34,7 +34,7 @@ plot_granulometria(
 
 \item{ord_site}{Vector (Opcional). Orden específico para los sitios.}
 
-\item{ord_factor}{Vector (Opcional). Orden específico para el factor de agrupación.}
+\item{levels_factor}{Vector (Opcional). Orden específico para el factor de agrupación.}
 
 \item{width}{Numérico. Ancho de la imagen guardada.}
 
