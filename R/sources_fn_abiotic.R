@@ -649,7 +649,7 @@ plot_correlogram <- function(data,
     error = function(e) warning("Error guardando imagen/objeto: ", e$message)
   )
 
-  return(invisble(p))
+  return(invisible(p))
 }
 ###############################################################################
 #' @title Biplot de PCA con PERMANOVA Opcional
