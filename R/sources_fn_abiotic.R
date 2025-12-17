@@ -1203,7 +1203,7 @@ plot_boxplot <- function(data,
       outliers = TRUE,
       na.rm = TRUE,
       outlier.colour = "red",
-      outlier.shape = 19, #NA
+      outlier.shape = 19, # NA
       outlier.alpha = 0.1,
       fill = "#E69F00"
     ) +
