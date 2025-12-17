@@ -2,7 +2,7 @@
 % Please edit documentation in R/sources_fn_abiotic.R
 \name{plot_boxplot}
 \alias{plot_boxplot}
-\title{Generar Boxplots con opción de pruebas estadísticas}
+\title{Generar Boxplots con GLM Externo (Campos Específicos)}
 \usage{
 plot_boxplot(
   data,
@@ -10,6 +10,7 @@ plot_boxplot(
   col_y,
   col_pars,
   col_units,
+  stats_df = NULL,
   n_col = 3,
   output_name = "boxplot.png",
   width = 10,
@@ -23,36 +24,38 @@ plot_boxplot(
 )
 }
 \arguments{
-\item{data}{Data frame con los datos.}
+\item{data}{Data frame con los datos crudos.}
 
-\item{col_x}{String. Nombre de la columna para el eje X (factor/grupos).}
+\item{col_x}{String. Columna eje X.}
 
-\item{col_y}{String. Nombre de la columna para el eje Y (numérica).}
+\item{col_y}{String. Columna eje Y.}
 
-\item{col_pars}{String. Nombre de la columna de parámetros (para facet_wrap).}
+\item{col_pars}{String. Columna de parámetros.}
 
-\item{col_units}{String. Nombre de la columna de unidades.}
+\item{col_units}{String. Columna de unidades.}
 
-\item{n_col}{Entero. Número de columnas en el facet_wrap.}
+\item{stats_df}{Data frame con los resultados del GLM. Debe contener las columnas **`parametros`** y **`pr_chi`**.}
 
-\item{output_name}{String. Ruta/nombre del archivo de salida (png).}
+\item{n_col}{Entero. Columnas facet.}
 
-\item{width}{Numérico. Ancho de la imagen.}
+\item{output_name}{String. Archivo salida.}
 
-\item{height}{Numérico. Alto de la imagen.}
+\item{width}{Numérico. Ancho.}
 
-\item{levels_factor}{Vector. Niveles ordenados para el factor del eje X.}
+\item{height}{Numérico. Alto.}
 
-\item{title}{String. Título del gráfico.}
+\item{levels_factor}{Vector. Orden factor X.}
 
-\item{label_x}{String. Etiqueta eje X.}
+\item{title}{String. Título.}
 
-\item{label_y}{String. Etiqueta eje Y.}
+\item{label_x}{String. Etiqueta X.}
 
-\item{add_test}{Lógico. Si es TRUE, agrega estadísticas (KW y/o Dunn). Por defecto FALSE.#' @return Guarda un archivo PNG y retorna el objeto ggplot invisiblmente.}
+\item{label_y}{String. Etiqueta Y.}
 
-\item{save_rds}{Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.}
+\item{add_test}{Lógico. Si TRUE, activa subtítulo GLM, etiquetas GLM y test de Dunn (condicional).}
+
+\item{save_rds}{Lógico. Guardar RDS.}
 }
 \description{
-Crea boxplots faceteados. Opcionalmente realiza pruebas de Kruskal-Wallis y, si hay pocos grupos, pruebas post-hoc de Dunn.
+Crea boxplots paginados. Usa una tabla externa (`stats_df`) con campos `parametros` y `pr_chi` para etiquetar el GLM.
 }

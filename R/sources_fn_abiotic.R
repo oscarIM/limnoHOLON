@@ -1232,7 +1232,7 @@ plot_boxplot <- function(data,
       ) +
       ggplot2::facet_wrap(~col_label, scales = "free_y", ncol = n_col) +
       ggplot2::labs(x = label_x, y = label_y, title = title, subtitle = subtitle_text) +
-      ggplot2::theme_linedraw() +
+      ggplot2::theme_linedraw(base_family = "Arial") +
       ggplot2::theme(
         axis.text.x = ggplot2::element_text(angle = 0, hjust = 0.5),
         strip.text = ggplot2::element_text(face = "bold", colour = "white"),
