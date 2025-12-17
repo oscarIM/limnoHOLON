@@ -664,7 +664,7 @@ plot_correlogram <- function(data,
 #' @param matrix String. Tipo de matrix (ej. "Agua", "Sedimento").
 #' @param col_rep String (Opcional). Columna de réplicas.
 #' @param col_factor String (Opcional). Columna para agrupar y calcular PERMANOVA.
-#' @param ord_factor Vector (Opcional). Orden específico para los niveles de `col_factor`.
+#' @param levels_factor Vector (Opcional). Orden específico para los niveles de `col_factor`.
 #' @param width Numérico. Ancho de la imagen.
 #' @param height Numérico. Alto de la imagen.
 #' @param dist String. Método de distancia para PERMANOVA (por defecto "euclidean").
@@ -692,7 +692,7 @@ plot_pca <- function(data,
                      matrix,
                      col_rep = NULL,
                      col_factor = NULL,
-                     ord_factor = NULL,
+                     levels_factor = NULL,
                      width = 6,
                      height = 6,
                      dist = "euclidean",
@@ -874,8 +874,8 @@ plot_pca <- function(data,
     }
     names(col_pca) <- unique(scores$col_factor)
 
-    if (!is.null(ord_factor)) {
-      order_grupo <- ord_factor
+    if (!is.null(levels_factor)) {
+      order_grupo <- levels_factor
     } else {
       order_grupo <- scores %>%
         dplyr::pull(col_factor) %>%
@@ -1207,7 +1207,11 @@ plot_boxplot <- function(data,
     ) +
     ggplot2::facet_wrap(~col_label, scales = "free_y", ncol = n_col) +
     ggplot2::theme_linedraw(base_family = "Arial") +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 0, hjust = 0.5),
+      strip.text = element_text(face = "bold", colour = "white"),
+      strip.background = element_rect(fill = "#2c3e50")
+    )
 
   # 4. Lógica Estadística (Solo si add_test es TRUE) --------------------------
   if (add_test) {
@@ -1286,7 +1290,7 @@ plot_boxplot <- function(data,
           dplyr::group_by(col_label) %>%
           dplyr::mutate(
             step = dplyr::row_number(),
-            y.position = max_y + step * 0.12 * max_y # Escalado dinámico
+            y.position = max_y + step * 0.10 * max_y # Escalado dinámico
           ) %>%
           dplyr::ungroup()
 
@@ -1379,7 +1383,7 @@ plot_boxplot <- function(data,
 #' @param col_factor String (Opcional). Columna para agrupar en facetas (columnas).
 #' @param col_rep String (Opcional). Columna para agrupar en facetas (filas).
 #' @param ord_site Vector (Opcional). Orden específico para los sitios.
-#' @param ord_factor Vector (Opcional). Orden específico para el factor de agrupación.
+#' @param levels_factor Vector (Opcional). Orden específico para el factor de agrupación.
 #' @param width Numérico. Ancho de la imagen guardada.
 #' @param height Numérico. Alto de la imagen guardada.
 #' @param output_name String. Nombre del archivo de salida.
@@ -1398,7 +1402,7 @@ plot_granulometria <- function(data,
                                col_factor = NULL,
                                col_rep = NULL,
                                ord_site = NULL,
-                               ord_factor = NULL,
+                               levels_factor = NULL,
                                width = 8,
                                height = 6,
                                output_name = "plot_granulometria.png",
@@ -1444,8 +1448,8 @@ plot_granulometria <- function(data,
 
   # Aplicar orden a Factor (si existe)
   if (!is.null(col_factor)) {
-    if (!is.null(ord_factor)) {
-      data_plot$col_factor <- factor(data_plot$col_factor, levels = ord_factor)
+    if (!is.null(levels_factor)) {
+      data_plot$col_factor <- factor(data_plot$col_factor, levels = levels_factor)
     } else {
       data_plot$col_factor <- as.factor(data_plot$col_factor)
     }
