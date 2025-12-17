@@ -1200,7 +1200,7 @@ plot_boxplot <- function(data,
   # 3. Base del Gráfico (Común para ambos casos) ------------------------------
   p <- ggplot2::ggplot(data = data_plot, ggplot2::aes(x = col_x, y = col_y_plot)) +
     ggplot2::geom_boxplot(
-      outliers = TRUE
+      outliers = TRUE,
       na.rm = TRUE,
       outlier.colour = "red",
       outlier.shape = 19, #NA
