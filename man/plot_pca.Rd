@@ -13,7 +13,7 @@ plot_pca(
   matrix,
   col_rep = NULL,
   col_factor = NULL,
-  ord_factor = NULL,
+  levels_factor = NULL,
   width = 6,
   height = 6,
   dist = "euclidean",
@@ -38,7 +38,7 @@ plot_pca(
 
 \item{col_factor}{String (Opcional). Columna para agrupar y calcular PERMANOVA.}
 
-\item{ord_factor}{Vector (Opcional). Orden específico para los niveles de `col_factor`.}
+\item{levels_factor}{Vector (Opcional). Orden específico para los niveles de `col_factor`.}
 
 \item{width}{Numérico. Ancho de la imagen.}
 
