@@ -1200,9 +1200,11 @@ plot_boxplot <- function(data,
   # 3. Base del Gráfico (Común para ambos casos) ------------------------------
   p <- ggplot2::ggplot(data = data_plot, ggplot2::aes(x = col_x, y = col_y_plot)) +
     ggplot2::geom_boxplot(
+      outliers = TRUE
       na.rm = TRUE,
       outlier.colour = "red",
-      outlier.shape = NA, # Ocultamos outliers gráficos si recortamos datos, o según gusto
+      outlier.shape = 19, #NA
+      outlier.alpha = 0.1,
       fill = "#E69F00"
     ) +
     ggplot2::facet_wrap(~col_label, scales = "free_y", ncol = n_col) +
