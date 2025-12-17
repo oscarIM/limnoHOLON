@@ -1818,4 +1818,161 @@ line_plot_by_time <- function(data,
 
   return(p)
 }
-#######################################################################################
+################################################################################
+#' @title Calcular Excedencias de Normas Ambientales
+#' @description Evalúa los datos frente a una tabla de normas, calculando frecuencias y porcentajes de excedencia. Maneja lógica específica para rangos (ej. pH) y límites superiores.
+#'
+#' @param data Data frame con los datos de mediciones.
+#' @param norm_data Data frame con las normas. Debe contener columnas `limite_1` y `limite_2`.
+#' @param col_pars String. Nombre de la columna de parámetros en `data` y `norm_data`.
+#' @param col_value String. Nombre de la columna de valores en `data`.
+#' @param col_group String (Opcional). Columna de agrupación (ej. "Zona", "Sitio").
+#' @param output_name String. Nombre del archivo de salida (.tsv o .csv).
+#'
+#' @return Un data frame con el resumen de excedencias (invisible).
+#' @export get_norm_exceedance
+#' @importFrom dplyr select rename group_by summarise filter pull distinct mutate left_join case_when relocate n
+#' @importFrom tidyr pivot_longer
+#' @importFrom stringr str_detect
+#' @importFrom scales percent
+#' @importFrom readr write_tsv write_csv
+#' @importFrom rlang sym "!!" "!!!"
+get_norm_exceedance <- function(data,
+                                norm_data,
+                                col_pars,
+                                col_value,
+                                col_group = NULL,
+                                output_name = "tabla_excedencias.tsv") {
+  # 1. Preparación de Datos ---------------------------------------------------
+
+  # Renombrado estándar para manipulación interna
+  # Nota: Asumimos que col_pars existe en ambas tablas con el mismo nombre o el usuario ya lo gestionó.
+  # Aquí estandarizamos 'data'
+  vars_select <- c(col_pars, col_value, col_group)
+
+  data_clean <- data %>%
+    dplyr::select(dplyr::all_of(vars_select)) %>%
+    dplyr::rename(
+      col_pars_int = !!rlang::sym(col_pars),
+      col_val_int = !!rlang::sym(col_value),
+      col_group_int = !!rlang::sym(col_group)
+    )
+
+  # 2. Filtrado por Varianza (CV > 0) -----------------------------------------
+  # Eliminar parámetros constantes o vacíos antes de cruzar
+  selected_pars <- data_clean %>%
+    dplyr::group_by(col_pars_int) %>%
+    dplyr::summarise(
+      prom = mean(col_val_int, na.rm = TRUE),
+      desvest = stats::sd(col_val_int, na.rm = TRUE),
+      cv_num = dplyr::if_else(prom == 0, 0, desvest / prom),
+      .groups = "drop"
+    ) %>%
+    dplyr::filter(cv_num > 0) %>%
+    dplyr::pull(col_pars_int)
+
+  data_filt <- data_clean %>%
+    dplyr::filter(col_pars_int %in% selected_pars)
+
+  # 3. Cruce con Normas -------------------------------------------------------
+
+  # Validar que la tabla de normas tenga la estructura esperada
+  if (!all(c("limite_1", "limite_2") %in% names(norm_data))) {
+    stop("La tabla 'norm_data' debe contener las columnas 'limite_1' y 'limite_2'.")
+  }
+
+  # Asegurar que el nombre del parámetro en norma coincida con el argumento col_pars
+  # Si la norma usa otro nombre, el usuario debe renombrarlo antes o usar el mismo.
+  # Asumimos que `col_pars` es la llave. Renombramos en norma temporalmente si es necesario,
+  # pero lo más seguro es hacer el join dinámico.
+
+  # Preparamos norma para el join
+  norm_prep <- norm_data %>%
+    dplyr::rename(col_pars_int = !!rlang::sym(col_pars))
+
+  # Filtrar datos que tengan norma
+  data_to_table <- data_filt %>%
+    dplyr::filter(col_pars_int %in% unique(norm_prep$col_pars_int))
+
+  data_final <- dplyr::left_join(data_to_table, norm_prep, by = "col_pars_int", relationship = "many-to-many")
+
+  # 4. Evaluación de Excedencias ----------------------------------------------
+
+  df_long <- data_final %>%
+    tidyr::pivot_longer(
+      cols = c("limite_1", "limite_2"),
+      names_to = "tipo_limite_int",
+      values_to = "limite_val"
+    ) %>%
+    dplyr::filter(!is.na(limite_val)) # Eliminar normas sin valor
+
+  df_excede <- df_long %>%
+    dplyr::mutate(
+      excede = dplyr::case_when(
+        # Lógica pH: Rango (Bajo inferior o Sobre superior)
+        col_pars_int == "pH" & tipo_limite_int == "limite_1" & col_val_int < limite_val ~ 1,
+        col_pars_int == "pH" & tipo_limite_int == "limite_2" & col_val_int > limite_val ~ 1,
+        # Lógica General: Supera límite superior
+        col_pars_int != "pH" & col_val_int > limite_val ~ 1,
+        TRUE ~ 0
+      )
+    )
+
+  # 5. Resumen y Etiquetado ---------------------------------------------------
+
+  # Verificar si existe columna 'norma' en norm_data, sino crear dummy
+  if (!"norma" %in% names(df_excede)) df_excede$norma <- "Norma"
+
+  tabla_excedencia <- df_excede %>%
+    dplyr::group_by(col_pars_int, norma, tipo_limite_int, col_group_int) %>%
+    dplyr::summarise(
+      N_muestras = dplyr::n(),
+      N_excedencias = sum(excede),
+      Porcentaje_excedencia = scales::percent(mean(excede), accuracy = 1),
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(
+      Limite_desc = dplyr::case_when(
+        # --- CASO ESPECIAL: pH ---
+        col_pars_int == "pH" & stringr::str_detect(norma, "DS 144") & tipo_limite_int == "limite_1" ~ "Valor mínimo",
+        col_pars_int == "pH" & stringr::str_detect(norma, "DS 144") & tipo_limite_int == "limite_2" ~ "Valor máximo",
+
+        # --- REGLAS GENERALES ---
+        stringr::str_detect(norma, "NSCA Quintero|DS 144") & tipo_limite_int == "limite_1" ~ "Valor máximo",
+        stringr::str_detect(norma, "EPA") & tipo_limite_int == "limite_1" ~ "Agudo",
+        stringr::str_detect(norma, "EPA") & tipo_limite_int == "limite_2" ~ "Crónico",
+        stringr::str_detect(norma, "NOAA") & tipo_limite_int == "limite_1" ~ "Agudo",
+        stringr::str_detect(norma, "NOAA") & tipo_limite_int == "limite_2" ~ "Crónico",
+        TRUE ~ tipo_limite_int
+      )
+    ) %>%
+    dplyr::relocate(Limite_desc, .after = norma) %>%
+    dplyr::select(-tipo_limite_int) %>%
+    dplyr::rename(
+      Parámetro = col_pars_int,
+      Norma = norma,
+      Límite = Limite_desc,
+      !!rlang::sym(col_group) := col_group_int, # Restaurar nombre original del grupo
+      "N° de muestras" = N_muestras,
+      "N° de excedencias" = N_excedencias,
+      "Excedencias %" = Porcentaje_excedencia
+    )
+
+  # 6. Guardado y Retorno -----------------------------------------------------
+
+  tryCatch(
+    {
+      # Detectar formato por extensión
+      if (stringr::str_detect(output_name, "\\.csv$")) {
+        readr::write_csv(tabla_excedencia, output_name)
+      } else {
+        # Por defecto TSV si no es CSV
+        if (!stringr::str_detect(output_name, "\\.tsv$")) output_name <- paste0(output_name, ".tsv")
+        readr::write_tsv(tabla_excedencia, output_name)
+      }
+    },
+    error = function(e) warning("Error guardando tabla: ", e$message)
+  )
+
+  return(tabla_excedencia)
+}
