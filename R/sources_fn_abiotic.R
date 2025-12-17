@@ -1202,9 +1202,9 @@ plot_boxplot <- function(data,
     ggplot2::geom_boxplot(
       outliers = TRUE,
       na.rm = TRUE,
-      outlier.colour = "red",
+      outlier.colour = "black",
       outlier.shape = 19, # NA
-      outlier.alpha = 0.1,
+      outlier.alpha = 0.5,
       fill = "#E69F00"
     ) +
     ggplot2::facet_wrap(~col_label, scales = "free_y", ncol = n_col) +
