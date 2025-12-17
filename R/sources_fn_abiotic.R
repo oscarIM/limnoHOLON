@@ -649,7 +649,7 @@ plot_correlogram <- function(data,
     error = function(e) warning("Error guardando imagen/objeto: ", e$message)
   )
 
-  return(invisible(p))
+  return(p)
 }
 ###############################################################################
 #' @title Biplot de PCA con PERMANOVA Opcional
@@ -666,6 +666,7 @@ plot_correlogram <- function(data,
 #' @param dist String. Método de distancia para `vegan::adonis2` (por defecto "euc" -> euclidean).
 #' @param width Numérico. Ancho de la imagen.
 #' @param height Numérico. Alto de la imagen.
+#' @param output_name String. Nombre archivo de salida.
 #' @param output_name String. Ruta/Nombre base para guardar los archivos de salida.
 #' @param save_rds Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.
 #' @return Un objeto ggplot.
@@ -692,7 +693,8 @@ plot_pca <- function(data,
                      width = 6,
                      height = 6,
                      dist = "euclidean",
-                     save_rds = FALSE) {
+                     save_rds = FALSE,
+                     output_name = "plot_pca.png") {
   # Manejo temporal de opciones científicas
   op <- options(scipen = 999)
   on.exit(options(op))
@@ -924,7 +926,7 @@ plot_pca <- function(data,
     error = function(e) warning("Error guardando imagen/objeto: ", e$message)
   )
 
-  return(invisible(p))
+  return(p)
 }
 ###############################################################################
 #' @title Modelos Lineales Generalizados (GLM) por Grupos
@@ -1349,7 +1351,7 @@ plot_boxplot <- function(data,
     error = function(e) warning("No se pudo guardar la imagen/objeto: ", e$message)
   )
 
-  return(invisible(p))
+  return(p)
 }
 ###############################################################################
 #' @title Graficar Distribución de Granulometría (Stacked Barplot)
@@ -1500,7 +1502,7 @@ plot_granulometria <- function(data,
     error = function(e) warning("Error guardando archivos: ", e$message)
   )
 
-  return(invisible(p))
+  return(p)
 }
 #######################################################################################
 #' @title Gráfico de Series Temporales con Detección de Outliers (DBSCAN)
@@ -1792,6 +1794,6 @@ line_plot_by_time <- function(data,
     error = function(e) warning("Error al guardar gráfico: ", e$message)
   )
 
-  return(invisible(p))
+  return(p)
 }
 #######################################################################################

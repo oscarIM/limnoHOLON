@@ -17,7 +17,8 @@ plot_pca(
   width = 6,
   height = 6,
   dist = "euclidean",
-  save_rds = FALSE
+  save_rds = FALSE,
+  output_name = "plot_pca.png"
 )
 }
 \arguments{
