@@ -1110,38 +1110,41 @@ get_glm <- function(data,
   ))
 }
 ###############################################################################
-#' @title Generar Boxplots con opción de pruebas estadísticas
-#' @description Crea boxplots faceteados. Opcionalmente realiza pruebas de Kruskal-Wallis y, si hay pocos grupos, pruebas post-hoc de Dunn.
-#' @param data Data frame con los datos.
-#' @param col_x String. Nombre de la columna para el eje X (factor/grupos).
-#' @param col_y String. Nombre de la columna para el eje Y (numérica).
-#' @param col_pars String. Nombre de la columna de parámetros (para facet_wrap).
-#' @param col_units String. Nombre de la columna de unidades.
-#' @param n_col Entero. Número de columnas en el facet_wrap.
-#' @param output_name String. Ruta/nombre del archivo de salida (png).
-#' @param width Numérico. Ancho de la imagen.
-#' @param height Numérico. Alto de la imagen.
-#' @param levels_factor Vector. Niveles ordenados para el factor del eje X.
-#' @param title String. Título del gráfico.
-#' @param label_x String. Etiqueta eje X.
-#' @param label_y String. Etiqueta eje Y.
-#' @param add_test Lógico. Si es TRUE, agrega estadísticas (KW y/o Dunn). Por defecto FALSE.#' @return Guarda un archivo PNG y retorna el objeto ggplot invisiblmente.
-#' @param save_rds Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.
+#' @title Generar Boxplots con GLM Externo (Campos Específicos)
+#' @description Crea boxplots paginados. Usa una tabla externa (`stats_df`) con campos `parametros` y `pr_chi` para etiquetar el GLM.
+#' @param data Data frame con los datos crudos.
+#' @param stats_df Data frame con los resultados del GLM. Debe contener las columnas **`parametros`** y **`pr_chi`**.
+#' @param col_x String. Columna eje X.
+#' @param col_y String. Columna eje Y.
+#' @param col_pars String. Columna de parámetros.
+#' @param col_units String. Columna de unidades.
+#' @param n_col Entero. Columnas facet.
+#' @param output_name String. Archivo salida.
+#' @param width Numérico. Ancho.
+#' @param height Numérico. Alto.
+#' @param levels_factor Vector. Orden factor X.
+#' @param title String. Título.
+#' @param label_x String. Etiqueta X.
+#' @param label_y String. Etiqueta Y.
+#' @param add_test Lógico. Si TRUE, activa subtítulo GLM, etiquetas GLM y test de Dunn (condicional).
+#' @param save_rds Lógico. Guardar RDS.
 #' @export plot_boxplot
-#' @importFrom dplyr select rename mutate group_by group_modify rowwise ungroup filter pull left_join summarise
-#' @importFrom ggplot2 ggplot aes geom_boxplot facet_wrap labs theme_linedraw theme element_text scale_x_discrete expansion geom_text ggsave expansion
+#' @importFrom dplyr select rename mutate group_by summarise left_join filter pull distinct group_modify ungroup inner_join
+#' @importFrom ggplot2 ggplot aes geom_boxplot facet_wrap labs theme_linedraw theme element_text geom_text scale_y_continuous ggsave element_rect expansion scale_x_discrete
 #' @importFrom rlang sym "!!"
+#' @importFrom stats quantile
 #' @importFrom glue glue
+#' @importFrom tools file_path_sans_ext
 #' @importFrom scales pvalue
 #' @importFrom rstatix dunn_test add_xy_position
 #' @importFrom ggpubr stat_pvalue_manual
-#' @importFrom stats kruskal.test quantile IQR
 #' @importFrom tibble tibble
 plot_boxplot <- function(data,
                          col_x,
                          col_y,
                          col_pars,
                          col_units,
+                         stats_df = NULL,
                          n_col = 3,
                          output_name = "boxplot.png",
                          width = 10,
@@ -1152,8 +1155,7 @@ plot_boxplot <- function(data,
                          label_y = "Valor",
                          add_test = FALSE,
                          save_rds = FALSE) {
-  # 1. Preparación de Datos ---------------------------------------------------
-  # Selección y renombrado seguro
+  # --- 1. Preparación de Datos ---
   vars <- c(col_x, col_y, col_pars, col_units)
 
   data_plot <- data %>%
@@ -1172,20 +1174,13 @@ plot_boxplot <- function(data,
       )
     )
 
-  # Manejo de niveles del factor X
   if (!is.null(levels_factor)) {
-    # Filtrar solo niveles presentes para evitar errores en factores
-    valid_levels <- intersect(levels_factor, unique(data_plot$col_x))
-    data_plot <- data_plot %>%
-      dplyr::mutate(col_x = factor(col_x, levels = levels_factor))
+    data_plot$col_x <- factor(data_plot$col_x, levels = levels_factor)
   } else {
-    data_plot <- data_plot %>%
-      dplyr::mutate(col_x = as.factor(col_x))
+    data_plot$col_x <- as.factor(data_plot$col_x)
   }
 
-  # 2. Lógica de "Recorte" visual (Upper limit 95%) ---------------------------
-  # Nota: Esto es visual, los tests estadísticos deben usar los datos completos si es posible.
-  # El código original usaba esto para el gráfico:
+  # Recorte visual (95%)
   limites <- data_plot %>%
     dplyr::group_by(col_label) %>%
     dplyr::summarise(
@@ -1197,184 +1192,153 @@ plot_boxplot <- function(data,
     dplyr::left_join(limites, by = "col_label") %>%
     dplyr::mutate(col_y_plot = pmin(col_y, lim_superior))
 
-  # 3. Base del Gráfico (Común para ambos casos) ------------------------------
-  p <- ggplot2::ggplot(data = data_plot, ggplot2::aes(x = col_x, y = col_y_plot)) +
-    ggplot2::geom_boxplot(
-      outliers = TRUE,
-      na.rm = TRUE,
-      outlier.colour = "black",
-      outlier.shape = 19, # NA
-      outlier.alpha = 0.5,
-      fill = "#E69F00"
-    ) +
-    ggplot2::facet_wrap(~col_label, scales = "free_y", ncol = n_col) +
-    ggplot2::theme_linedraw(base_family = "Arial") +
-    ggplot2::theme(
-      axis.text.x = ggplot2::element_text(angle = 0, hjust = 0.5),
-      strip.text = element_text(face = "bold", colour = "white"),
-      strip.background = element_rect(fill = "#2c3e50")
-    )
+  # --- 2. Preparar Etiquetas GLM (Desde stats_df) ---
+  stats_ready <- NULL
+  subtitle_text <- "Parámetros con efecto significativo del factor considerado (GLM)" # Subtítulo fijo
 
-  # 4. Lógica Estadística (Solo si add_test es TRUE) --------------------------
-  if (add_test) {
-    # A. Calcular Kruskal-Wallis
-    stats_df <- data_plot %>%
-      dplyr::group_by(col_label) %>%
-      dplyr::group_modify(~ {
-        test <- tryCatch(
-          stats::kruskal.test(col_y ~ col_x, data = .x),
-          error = function(e) NULL
-        )
-        tibble::tibble(
-          p_value = if (!is.null(test)) test$p.value else NA_real_,
-          statistic = if (!is.null(test)) unname(test$statistic) else NA_real_
-        )
-      }) %>%
-      dplyr::mutate(
-        label_test = dplyr::if_else(
-          is.na(p_value),
-          "p = NA",
-          glue::glue("p = {scales::pvalue(p_value, accuracy = 0.001)}")
-        )
-      )
-
-    n_factor <- length(unique(data_plot$col_x))
-    subtitle_text <- ""
-
-    # B. Ramificación según cantidad de factores
-    if (n_factor <= 5) {
-      # --- Caso Pocos Factores: Dunn Test + Barras ---
-      subtitle_text <- "Prueba de Dunn para parámetros donde Kruskal-Wallis p < 0.05"
-
-      # Actualizar etiqueta KW con estadístico
-      stats_df <- stats_df %>%
-        dplyr::rowwise() %>%
-        dplyr::mutate(label_test = glue::glue("KW: {signif(statistic, 4)}; {label_test}")) %>%
-        dplyr::ungroup()
-
-      # Filtrar significativos para Dunn
-      select_pars <- stats_df %>%
-        dplyr::filter(p_value <= 0.05) %>%
-        dplyr::pull(col_label)
-
-      if (length(select_pars) > 0) {
-        data_plot_dunno <- data_plot %>% dplyr::filter(col_label %in% select_pars)
-
-        dunno_test <- data_plot_dunno %>%
-          dplyr::group_by(col_label) %>%
-          dplyr::group_modify(~ {
-            tryCatch(
-              rstatix::dunn_test(col_y ~ col_x, data = .x, p.adjust.method = "bonferroni"),
-              error = function(e) tibble::tibble()
-            )
-          })
-
-        # Calcular posiciones Y para las barras de significancia
-        # Usamos la lógica original basada en quartiles para evitar superposición
-        max_y_per_label <- data_plot %>%
-          dplyr::group_by(col_label, col_x) %>%
-          dplyr::summarise(
-            q3 = stats::quantile(col_y, 0.75, na.rm = TRUE),
-            iqr = stats::IQR(col_y, na.rm = TRUE),
-            .groups = "drop"
-          ) %>%
-          dplyr::mutate(upper_whisker = q3 + 1.5 * iqr) %>%
-          dplyr::group_by(col_label) %>%
-          dplyr::summarise(max_y = max(upper_whisker, na.rm = TRUE), .groups = "drop")
-
-        # Añadir posiciones al test de Dunn
-        dunno_test <- dunno_test %>%
-          rstatix::add_xy_position(formula = col_y ~ col_x, x = "col_x", data = data_plot_dunno)
-
-        # Ajustar altura manual basada en max_y calculado (sobrescribe la de rstatix si es necesario)
-        dunno_test <- dunno_test %>%
-          dplyr::left_join(max_y_per_label, by = "col_label") %>%
-          dplyr::group_by(col_label) %>%
-          dplyr::mutate(
-            step = dplyr::row_number(),
-            y.position = max_y + step * 0.10 * max_y # Escalado dinámico
-          ) %>%
-          dplyr::ungroup()
-
-        # Agregar capa de Dunn al gráfico
-        p <- p + ggpubr::stat_pvalue_manual(
-          dunno_test,
-          label = "p.adj.signif",
-          hide.ns = TRUE,
-          step.increase = 0,
-          size = 3
-        )
-      }
-
-      # Agregar etiquetas de KW en el facet strip o subtítulo modificado
-      # En el código original se modificaba el col_label. Hacemos lo mismo para consistencia.
-      # PERO, como ggplot ya se inició, modificar 'data' no actualiza el facet automáticamente
-      # si no rehacemos el plot.
-      # Solución: Usamos geom_text para el KW global en la esquina.
-
-      # Unir estadísticas al plot data para etiquetado facet (Estrategia Reconstrucción)
-      # Nota: Para inyectar el texto en el facet strip limpiamente, lo mejor es modificar los datos antes.
-      # Dado que ya creamos 'p', usaremos geom_text para poner el KW en el gráfico.
-      p <- p + ggplot2::geom_text(
-        data = stats_df,
-        ggplot2::aes(
-          x = -Inf, y = Inf, label = label_test,
-          group = NULL # Reset group
-        ),
-        inherit.aes = FALSE,
-        hjust = -0.1, vjust = 1.5, size = 3, fontface = "italic"
-      )
-
-      # Ajuste eje X
-      p <- p + ggplot2::scale_x_discrete(expand = ggplot2::expansion(mult = c(0.2, 0.2)))
-    } else {
-      # --- Caso Muchos Factores: Solo Texto KW ---
-      subtitle_text <- "Valores-p correspondientes a la prueba Kruskal-Wallis"
-
-      p <- p + ggplot2::geom_text(
-        data = stats_df,
-        ggplot2::aes(
-          x = Inf, y = Inf, label = label_test
-        ),
-        inherit.aes = FALSE,
-        hjust = 1.1, vjust = 1.1, size = 3.5, color = "black", fontface = "italic"
-      )
+  if (add_test && !is.null(stats_df)) {
+    # Validar que existan las columnas requeridas
+    if (!all(c("parametros", "pr_chi") %in% names(stats_df))) {
+      stop("La tabla 'stats_df' debe contener las columnas 'parametros' y 'pr_chi'.")
     }
 
-    # Añadir títulos con subtitulo dinámico
-    p <- p + ggplot2::labs(
-      x = label_x,
-      y = label_y,
-      title = title,
-      subtitle = subtitle_text
-    )
-  } else {
-    # 5. Caso SIN Test (add_test = FALSE) -------------------------------------
-    # Solo añadimos etiquetas básicas
-    p <- p + ggplot2::labs(
-      x = label_x,
-      y = label_y,
-      title = title
-    )
+    # Mapear etiquetas completas (param + unidad) para el join
+    mapping_labels <- data_plot %>%
+      dplyr::select(col_pars, col_label) %>%
+      dplyr::distinct()
+
+    # Procesar la tabla externa
+    stats_ready <- stats_df %>%
+      dplyr::select(col_pars = parametros, pr_chi) %>% # Renombrar para el join y seleccionar p-value
+      dplyr::inner_join(mapping_labels, by = "col_pars") %>%
+      dplyr::mutate(
+        # Crear la etiqueta con el formato solicitado
+        label_test = glue::glue("Modelo GLM: valor-p = {scales::pvalue(pr_chi, accuracy = 0.001)}")
+      )
   }
 
-  # --- Bloque actualizado para exportar rds ---
-  tryCatch(
-    {
-      ggplot2::ggsave(filename = output_name, plot = p, width = width, height = height, dpi = 300)
+  # --- 3. Función Constructora del Gráfico ---
+  build_plot <- function(d_plot, d_stats_glm) {
+    n_factor <- length(unique(d_plot$col_x))
 
-      if (save_rds) {
-        rds_name <- stringr::str_replace(output_name, "\\.(png|jpg|jpeg|pdf|tiff)$", ".rds")
-        if (rds_name == output_name) rds_name <- paste0(output_name, ".rds")
-        saveRDS(p, file = rds_name)
-        message(paste("Objeto R guardado en:", rds_name))
+    # Base Plot (Estilo Original)
+    p <- ggplot2::ggplot(d_plot, ggplot2::aes(x = col_x, y = col_y_plot)) +
+      ggplot2::geom_boxplot(
+        na.rm = TRUE,
+        outlier.colour = "black",
+        outlier.shape = 19,
+        outlier.alpha = 0.4,
+        fill = "#E69F00"
+      ) +
+      ggplot2::facet_wrap(~col_label, scales = "free_y", ncol = n_col) +
+      ggplot2::labs(x = label_x, y = label_y, title = title, subtitle = subtitle_text) +
+      ggplot2::theme_linedraw() +
+      ggplot2::theme(
+        axis.text.x = ggplot2::element_text(angle = 0, hjust = 0.5),
+        strip.text = ggplot2::element_text(face = "bold", colour = "white"),
+        strip.background = ggplot2::element_rect(fill = "#2c3e50")
+      )
+
+    # --- LOGICA CONDICIONAL DE TEST ---
+    if (add_test) {
+      # 1. DUNN TEST (Interno y Condicional: <= 4 niveles)
+      if (n_factor <= 4) {
+        dunn_res <- d_plot %>%
+          dplyr::group_by(col_label) %>%
+          dplyr::group_modify(~ tryCatch(
+            rstatix::dunn_test(col_y ~ col_x, data = .x, p.adjust.method = "bonferroni"),
+            error = function(e) tibble::tibble()
+          )) %>%
+          dplyr::ungroup()
+
+        if (nrow(dunn_res) > 0) {
+          # Corrección visual de altura
+          max_vis <- d_plot %>%
+            dplyr::group_by(col_label) %>%
+            dplyr::summarise(mx = max(col_y_plot, na.rm = TRUE), .groups = "drop")
+
+          dunn_res <- dunn_res %>%
+            rstatix::add_xy_position(x = "col_x", formula = col_y ~ col_x, data = d_plot, step.increase = 0) %>%
+            dplyr::left_join(max_vis, by = "col_label") %>%
+            dplyr::group_by(col_label) %>%
+            dplyr::mutate(
+              step = dplyr::row_number(),
+              y.position = mx + (mx * 0.05) + (step * 0.08 * mx)
+            ) %>%
+            dplyr::ungroup()
+
+          p <- p + ggpubr::stat_pvalue_manual(dunn_res, label = "p.adj.signif", hide.ns = TRUE, size = 3)
+          p <- p + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.25)))
+          p <- p + ggplot2::scale_x_discrete(expand = ggplot2::expansion(mult = c(0.2, 0.2)))
+        }
       }
-    },
-    error = function(e) warning("No se pudo guardar la imagen/objeto: ", e$message)
-  )
 
-  return(p)
+      # 2. TEXTO GLM (Desde Tabla Externa stats_df)
+      if (!is.null(d_stats_glm) && nrow(d_stats_glm) > 0) {
+        if (n_factor <= 4) {
+          # Izquierda (si hay barras Dunn)
+          p <- p + ggplot2::geom_text(
+            data = d_stats_glm,
+            ggplot2::aes(x = -Inf, y = Inf, label = label_test),
+            hjust = -0.1, vjust = 1.5, size = 3, fontface = "italic", inherit.aes = FALSE
+          )
+        } else {
+          # Derecha (si NO hay barras Dunn)
+          p <- p + ggplot2::geom_text(
+            data = d_stats_glm,
+            ggplot2::aes(x = Inf, y = Inf, label = label_test),
+            hjust = 1.1, vjust = 1.1, size = 3.5, color = "black", fontface = "italic", inherit.aes = FALSE
+          )
+        }
+      }
+    }
+
+    return(p)
+  }
+
+  # --- 4. Lógica de Paginación ---
+  labels_unicos <- unique(data_plot$col_label)
+  n_pars <- length(labels_unicos)
+
+  if (n_pars > 10) {
+    n_grupos <- ceiling(n_pars / 10)
+    grupos <- split(labels_unicos, sort(rep(1:n_grupos, length.out = n_pars)))
+
+    for (i in seq_along(grupos)) {
+      sub_data <- data_plot %>% dplyr::filter(col_label %in% grupos[[i]])
+      sub_stats <- if (!is.null(stats_ready)) stats_ready %>% dplyr::filter(col_label %in% grupos[[i]]) else NULL
+
+      p_page <- build_plot(sub_data, sub_stats)
+
+      fname <- glue::glue("{tools::file_path_sans_ext(output_name)}_{i}.png")
+      tryCatch(
+        {
+          ggplot2::ggsave(filename = fname, plot = p_page, width = width, height = height, dpi = 300)
+          if (save_rds) {
+            rds_name <- glue::glue("{tools::file_path_sans_ext(output_name)}_{i}.rds")
+            saveRDS(p_page, file = rds_name)
+          }
+        },
+        error = function(e) warning(paste("Error página", i, ":", e$message))
+      )
+    }
+    return(invisible(NULL))
+  } else {
+    # Caso Único
+    p_single <- build_plot(data_plot, stats_ready)
+
+    tryCatch(
+      {
+        ggplot2::ggsave(filename = output_name, plot = p_single, width = width, height = height, dpi = 300)
+        if (save_rds) saveRDS(p_single, stringr::str_replace(output_name, "\\.[a-z]+$", ".rds"))
+      },
+      error = function(e) warning(e$message)
+    )
+
+    return(invisible(p_single))
+  }
 }
+
 ###############################################################################
 #' @title Graficar Distribución de Granulometría (Stacked Barplot)
 #' @description Genera un gráfico de barras apiladas para visualizar la composición granulométrica por sitio. Permite agrupar por factores (ej. Zonas) y separar por réplicas.
