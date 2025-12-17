@@ -17,12 +17,12 @@ plot_pca(
   width = 6,
   height = 6,
   dist = "euclidean",
-  save_rds = FALSE,
-  output_name = "plot_pca.png"
+  output_name = "pca.png",
+  save_rds = FALSE
 )
 }
 \arguments{
-\item{data}{Data frame con los datos originales.}
+\item{data}{Data frame con los datos.}
 
 \item{col_pars}{String. Columna con los nombres de los parámetros.}
 
@@ -30,11 +30,11 @@ plot_pca(
 
 \item{col_value}{String. Columna con los valores numéricos.}
 
-\item{type_par}{String. Columna que clasifica el tipo de parámetro (para colorear flechas).}
+\item{type_par}{String. Columna que clasifica el tipo de parámetro.}
 
 \item{matrix}{String. Tipo de matrix (ej. "Agua", "Sedimento").}
 
-\item{col_rep}{String (Opcional). Columna de réplicas o variable que induzcan a réplicas.}
+\item{col_rep}{String (Opcional). Columna de réplicas.}
 
 \item{col_factor}{String (Opcional). Columna para agrupar y calcular PERMANOVA.}
 
@@ -44,15 +44,16 @@ plot_pca(
 
 \item{height}{Numérico. Alto de la imagen.}
 
-\item{dist}{String. Método de distancia para `vegan::adonis2` (por defecto "euc" -> euclidean).}
+\item{dist}{String. Método de distancia para PERMANOVA (por defecto "euclidean").}
+
+\item{output_name}{String. Nombre del archivo de salida (png).}
 
 \item{save_rds}{Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.}
-
-\item{output_name}{String. Ruta/Nombre base para guardar los archivos de salida.}
 }
 \value{
-Un objeto ggplot.
+Un objeto ggplot (invisible).
 }
 \description{
-Realiza un Análisis de Componentes Principales (PCA) y genera un biplot. Si se proporciona un factor de agrupación, calcula una PERMANOVA y añade elipses de confianza.
+Realiza un Análisis de Componentes Principales (PCA) y genera un biplot.
+Si se proporciona un factor (`col_factor`), calcula PERMANOVA y añade elipses.
 }

@@ -653,34 +653,37 @@ plot_correlogram <- function(data,
 }
 ###############################################################################
 #' @title Biplot de PCA con PERMANOVA Opcional
-#' @description Realiza un Análisis de Componentes Principales (PCA) y genera un biplot. Si se proporciona un factor de agrupación, calcula una PERMANOVA y añade elipses de confianza.
-#' @param data Data frame con los datos originales.
+#' @description Realiza un Análisis de Componentes Principales (PCA) y genera un biplot.
+#' Si se proporciona un factor (`col_factor`), calcula PERMANOVA y añade elipses.
+#'
+#' @param data Data frame con los datos.
 #' @param col_pars String. Columna con los nombres de los parámetros.
 #' @param col_site String. Columna con los identificadores de sitio.
 #' @param col_value String. Columna con los valores numéricos.
-#' @param type_par String. Columna que clasifica el tipo de parámetro (para colorear flechas).
-#' @param col_rep String (Opcional). Columna de réplicas o variable que induzcan a réplicas.
+#' @param type_par String. Columna que clasifica el tipo de parámetro.
+#' @param matrix String. Tipo de matrix (ej. "Agua", "Sedimento").
+#' @param col_rep String (Opcional). Columna de réplicas.
 #' @param col_factor String (Opcional). Columna para agrupar y calcular PERMANOVA.
 #' @param ord_factor Vector (Opcional). Orden específico para los niveles de `col_factor`.
-#' @param matrix String. Tipo de matrix (ej. "Agua", "Sedimento").
-#' @param dist String. Método de distancia para `vegan::adonis2` (por defecto "euc" -> euclidean).
 #' @param width Numérico. Ancho de la imagen.
 #' @param height Numérico. Alto de la imagen.
-#' @param output_name String. Nombre archivo de salida.
-#' @param output_name String. Ruta/Nombre base para guardar los archivos de salida.
+#' @param dist String. Método de distancia para PERMANOVA (por defecto "euclidean").
+#' @param output_name String. Nombre del archivo de salida (png).
 #' @param save_rds Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.
-#' @return Un objeto ggplot.
+#'
+#' @return Un objeto ggplot (invisible).
 #' @export plot_pca
-#' @importFrom dplyr select rename group_by summarise filter pull distinct mutate left_join bind_cols starts_with any_of
+#' @importFrom dplyr select rename group_by summarise filter pull distinct mutate left_join bind_cols starts_with any_of arrange
 #' @importFrom tidyr pivot_wider
-#' @importFrom stringr str_detect str_to_lower str_to_sentence
-#' @importFrom ggplot2 ggplot aes geom_hline geom_vline labs geom_segment geom_text geom_point scale_color_manual scale_fill_manual guides guide_legend theme_bw theme element_text stat_ellipse scale_x_continuous scale_y_continuous arrow unit
+#' @importFrom stringr str_detect str_to_lower str_to_sentence str_replace
+#' @importFrom ggplot2 ggplot aes geom_hline geom_vline labs geom_segment geom_text geom_point scale_color_manual scale_fill_manual guides guide_legend theme_bw theme element_text stat_ellipse scale_x_continuous scale_y_continuous arrow unit xlim ylim coord_fixed
 #' @importFrom glue glue
-#' @importFrom stats prcomp sd setNames
+#' @importFrom stats prcomp sd setNames qchisq
 #' @importFrom scales percent
 #' @importFrom ggsci pal_nejm pal_d3
 #' @importFrom grDevices colorRampPalette
 #' @importFrom rlang sym "!!" "!!!"
+#' @importFrom vegan adonis2
 plot_pca <- function(data,
                      col_pars,
                      col_site,
@@ -693,241 +696,254 @@ plot_pca <- function(data,
                      width = 6,
                      height = 6,
                      dist = "euclidean",
-                     save_rds = FALSE,
-                     output_name = "plot_pca.png") {
-  # Manejo temporal de opciones científicas
+                     output_name = "pca.png",
+                     save_rds = FALSE) {
+  # Manejo de notación científica seguro
   op <- options(scipen = 999)
   on.exit(options(op))
 
-  # 1. Definición de Hardcodes (Parametros y Colores)
+  # --- 2. Configuración de Parámetros ---
   pars_gran <- c(
     "LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN", "GUIJ",
-    "Arena Fina", "Arena Gruesa", "Arena Media", "Arena Muy Fina",
-    "Arena Muy Gruesa", "Fango", "Grava Fina", "Grava Muy Fina",
-    "KURTOSIS", "SKEWNESS", "SORTING", "Tamaño medio", "Tipo Grano"
+    "Arena Fina", "Arena Gruesa", "Arena Media", "Arena Muy Fina", "Arena Muy Gruesa", "Fango",
+    "Grava Fina", "Grava Muy Fina", "KURTOSIS", "SKEWNESS", "SORTING", "Tamaño medio", "Tipo Grano"
   )
 
-  order_type <- c(
-    "Fisicoquímicos", "Nutrientes", "Metales", "Orgánicos",
-    "Bacteriológicos", "Bioquímicos", "TCLP inorgánicos"
-  )
+  vars <- c(col_site, col_pars, col_value, col_rep, type_par, col_factor)
 
-  # Paleta base para los tipos de parámetros (Flechas)
-  cols_type_base <- ggsci::pal_nejm("default")(length(order_type) + 1)
-  cols_type_final <- stats::setNames(cols_type_base[1:length(order_type)], order_type)
-  # Ajuste manual para TCLP si existe en el vector original
-  if ("TCLP inorgánicos" %in% names(cols_type_final)) {
-    cols_type_final["TCLP inorgánicos"] <- "#727272"
-  }
-
-  # 2. Selección y Limpieza de Datos
-  vars_select <- c(col_site, col_pars, col_value, type_par, col_rep, col_factor)
-
-  data_clean <- data %>%
-    dplyr::select(dplyr::all_of(vars_select)) %>%
+  # Renombrado y Selección (Harmonizado)
+  data_plot <- data %>%
+    dplyr::select(dplyr::all_of(vars)) %>%
     dplyr::rename(
-      col_site = !!rlang::sym(col_site),
       col_pars = !!rlang::sym(col_pars),
+      col_site = !!rlang::sym(col_site),
       col_value = !!rlang::sym(col_value),
       type_par = !!rlang::sym(type_par),
       !!!if (!is.null(col_factor)) stats::setNames(col_factor, "col_factor") else NULL,
       !!!if (!is.null(col_rep)) stats::setNames(col_rep, "col_rep") else NULL
     )
 
-  # 3. Filtrado por Varianza (CV > 0) y matrix
-  selected_pars <- data_clean %>%
+  # Filtrado CV > 0
+  selected_pars <- data_plot %>%
     dplyr::group_by(col_pars) %>%
     dplyr::summarise(
       prom = abs(mean(col_value, na.rm = TRUE)),
       desvest = stats::sd(col_value, na.rm = TRUE),
-      cv_num = dplyr::if_else(prom == 0, 0, desvest / prom),
-      .groups = "drop"
+      cv_num = desvest / prom
     ) %>%
     dplyr::filter(cv_num > 0) %>%
     dplyr::pull(col_pars)
 
-  if (stringr::str_detect(matrix, "(?i)sedimento?")) {
+  if (stringr::str_detect(string = matrix, pattern = "(?i)sedimento?")) {
     selected_pars <- setdiff(selected_pars, pars_gran)
   }
 
-  data_pca_ready <- data_clean %>%
+  data_pca <- data_plot %>%
     dplyr::filter(col_pars %in% selected_pars)
 
-  # Filtro de colores para los tipos presentes
-  current_types <- unique(data_pca_ready$type_par)
-  cols_type_plot <- cols_type_final[names(cols_type_final) %in% current_types]
+  # Configuración de Colores
+  order_type <- c("Fisicoquímicos", "Nutrientes", "Metales", "Orgánicos", "Bacteriológicos", "Bioquímicos", "TCLP inorgánicos")
+  cols_type <- ggsci::pal_nejm("default")(length(order_type) + 1)
+  cols_type <- cols_type[-7]
+  # Ajuste manual TCLP
+  cols_type_final <- stats::setNames(cols_type, order_type[1:length(cols_type)])
+  if (length(cols_type) < length(order_type)) {
+    # Fallback simple si el vector no calza exacto
+    cols_type_final <- stats::setNames(rep("grey", length(order_type)), order_type)
+  }
+  # Reasignar el gris específico si existe el nombre
+  # Nota: Tu código original hacía cols_type[7] <- "#727272" asumiendo longitud.
+  # Para robustez en paquete:
+  cols_type <- ggsci::pal_nejm("default")(length(order_type) + 1)
+  cols_type <- cols_type[1:length(order_type)]
+  names(cols_type) <- order_type
+  cols_type["TCLP inorgánicos"] <- "#727272"
 
-  # 4. Preparación de matrix Ancha para PCA
-  # Identificar columnas de metadatos (que no son valores ni parámetros)
-  id_cols <- c("col_site")
-  if (!is.null(col_rep)) id_cols <- c(id_cols, "col_rep")
-  if (!is.null(col_factor)) id_cols <- c(id_cols, "col_factor")
+  type_par_vec <- unique(data_plot$type_par)
+  cols_type <- cols_type[names(cols_type) %in% type_par_vec]
 
-  to_pca_wide <- data_pca_ready %>%
-    dplyr::select(dplyr::all_of(c(id_cols, "col_pars", "col_value"))) %>%
-    tidyr::pivot_wider(names_from = "col_pars", values_from = "col_value") %>%
-    # Eliminar columnas con NAs porque prcomp no las soporta bien
-    dplyr::select(dplyr::where(~ !any(is.na(.))))
+  # --- 3. Generación del Gráfico (Estructura Original Bifurcada) ---
 
-  # Separar metadatos y matrix numérica
-  metadata <- to_pca_wide %>% dplyr::select(dplyr::any_of(id_cols))
-  matrix_num <- to_pca_wide %>% dplyr::select(-dplyr::any_of(id_cols))
+  if (is.null(col_factor)) {
+    # === CASO A: SIN FACTOR ===
+    to_pca <- data_pca %>%
+      dplyr::select(dplyr::any_of(c("col_site", "col_rep", "col_pars", "col_value"))) %>%
+      tidyr::pivot_wider(names_from = col_pars, values_from = col_value) %>%
+      dplyr::select(dplyr::where(~ !any(is.na(.))))
 
-  # 5. Ejecución del PCA
-  pca <- stats::prcomp(matrix_num, scale. = TRUE)
-  prop_pca <- pca$sdev^2 / sum(pca$sdev^2)
+    metadata <- to_pca %>% dplyr::select(dplyr::starts_with("col_"))
+    to_pca_num <- to_pca %>% dplyr::select(!dplyr::starts_with("col_"))
 
-  # Obtener coordenadas para biplot (Scores y Directions)
-  pca_plot_data <- utils_get_pca_biplot(pca)
-  directions <- pca_plot_data$directions
-  scores <- dplyr::bind_cols(pca_plot_data$scores, metadata)
+    pca <- stats::prcomp(to_pca_num, scale. = TRUE)
+    prop_pca <- pca$sdev^2 / sum(pca$sdev^2)
 
-  # Unir metadata de tipo de parámetro a las direcciones (flechas)
-  meta_pars <- data_pca_ready %>%
-    dplyr::select(col_pars, type_par) %>%
-    dplyr::distinct()
+    tmp_data <- get_data_pca_plot(pca_obj = pca)
+    directions <- tmp_data$directions
 
-  directions <- dplyr::left_join(directions, meta_pars, by = c("varname" = "col_pars"))
+    data_pars <- data_pca %>%
+      dplyr::select(col_pars, type_par) %>%
+      dplyr::distinct()
 
-  # 6. PERMANOVA (Si aplica)
-  subtitle_text <- NULL
-  col_pca_fill <- NULL # Paleta de relleno para elipses
+    directions <- dplyr::left_join(directions, data_pars, by = c("varname" = "col_pars"))
+    scores <- tmp_data$scores
+    scores <- dplyr::bind_cols(scores, metadata)
 
-  if (!is.null(col_factor)) {
-    # Check paquete vegan
-    if (!requireNamespace("vegan", quietly = TRUE)) {
-      stop("El paquete 'vegan' es necesario para calcular PERMANOVA.")
-    }
+    xmax <- ceiling(max(directions$xvar, scores$xvar)) + 0.5
+    xmin <- floor(min(directions$xvar, scores$xvar)) - 0.5
+    ymax <- ceiling(max(directions$yvar, scores$yvar)) + 0.5
+    ymin <- floor(min(directions$yvar, scores$yvar)) - 0.5
 
-    # Calcular PERMANOVA
-    # Aseguramos que el orden de filas coincida (lo hace bind_cols arriba, pero verificamos)
-    try(
-      {
-        test <- vegan::adonis2(matrix_num ~ col_factor, data = metadata, method = dist)
-        R2 <- round(test$R2[1] * 100, 1)
-        pval <- format.pval(test$`Pr(>F)`[1], digits = 3, eps = 0.001)
-        subtitle_text <- glue::glue("PERMANOVA por {stringr::str_to_lower(col_factor)}: R² = {R2}%, valor-p = {pval}")
-      },
-      silent = TRUE
-    )
+    plot <- ggplot2::ggplot() +
+      ggplot2::geom_hline(yintercept = 0, linetype = 3, color = "gray0") +
+      ggplot2::geom_vline(xintercept = 0, linetype = 3, color = "gray0") +
+      ggplot2::xlim(xmin + 0.25, xmax - 0.25) +
+      ggplot2::ylim(ymin + 0.25, ymax - 0.25) +
+      ggplot2::labs(
+        title = glue::glue("Análisis multivariado (PCA) para parámetros medidos en {matrix}"),
+        x = glue::glue("Primera Componente Principal ({scales::percent(prop_pca[1])})"),
+        y = glue::glue("Segunda Componente Principal ({scales::percent(prop_pca[2])})")
+      ) +
+      ggplot2::geom_segment(
+        data = directions,
+        mapping = ggplot2::aes(x = 0, y = 0, xend = xvar, yend = yvar, color = type_par),
+        arrow = ggplot2::arrow(length = ggplot2::unit(1 / 2, "picas"))
+      ) +
+      ggplot2::geom_text(
+        data = directions,
+        mapping = ggplot2::aes(label = varname, x = xvar, y = yvar, angle = angle, hjust = hjust, color = type_par),
+        size = 3, family = "sans"
+      ) +
+      ggplot2::geom_text(
+        data = scores,
+        mapping = ggplot2::aes(x = xvar, y = yvar, label = col_site),
+        nudge_y = 0.1,
+        family = "sans",
+        size = 3
+      ) +
+      ggplot2::scale_color_manual(name = "Tipo parámetro", values = cols_type, breaks = names(cols_type)) +
+      ggplot2::guides(color = ggplot2::guide_legend(title.position = "top", override.aes = list(label = " "))) +
+      ggplot2::geom_point(data = scores, mapping = ggplot2::aes(x = xvar, y = yvar), size = 1) +
+      ggplot2::scale_x_continuous(expand = c(0.1, 0.1)) +
+      ggplot2::scale_y_continuous(expand = c(0.1, 0.1)) +
+      ggplot2::theme_bw() +
+      ggplot2::theme(
+        text = ggplot2::element_text(size = 8, family = "sans"),
+        plot.title = ggplot2::element_text(face = "bold", family = "sans", size = 10)
+      )
+  } else {
+    # === CASO B: CON FACTOR (PERMANOVA) ===
+    to_pca <- data_pca %>%
+      dplyr::select(dplyr::starts_with("col_")) %>%
+      tidyr::pivot_wider(names_from = col_pars, values_from = col_value) %>%
+      dplyr::select(dplyr::where(~ !any(is.na(.))))
 
-    # Configurar colores y orden de factores
+    # Calcular índice de inicio de columnas numéricas
+    # Esto asume estructura, pero es como estaba en tu código original
+    # Usamos tryCatch para vegan
+    if (!requireNamespace("vegan", quietly = TRUE)) stop("Paquete vegan requerido")
+
+    begin <- data_pca %>%
+      dplyr::select(dplyr::any_of(c("col_site", "col_factor", "col_rep"))) %>%
+      ncol(.) + 1
+
+    pca <- stats::prcomp(to_pca[begin:ncol(to_pca)], scale = TRUE)
+
+    test <- vegan::adonis2(to_pca[begin:ncol(to_pca)] ~ as.factor(to_pca$col_factor), method = dist)
+
+    prop_pca <- pca$sdev^2 / sum(pca$sdev^2)
+    tmp_data <- get_data_pca_plot(pca_obj = pca)
+    directions <- tmp_data$directions
+
+    data_pars <- data_pca %>%
+      dplyr::select(col_pars, type_par) %>%
+      dplyr::distinct()
+
+    directions <- dplyr::left_join(directions, data_pars, by = c("varname" = "col_pars"))
+    scores_tmp <- tmp_data$scores
+    scores <- dplyr::bind_cols(to_pca, scores_tmp)
+
+    directions$gr <- "constante"
+
+    # Colores dinámicos para el factor
     n_factor <- length(unique(scores$col_factor))
     if (n_factor <= 20) {
-      col_pca_fill <- ggsci::pal_d3("category20")(n_factor)
+      col_pca <- ggsci::pal_d3("category20")(n_factor)
     } else {
-      col_pca_fill <- grDevices::colorRampPalette(ggsci::pal_d3("category20")(20))(n_factor)
+      base_colors <- ggsci::pal_d3("category20")(20)
+      col_pca <- grDevices::colorRampPalette(base_colors)(n_factor)
     }
-    names(col_pca_fill) <- unique(scores$col_factor)
+    names(col_pca) <- unique(scores$col_factor)
 
-    # Reordenar factor si se pide
     if (!is.null(ord_factor)) {
-      scores$col_factor <- factor(scores$col_factor, levels = ord_factor)
-      # Reordenar paleta
-      existing_levels <- ord_factor[ord_factor %in% names(col_pca_fill)]
-      col_pca_fill <- col_pca_fill[existing_levels]
+      order_grupo <- ord_factor
     } else {
-      scores$col_factor <- as.factor(scores$col_factor)
+      order_grupo <- scores %>%
+        dplyr::pull(col_factor) %>%
+        unique() %>%
+        sort()
     }
+
+    # Reordenar colores
+    names(col_pca) <- order_grupo
+    col_pca <- col_pca[order_grupo[order_grupo %in% names(col_pca)]]
+    scores$gr <- factor(scores$col_factor, levels = order_grupo)
+    R2 <- round(test$R2[1] * 100, 1)
+    pval <- format.pval(test$`Pr(>F)`[1], digits = 3, eps = 0.001)
+    subtitle <- glue::glue("PERMANOVA por {stringr::str_to_lower(col_factor)}: R² = {R2}%, valor-p = {pval}")
+
+    p <- ggplot2::ggplot(data = scores, mapping = ggplot2::aes(x = xvar, y = yvar, fill = gr, group = gr)) +
+      ggplot2::stat_ellipse(level = 0.68, geom = "polygon") +
+      ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "gray") +
+      ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "gray") +
+      ggplot2::labs(
+        x = glue::glue("Primera Componente Principal ({scales::percent(prop_pca[1])})"),
+        y = glue::glue("Segunda Componente Principal ({scales::percent(prop_pca[2])})"),
+        title = glue::glue("Análisis multivariado (PCA) para parámetros medidos en {matrix}"),
+        subtitle = subtitle
+      ) +
+      ggplot2::scale_fill_manual(name = stringr::str_to_sentence(col_factor), values = ggplot2::alpha(col_pca, 0.2), labels = names(col_pca)) +
+      ggplot2::geom_segment(
+        data = directions,
+        mapping = ggplot2::aes(x = 0, y = 0, xend = xvar, yend = yvar, color = type_par),
+        arrow = ggplot2::arrow(length = ggplot2::unit(1 / 2, "picas")),
+        inherit.aes = FALSE # Importante para no heredar groups
+      ) +
+      ggplot2::geom_text(
+        data = directions,
+        mapping = ggplot2::aes(label = varname, x = xvar, y = yvar, angle = angle, hjust = hjust, color = type_par),
+        size = 3, inherit.aes = FALSE
+      ) +
+      ggplot2::scale_color_manual(name = "Tipo parámetro", values = cols_type, breaks = names(cols_type)) +
+      ggplot2::geom_point(data = scores, mapping = ggplot2::aes(x = xvar, y = yvar), show.legend = FALSE) +
+      ggplot2::geom_text(data = scores, mapping = ggplot2::aes(x = xvar, y = yvar, label = col_site), nudge_y = 0.1, size = 2.5) +
+      ggplot2::scale_x_continuous(expand = c(0.1, 0.1)) +
+      ggplot2::scale_y_continuous(expand = c(0.1, 0.1)) +
+      ggplot2::theme_bw(base_family = "Arial") +
+      ggplot2::guides(
+        fill = ggplot2::guide_legend(order = 1),
+        color = ggplot2::guide_legend(order = 2, override.aes = list(label = " "))
+      ) +
+      ggplot2::theme(plot.title = ggplot2::element_text(face = "bold"))
   }
 
-  # 7. Construcción del Gráfico (Unificada)
-  # Calcular límites para que todo quepa
-  xmax <- ceiling(max(directions$xvar, scores$xvar)) + 0.5
-  xmin <- floor(min(directions$xvar, scores$xvar)) - 0.5
-  ymax <- ceiling(max(directions$yvar, scores$yvar)) + 0.5
-  ymin <- floor(min(directions$yvar, scores$yvar)) - 0.5
 
-  p <- ggplot2::ggplot() +
-    # Líneas centrales
-    ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "gray") +
-    ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "gray") +
-
-    # Títulos y Ejes
-    ggplot2::labs(
-      title = glue::glue("Análisis multivariado (PCA) para parámetros medidos en {matrix}"),
-      subtitle = subtitle_text,
-      x = glue::glue("PC1 ({scales::percent(prop_pca[1])})"),
-      y = glue::glue("PC2 ({scales::percent(prop_pca[2])})")
-    ) +
-    ggplot2::scale_x_continuous(limits = c(xmin, xmax), expand = c(0.1, 0.1)) +
-    ggplot2::scale_y_continuous(limits = c(ymin, ymax), expand = c(0.1, 0.1)) +
-
-    # Elipses (Condicional si hay factor)
-    {
-      if (!is.null(col_factor)) {
-        list(
-          ggplot2::stat_ellipse(
-            data = scores,
-            ggplot2::aes(x = xvar, y = yvar, fill = col_factor, group = col_factor),
-            level = 0.68, geom = "polygon", alpha = 0.2
-          ),
-          ggplot2::scale_fill_manual(
-            name = stringr::str_to_sentence(col_factor),
-            values = col_pca_fill
-          )
-        )
-      }
-    } +
-
-    # Flechas (Vectores)
-    ggplot2::geom_segment(
-      data = directions,
-      ggplot2::aes(x = 0, y = 0, xend = xvar, yend = yvar, color = type_par),
-      arrow = ggplot2::arrow(length = ggplot2::unit(0.2, "cm"))
-    ) +
-
-    # Texto de Variables (Flechas)
-    ggplot2::geom_text(
-      data = directions,
-      ggplot2::aes(label = varname, x = xvar, y = yvar, angle = angle, hjust = hjust, color = type_par),
-      size = 3, family = "Arial"
-    ) +
-
-    # Puntos de Sitios (Scores)
-    ggplot2::geom_point(
-      data = scores,
-      ggplot2::aes(x = xvar, y = yvar),
-      size = 1.5
-    ) +
-
-    # Etiquetas de Sitios
-    ggplot2::geom_text(
-      data = scores,
-      ggplot2::aes(x = xvar, y = yvar, label = col_site),
-      nudge_y = 0.2, size = 2.5, check_overlap = FALSE
-    ) +
-
-    # Escalas de Color para Parámetros
-    ggplot2::scale_color_manual(
-      name = "Tipo parámetro",
-      values = cols_type_plot
-    ) +
-
-    # Tema
-    ggplot2::theme_bw(base_family = "Arial") +
-    ggplot2::theme(
-      plot.title = ggplot2::element_text(face = "bold", size = 11),
-      legend.position = "right"
-    )
-
-  # 8. Guardado y Retorno
   tryCatch(
     {
-      ggplot2::ggsave(filename = output_name, plot = p, width = width, height = height, dpi = 300)
+      ggplot2::ggsave(filename = output_name, plot = p, device = "png", width = width, height = height, dpi = 300)
 
       if (save_rds) {
         rds_name <- stringr::str_replace(output_name, "\\.(png|jpg|jpeg|pdf|tiff)$", ".rds")
         if (rds_name == output_name) rds_name <- paste0(output_name, ".rds")
-        saveRDS(p, file = rds_name)
-        message(paste("Objeto PCA (ggplot) guardado en:", rds_name))
+        saveRDS(plot, file = rds_name)
+        message(paste("Objeto R con el pca guardado en:", rds_name))
       }
     },
-    error = function(e) warning("Error guardando imagen/objeto: ", e$message)
+    error = function(e) warning("Error guardando imagen: ", e$message)
   )
 
   return(p)
 }
+
 ###############################################################################
 #' @title Modelos Lineales Generalizados (GLM) por Grupos
 #' @description Ajusta GLMs para múltiples parámetros simultáneamente, calcula el análisis de deviance (ANOVA) y genera tablas resumen con el porcentaje de deviance explicada (%DEM) y significancia.
