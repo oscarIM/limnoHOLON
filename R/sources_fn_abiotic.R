@@ -62,7 +62,7 @@ get_summ_stats <- function(data,
       prom = mean(col_value, na.rm = TRUE),
       desvest = sd(col_value, na.rm = TRUE),
       cv_num = (desvest / prom),
-      "cv%" = scales::percent(desvest / prom), accuracy = 0.01,
+      "cv%" = scales::percent(desvest / prom, accuracy = 0.01),
       n_bld = sum(col_bld, na.rm = TRUE),
       prop_bld = round(n_bld / Nobs, 2)
     ) %>%
