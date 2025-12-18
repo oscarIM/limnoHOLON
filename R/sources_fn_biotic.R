@@ -1,3 +1,235 @@
+#' @title Generar Treemap de Composición Taxonómica
+#' @description Crea un gráfico Treemap basado en abundancias. Soporta facetado, agrupación por sitio/zona y formateo específico de etiquetas.
+#' @param data Data frame con los datos.
+#' @param col_site String (Opcional). Nombre de la columna de sitios. (Anteriormente `col_sitio`).
+#' @param ord_site Vector (Opcional). Orden de los niveles de sitios.
+#' @param col_N String. Nombre de la columna de abundancia o conteo. (Anteriormente `col_N`).
+#' @param col_facet String (Opcional). Nombre de la columna para facetar.
+#' @param ord_facet Vector (Opcional). Orden de los niveles del facet.
+#' @param col_zone String (Opcional). Nombre de la columna de zonas. (Anteriormente `col_zona`).
+#' @param ord_zone Vector (Opcional). Orden de los niveles de zonas.
+#' @param taxa_id String. Texto identificador del taxón superior (ej. "Familia X") para el título.
+#' @param taxa_group String. Nombre de la columna con el grupo taxonómico a graficar.
+#' @param width Numérico. Ancho de la imagen. Default 8.
+#' @param height Numérico. Alto de la imagen. Default 10.
+#' @param output_name String. Nombre del archivo de salida.
+#' @return Un objeto ggplot (invisible).
+#' @export plot_treemap
+#' @importFrom dplyr select rename group_by summarise mutate arrange pull across desc filter ungroup all_of
+#' @importFrom ggplot2 ggplot aes scale_fill_manual guides guide_legend labs theme_bw theme element_text element_rect margin facet_wrap ggsave margin
+#' @importFrom treemapify geom_treemap geom_treemap_text
+#' @importFrom ggsci pal_d3
+#' @importFrom glue glue
+#' @importFrom stringr str_to_sentence str_to_lower str_detect
+#' @importFrom stats setNames
+#' @importFrom rlang sym "!!" "!!!"
+plot_treemap <- function(data,
+                         col_site = NULL,
+                         ord_site = NULL,
+                         col_N,
+                         col_facet = NULL,
+                         ord_facet = NULL,
+                         col_zone = NULL,
+                         ord_zone = NULL,
+                         taxa_id,
+                         taxa_group,
+                         width = 8,
+                         height = 10,
+                         output_name = "plot_treemap.png") {
+
+  # 1. Configuración Inicial
+  op <- options(scipen = 999)
+  on.exit(options(op))
+
+  # Armonización de variables internas
+  vars <- c(taxa_group, col_N, col_facet, col_zone, col_site)
+
+  # 2. Selección y Renombrado Dinámico
+  # Mapeamos los nombres originales a nombres internos estándar (col_site, col_N, etc.)
+  data_plot <- data %>%
+    dplyr::select(dplyr::all_of(vars)) %>%
+    dplyr::rename(
+      taxa_group = !!rlang::sym(taxa_group),
+      col_N= !!rlang::sym(col_N),
+      !!!if (!is.null(col_zone)) stats::setNames(col_zone, "col_zone") else NULL,
+      !!!if (!is.null(col_facet)) stats::setNames(col_facet, "col_facet") else NULL,
+      !!!if (!is.null(col_site)) stats::setNames(col_site, "col_site") else NULL
+    )
+
+  all_vars <- names(data_plot)
+  # Excluir la columna de valores para agrupar por todo lo demás
+  gr_vars <- setdiff(all_vars, c("col_N"))
+
+  # 3. Agregación de Datos
+  data_plot <- data_plot %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(gr_vars))) %>%
+    dplyr::summarise(col_N = sum(col_N), .groups = "drop")
+
+  # 4. Cálculo de Porcentajes (Labels)
+  if (!is.null(col_facet)) {
+    # Porcentaje dentro del panel
+    data_plot <- data_plot %>%
+      dplyr::group_by(col_facet) %>%
+      dplyr::mutate(
+        label = scales::percent(col_N/ sum(col_N), accuracy = 0.01)
+      ) %>%
+      dplyr::ungroup()
+  } else {
+    # Porcentaje global
+    data_plot <- data_plot %>%
+      dplyr::mutate(
+        label = scales::percent(col_N/ sum(col_N), accuracy = 0.01)
+      )
+  }
+
+  # 5. Ordenamiento Taxonómico
+  ord_taxonomy <- data_plot %>%
+    dplyr::group_by(taxa_group) %>%
+    dplyr::summarise(total = sum(col_N), .groups = "drop") %>%
+    dplyr::arrange(dplyr::desc(total)) %>%
+    dplyr::pull(taxa_group)
+
+  data_plot <- data_plot %>%
+    dplyr::mutate(taxa_group = factor(taxa_group, levels = ord_taxonomy))
+
+  # 6. Manejo de Factores (Facet, Sitio, Zona)
+
+  # Facet
+  if (!is.null(col_facet)) {
+    if (!is.null(ord_facet)) {
+      data_plot <- data_plot %>% dplyr::mutate(col_facet = factor(col_facet, levels = ord_facet))
+    } else {
+      data_plot <- data_plot %>% dplyr::mutate(col_facet = as.factor(col_facet))
+    }
+  }
+
+  # Sitio (Antes col_sitio)
+  if (!is.null(col_site)) {
+    if (!is.null(ord_site)) {
+      data_plot <- data_plot %>% dplyr::mutate(col_site = factor(col_site, levels = ord_site))
+    } else {
+      data_plot <- data_plot %>% dplyr::mutate(col_site = factor(col_site, levels = sort(unique(col_site))))
+    }
+  }
+
+  # Zona (Antes col_zona)
+  if (!is.null(col_zone)) {
+    if (!is.null(ord_zone)) {
+      data_plot <- data_plot %>% dplyr::mutate(col_zone = factor(col_zone, levels = ord_zone))
+    } else {
+      data_plot <- data_plot %>% dplyr::mutate(col_zone = factor(col_zone, levels = sort(unique(col_zone))))
+    }
+  }
+
+  # 7. Configuración de Colores
+  col <- ggsci::pal_d3("category20c")(length(ord_taxonomy))
+  names(col) <- ord_taxonomy
+
+  # 8. Creación de Etiquetas Compuestas
+  if (!is.null(col_site) || !is.null(col_zone)) {
+    data_plot <- data_plot %>%
+      dplyr::mutate(
+        # Usamos nombres internos ya renombrados
+        label_lugar = if (!is.null(col_site)) col_site else col_zone,
+        label = glue::glue("{label_lugar} ({label})")
+      )
+  }
+
+  # 9. Generación del Gráfico
+  plot <- ggplot2::ggplot(data = data_plot, mapping = ggplot2::aes(area = col_N, fill = taxa_group, label = label)) +
+    treemapify::geom_treemap() +
+    treemapify::geom_treemap_text(
+      grow = FALSE,
+      reflow = TRUE,
+      colour = "white",
+      place = "centre",
+      size = 12
+    ) +
+    ggplot2::scale_fill_manual(values = col, name = stringr::str_to_sentence(taxa_group)) +
+    ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1)) +
+    ggplot2::labs(
+      title = glue::glue("Composición taxonómica por {stringr::str_to_lower(taxa_group)} de {taxa_id}"),
+      subtitle = "Composición derivada de la abundancia total de taxones"
+    ) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      text = ggplot2::element_text(family = "Arial"),
+      plot.title = ggplot2::element_text(face = "bold", size = 12),
+      strip.background = ggplot2::element_rect(fill = "gray20"),
+      strip.text = ggplot2::element_text(face = "bold", colour = "white"),
+      plot.subtitle = ggplot2::element_text(margin = ggplot2::margin(b = 12))
+    )
+
+  if (!is.null(col_facet)) {
+    plot <- plot + ggplot2::facet_wrap(~col_facet, scales = "free", ncol = 1)
+  }
+
+  # Formato Itálico Condicional (Especies)
+  if (stringr::str_detect(string = taxa_group, pattern = "(?i)(especies?|organismos?)")) {
+    plot <- plot +
+      ggplot2::theme(legend.text = ggplot2::element_text(face = "italic"))
+  }
+
+  # 10. Guardado y Retorno
+  tryCatch({
+    ggplot2::ggsave(
+      filename = output_name,
+      plot = plot, width = width, height = height, dpi = 300
+    )
+  }, error = function(e) warning("Error guardando imagen: ", e$message))
+
+  return(plot)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #### funciones para medio biótico####
 #' @title fn_plot_bar_biotic
 #' @description función para graficar de barras para la abundancia de las especies/taxones de un taxón determinado
@@ -901,104 +1133,7 @@ fn_plot_div_index <- function(data, col_N, col_sitio, code_sitio, col_taxa, col_
 }
 
 
-#' @title fn_plot_treemap
-#' @description función para graficar abundancia de taxones por taxa por sitios o zonas en forma de treemap
-#' @param data archivo entrada que tiene que tener, al menos, las columnas que contengan a los taxones, N y sitios de muestreo. Tiene que estar en formato "long". Se recomida usar csv o tsv como formatos.
-#' @param col_N cadena de texto que indica el nombre de la columna que contiene el N (abundancia) en la base de datos de entrada.
-#' @param col_sitio cadena de texto que indica el nombre de la columna que contiene los sitios de muestreo en la base de datos de entrada.
-#' @param col_taxa cadena de texto que indica el nombre de la columna que contiene los taxones (generalmente se llama especie, taxa, sigla) en la base de datos de entrada.
-#' @param col_zona cadena de texto que indica el nombre de la columna que contiene al factor de agrupamiento (zonas, campañas, etc) en la base de datos de entrada. Por defecto, Nulo.
-#' @param col_facet cadena de texto que indica el nombre de la columna que indica la variable para hacer el facet. Si no se proporciona orden , asume el orden  de la variable en el dataframae
-#' @param taxa_id cadena de texto que indica el nombre del "grupo funcional" al cual pertenecen los taxones ("fitoplancton", "zooplancton", "macrofitas", "perifiton", "ictiofauna",etc.).
-#' @param height alto del gráfico. Por defecto, toma valor 10.
-#' @param width ancho del gráfico. Por defecto, toma valor 8.
-#' @import rlang
-#' @import tidyverse
-#' @import treemapify
-#' @return gráfico treemap.
-#' @export fn_plot_treemap
-#' @examples
-#' \dontrun{
-#' data <- read_tsv("data_fitoplancton_integrado.tsv")
-#' col_N <- "N"
-#' col_facet <- "Campaña"
-#' col_sitio <- "Sitio"
-#' ord_facet <- c("Verano 2024", "Invierno 2024")
-#' taxa_id <- "fitoplancton"
-#' taxa_group <- "Clase"
-#' width <- 8
-#' height <- 10
-#' fn_plot_treemap(data = data,col_facet = col_facet,ord_facet = ord_facet,col_sitio = col_sitio,col_N = col_N,taxa_id = taxa_id,taxa_group = taxa_group,width = width,height = height)
-#' }
-fn_plot_treemap <- function(data, col_sitio = NULL, col_N, col_facet = NULL, ord_facet = NULL, col_zonas = NULL, taxa_id, taxa_group, width = 8, height = 10) {
-  options(scipen = 999)
-  # setting vars#
-  vars <- c(taxa_group, col_N, col_facet, col_zonas, col_sitio)
-  # Selecciona y renombra las columnas dinámicamente
-  data_plot <- data %>%
-    dplyr::select(all_of(vars)) %>%
-    dplyr::rename(
-      taxa_group = !!sym(taxa_group),
-      col_N = !!sym(col_N),
-      !!!if (!is.null(col_zonas)) setNames(col_zonas, "col_zonas") else NULL,
-      !!!if (!is.null(col_facet)) setNames(col_facet, "col_facet") else NULL,
-      !!!if (!is.null(col_sitio)) setNames(col_sitio, "col_sitio") else NULL
-    )
-  gr_vars <- names(data_plot)
-  gr_vars <- setdiff(gr_vars, "col_N")
-  data_plot <- data_plot %>%
-    dplyr::group_by(dplyr::across(all_of(gr_vars))) %>%
-    dplyr::summarise(col_N = mean(col_N), .groups = "drop") %>%
-    dplyr::ungroup()
-  ord_class <- data_plot %>%
-    dplyr::group_by(taxa_group) %>%
-    dplyr::summarise(total = sum(col_N), .groups = "drop") %>%
-    dplyr::arrange(desc(total)) %>%
-    dplyr::pull(taxa_group)
-  data_plot <- data_plot %>% dplyr::mutate(taxa_group = factor(taxa_group, levels = ord_class))
-  # if (!is.null(col_facet)) {
-  #  data_plot <- data_plot %>%
-  #    dplyr::mutate(col_facet = factor(col_facet, levels = ord_facet))
-  # }
-  #write_csv(data_plot, file = paste0("data_plot_treemap_",output_id, ".csv"))
-  if (stringr::str_detect(string = taxa_id,pattern = "(?i)ictiofauna")) {
-    col <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(length(unique(data_plot$taxa_group)))
-    names(col) <- unique(data_plot$taxa_group)
-  } else {
-    full_cols <- colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(27)
-    names(full_cols) <- c("Bacillariophyceae", "Insecta", "Chlorophyceae", "Zygnematophyceae", "Fragilariophyceae",   "Cyanophyceae", "Coscinodiscophyceae", "Malacostraca", "Clitellata", "Entognatha", "Gastropoda", "Dinophyceae",  "Adenophorea", "Bivalvia", "Ostracoda", "Trebouxiophyceae", "Euglenophyceae", "Arachnida", "Copepoda","Chrysophyceae", "Branchiopoda", "Cryptophyceae", "Rhabditophora", "Ulvophyceae","Hexanauplia", "Rhabdocoela", "Turbellaria")
-    class <- as.character(unique(data_plot$taxa_group))
-    col <- full_cols[class]
 
-  }
-
-  if (any(stringr::str_detect(string = gr_vars,pattern = "sitio"))) {
-    plot <- ggplot(data = data_plot,mapping =  aes(area = col_N, fill = taxa_group, subgroup = as.factor(col_sitio)), label = as.character(col_sitio)) +
-      geom_treemap() +
-      facet_wrap(~factor(col_facet, levels = ord_facet), ncol = 1, scales = "free") +
-      geom_treemap(color = "white") +
-      geom_treemap_subgroup_border(color = "gray40", size = 1.5) +
-      geom_treemap_subgroup_text(place = "centre", size = 8) +
-      theme_void() +
-      #scale_fill_paletteer_d("palettetown::bayleef")
-      scale_fill_manual(taxa_group, values = col) +
-      guides(fill = guide_legend(ncol = 1))
-    ggsave(filename = paste0("treemap_", taxa_id, "_by_", taxa_group, ".png"), plot = plot, width = width , height = height, dpi = 300)
-  }
-  if (any(stringr::str_detect(string = gr_vars,pattern = "zona"))){
-    plot <- ggplot(data_plot, aes(area = col_N, fill = taxa_group, subgroup = as.factor(col_zonas)), label = as.character(col_zonas)) +
-      geom_treemap() +
-      facet_wrap(~factor(col_facet, levels = ord_facet), ncol = 1, scales = "free")+
-      geom_treemap(color = "white") +
-      geom_treemap_subgroup_border(color = "gray40", size = 1.5) +
-      geom_treemap_subgroup_text(place = "centre", size = 8) +
-      theme_void() +
-      #scale_fill_paletteer_d("palettetown::bayleef")
-      scale_fill_manual(taxa_group, values = col) +
-      guides(fill = guide_legend(ncol = 1))
-    ggsave(filename = paste0("treemap_", taxa_id, "_by_", taxa_group, ".png"), plot = plot, width = width , height = height, dpi = 300)
-  }
-}
 
 #' @title fn_plot_spec_rich
 #' @description función para graficar riqueza de taxones por taxa por sitios o zonas en grafico de barra
