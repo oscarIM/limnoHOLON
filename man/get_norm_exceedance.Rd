@@ -10,7 +10,8 @@ get_norm_exceedance(
   col_pars,
   col_value,
   col_group = NULL,
-  output_name = "tabla_excedencias.tsv"
+  output_name = "tabla_excedencias.tsv",
+  matrix = "agua"
 )
 }
 \arguments{
