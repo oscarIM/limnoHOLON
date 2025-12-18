@@ -506,7 +506,88 @@ get_index_df <- function(data,
   return(invisible(summ_index))
 }
 ################################################################################
+#' @title Abreviar Nombres Taxonómicos con Desambiguación
+#' @description Genera códigos abreviados. Si detecta colisiones (mismo código para especies distintas), aumenta la longitud del género para diferenciarlas.
+#'
+#' @param taxa_name Vector de caracteres con los nombres científicos.
+#'
+#' @return Un vector de caracteres con las abreviaciones.
+#' @export abbreviate_taxa
+#' @importFrom stringr str_squish str_trim str_replace_all word str_detect str_to_lower str_c str_sub str_to_sentence
+#' @importFrom dplyr case_when tibble mutate group_by add_count ungroup pull if_else n
+#' @importFrom rlang .data
+abbreviate_taxa <- function(taxa_name) {
 
+  # Creamos un tibble temporal para manejar el vector y detectar duplicados fácilmente
+  df <- dplyr::tibble(original = taxa_name) %>%
+    dplyr::mutate(
+      # 1. Limpieza inicial
+      clean = stringr::str_squish(
+        stringr::str_trim(
+          stringr::str_replace_all(original, "\\.", "")
+        )
+      ),
+
+      # 2. Extracción de palabras
+      w1 = stringr::word(clean, 1),
+      w2 = stringr::word(clean, 2),
+      w3 = stringr::word(clean, 3),
+
+      # 3. Detección de patrones
+      w2_sp = !is.na(w2) & stringr::str_detect(stringr::str_to_lower(w2), "^spp?$"),
+      w2_cf = !is.na(w2) & stringr::str_detect(stringr::str_to_lower(w2), "^cf$"),
+      w2_num = !is.na(w2) & stringr::str_detect(w2, "^\\d+$"),
+      w3_num = !is.na(w3) & stringr::str_detect(w3, "^\\d+$"),
+      solo_una = is.na(w2) | w2_sp,
+
+      # 4. Generación de Sigla Base (Intento 1: Estándar)
+      # Generalmente: 1 letra Genero + 4 letras Especie
+      sigla_base = dplyr::case_when(
+        # Caso: "sp" + número (Chaetoceros sp 1 -> Chaet1)
+        w2_sp & w3_num ~ stringr::str_c(stringr::str_sub(w1, 1, 5), w3),
+
+        # Caso: "cf." (Genus cf. species -> Gspec)
+        w2_cf & !is.na(w3) ~ stringr::str_c(stringr::str_sub(w1, 1, 1), stringr::str_sub(w3, 1, 4)),
+
+        # Caso: Solo género o sp sin numero -> Genus (5 letras)
+        solo_una ~ stringr::str_sub(w1, 1, 5),
+
+        # Caso: Genero + numero (Genus 123 -> Genu123)
+        w2_num ~ stringr::str_c(stringr::str_sub(w1, 1, 4), w2),
+
+        # Caso General: Genus species -> Gspec (1G + 4S)
+        TRUE ~ stringr::str_c(stringr::str_sub(w1, 1, 1), stringr::str_sub(w2, 1, 4))
+      )
+    )
+
+  # 5. Detección y Resolución de Colisiones
+  # Agrupamos por la sigla generada. Si hay más de un nombre original diferente para la misma sigla, hay colisión.
+
+  df_final <- df %>%
+    dplyr::group_by(sigla_base) %>%
+    dplyr::mutate(
+      n_distinct_originals = dplyr::n_distinct(original), # Cuántas especies distintas cayeron en esta sigla
+
+      # Generación Sigla Extendida (Intento 2: Resolución)
+      # Estrategia: 3 letras Genero + 3 letras Especie (Chaetoceros curvisetus -> Chacur)
+      sigla_ext = dplyr::case_when(
+        # Si es un caso especial (sp, cf, num), mantenemos la base porque suelen ser únicos por el número
+        w2_sp | w2_num | (w2_cf & is.na(w3)) ~ sigla_base,
+
+        # Si es el caso general (Genus species), aplicamos 3G + 3S
+        w2_cf & !is.na(w3) ~ stringr::str_c(stringr::str_sub(w1, 1, 3), stringr::str_sub(w3, 1, 3)),
+        TRUE ~ stringr::str_c(stringr::str_sub(w1, 1, 3), stringr::str_sub(w2, 1, 3))
+      ),
+
+      # Decisión final: Si hay colisión en la base, usa la extendida
+      sigla_final = dplyr::if_else(n_distinct_originals > 1, sigla_ext, sigla_base)
+    ) %>%
+    dplyr::ungroup()
+
+  # 6. Retorno formateado
+  return(stringr::str_to_sentence(df_final$sigla_final))
+}
+################################################################################
 
 
 
