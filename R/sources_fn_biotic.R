@@ -397,7 +397,115 @@ plot_index_by_taxa <- function(data,
   return(invisible(NULL))
 }
 ################################################################################
+#' @title Calcular Índices de Diversidad (N, S, H)
+#' @description Agrupa datos, calcula abundancia (N), riqueza (S) y Shannon (H) usando `vegan`, y guarda el resultado.
+#' @param data Data frame con los datos.
+#' @param col_N String. Nombre de la columna de abundancia o valor.
+#' @param col_site String. Nombre de la columna de sitios.
+#' @param col_sampling String (Opcional). Nombre de la columna de muestreo/campaña.
+#' @param col_taxa String. Nombre de la columna de taxones.
+#' @param col_zone String (Opcional). Nombre de la columna de zonas.
+#' @param col_rep String (Opcional). Nombre de la columna de réplicas.
+#' @param output_name String. Nombre del archivo de salida (.csv).
+#' @param fun Función o nombre de función (ej. "sum", "mean") para agregar los datos antes de calcular índices.
+#' @return Un data frame con los índices calculados (invisible).
+#' @export get_index_df
+#' @importFrom dplyr select rename filter group_by summarise mutate bind_cols starts_with all_of across
+#' @importFrom tidyr pivot_wider
+#' @importFrom rlang sym "!!" "!!!" as_function
+#' @importFrom stats setNames
+#' @importFrom stringr str_detect str_replace
+#' @importFrom vegan specnumber diversity
+#' @importFrom readr write_csv
+#' @title Calcular Índices de Diversidad (N, S, H)
+#' @description Agrupa datos, calcula abundancia (N), riqueza (S) y Shannon (H) usando `vegan`, y guarda el resultado en CSV.
+#' @param data Data frame con los datos.
+#' @param col_value String. Nombre de la columna de abundancia o valor.
+#' @param col_site String. Nombre de la columna de sitios.
+#' @param col_sampling String (Opcional). Nombre de la columna de muestreo/campaña.
+#' @param col_taxa String. Nombre de la columna de taxones.
+#' @param col_zone String (Opcional). Nombre de la columna de zonas.
+#' @param col_rep String (Opcional). Nombre de la columna de réplicas.
+#' @param output_name String. Nombre del archivo de salida (.csv).
+#' @param fun Función o nombre de función (ej. "sum", "mean") para agregar los datos antes de calcular índices.
+#' @return Un data frame con los índices calculados (invisible).
+#' @export get_index_df
+#' @importFrom dplyr select rename filter group_by summarise mutate bind_cols starts_with all_of across
+#' @importFrom tidyr pivot_wider
+#' @importFrom rlang sym "!!" "!!!" as_function
+#' @importFrom stats setNames
+#' @importFrom stringr str_detect
+#' @importFrom vegan specnumber diversity
+#' @importFrom readr write_csv
+#' @importFrom glue glue
+get_index_df <- function(data,
+                         col_value,
+                         col_site,
+                         col_sampling = NULL,
+                         col_taxa,
+                         col_zone = NULL,
+                         col_rep = NULL,
+                         output_name,
+                         fun = sum) {
 
+  # 1. Configuración
+  op <- options(scipen = 999)
+  on.exit(options(op))
+
+  # Convertir argumento 'fun' a función ejecutable
+  fun <- rlang::as_function(fun)
+
+  # 2. Selección y Renombrado Dinámico
+  vars_to_select <- c(col_value, col_sampling, col_site, col_taxa, col_zone, col_rep)
+
+  data_plot <- data %>%
+    dplyr::select(dplyr::all_of(vars_to_select)) %>%
+    dplyr::rename(
+      col_value = !!rlang::sym(col_value),
+      col_site = !!rlang::sym(col_site),
+      col_taxa = !!rlang::sym(col_taxa),
+      !!!if (!is.null(col_zone)) stats::setNames(col_zone, "col_zone") else NULL,
+      !!!if (!is.null(col_sampling)) stats::setNames(col_sampling, "col_sampling") else NULL,
+      !!!if (!is.null(col_rep)) stats::setNames(col_rep, "col_rep") else NULL
+    ) %>%
+    dplyr::filter(!is.na(col_taxa))
+
+  # 3. Agregación de Datos
+  grouping_cols <- setdiff(names(data_plot), "col_value")
+
+  data_index <- data_plot %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_cols))) %>%
+    dplyr::summarise(col_value = fun(col_value, na.rm = TRUE), .groups = "drop") %>%
+    tidyr::pivot_wider(names_from = "col_taxa", values_from = "col_value", values_fill = 0)
+
+  # 4. Cálculo de Índices con Vegan
+  metadata <- data_index %>% dplyr::select(dplyr::starts_with("col_"))
+  matrix_comm <- data_index %>% dplyr::select(-dplyr::starts_with("col_"))
+
+  summ_index <- matrix_comm %>%
+    dplyr::mutate(
+      N = rowSums(.),
+      S = vegan::specnumber(.),
+      H = vegan::diversity(., index = "shannon")
+    ) %>%
+    dplyr::select(N, S, H)
+
+  summ_index <- dplyr::bind_cols(metadata, summ_index)
+
+  # 5. Guardado y Retorno
+  tryCatch({
+    # Asegurar extensión csv usando glue
+    if (!stringr::str_detect(output_name, "\\.csv$")) {
+      output_name <- glue::glue("{output_name}.csv")
+    }
+
+    readr::write_csv(x = summ_index, file = output_name)
+
+  }, error = function(e) warning("Error guardando archivo CSV: ", e$message))
+
+  return(invisible(summ_index))
+}
+################################################################################
 
 
 
