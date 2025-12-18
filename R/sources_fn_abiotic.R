@@ -1181,16 +1181,16 @@ plot_boxplot <- function(data,
   }
 
   # Recorte visual (95%)
-  limites <- data_plot %>%
-    dplyr::group_by(col_label) %>%
-    dplyr::summarise(
-      lim_superior = stats::quantile(col_y, 0.95, na.rm = TRUE),
-      .groups = "drop"
-    )
+  # limites <- data_plot %>%
+  #  dplyr::group_by(col_label) %>%
+  #  dplyr::summarise(
+  #    lim_superior = stats::quantile(col_y, 0.95, na.rm = TRUE),
+  #    .groups = "drop"
+  #  )
 
-  data_plot <- data_plot %>%
-    dplyr::left_join(limites, by = "col_label") %>%
-    dplyr::mutate(col_y_plot = pmin(col_y, lim_superior))
+  # data_plot <- data_plot %>%
+  #  dplyr::left_join(limites, by = "col_label") %>%
+  #  dplyr::mutate(col_y_plot = pmin(col_y, lim_superior))
 
   # --- 2. Preparar Etiquetas GLM (Desde stats_df) ---
   stats_ready <- NULL
@@ -1222,7 +1222,7 @@ plot_boxplot <- function(data,
     n_factor <- length(unique(d_plot$col_x))
 
     # Base Plot (Estilo Original)
-    p <- ggplot2::ggplot(d_plot, ggplot2::aes(x = col_x, y = col_y_plot)) +
+    p <- ggplot2::ggplot(d_plot, ggplot2::aes(x = col_x, y = col_y)) +
       ggplot2::geom_boxplot(
         na.rm = TRUE,
         outlier.colour = "black",
