@@ -180,9 +180,223 @@ plot_treemap <- function(data,
 
   return(plot)
 }
+################################################################################
+#' @title Graficar Índices de Diversidad por Taxón
+#' @description Genera y guarda dos gráficos de barras apiladas: uno de Abundancia Total y otro de Riqueza de Taxones, desglosados por sitio y grupo taxonómico.
+#' @param data Data frame con los datos.
+#' @param col_site String. Nombre de la columna de sitios.
+#' @param ord_site Vector (Opcional). Orden de los niveles de sitios.
+#' @param col_N String. Nombre de la columna de abundancia.
+#' @param col_taxa String. Nombre de la columna de taxones individuales (para conteo de riqueza).
+#' @param taxon_group String. Nombre de la columna de agrupación taxonómica (ej. "Phylum", "Clase") para el relleno del gráfico.
+#' @param col_facet String (Opcional). Nombre de la columna para facetar (ej. "Zona").
+#' @param ord_facet Vector (Opcional). Orden de los niveles del facet.
+#' @param taxa_id String. Identificador del grupo taxonómico general (ej. "Macroinvertebrados") para títulos y nombres de archivo.
+#' @param width Numérico. Ancho de la imagen.
+#' @param height Numérico. Alto de la imagen.
+#' @param xlabel String (Opcional). Etiqueta personalizada para el eje X. Por defecto "Sitios".
+#'
+#' @return Invisible NULL. Guarda dos archivos PNG.
+#' @export plot_index_by_taxa
+#' @importFrom dplyr select rename group_by summarise mutate filter arrange pull n_distinct across desc all_of
+#' @importFrom ggplot2 ggplot aes geom_bar scale_y_continuous scale_fill_manual labs theme_linedraw theme element_text element_rect facet_grid ggsave expansion
+#' @importFrom ggsci pal_d3
+#' @importFrom glue glue
+#' @importFrom stringr str_to_sentence str_to_lower str_detect
+#' @importFrom stats setNames
+#' @importFrom scales label_number
+#' @importFrom rlang sym "!!" "!!!"
+plot_index_by_taxa <- function(data,
+                                     col_site,
+                                     ord_site = NULL,
+                                     col_N,
+                                     col_taxa,
+                                     taxon_group,
+                                     col_facet = NULL,
+                                     ord_facet = NULL,
+                                     taxa_id,
+                                     width = 10,
+                                     height = 6,
+                                     xlabel = NULL) {
 
+  # 1. Configuración Inicial
+  op <- options(scipen = 999)
+  on.exit(options(op))
 
+  # Variables internas
+  vars <- c(col_site, col_N, col_taxa, taxon_group, col_facet)
 
+  # Renombrado dinámico para uso interno
+  data_plot <- data %>%
+    dplyr::select(dplyr::all_of(vars)) %>%
+    dplyr::rename(
+      col_site = !!rlang::sym(col_site),
+      col_N = !!rlang::sym(col_N),
+      col_taxa = !!rlang::sym(col_taxa),
+      taxon_group = !!rlang::sym(taxon_group),
+      !!!if (!is.null(col_facet)) stats::setNames(col_facet, "col_facet") else NULL
+    )
+
+  # Configuración de agrupación
+  gr_by_cols <- c("col_site", "taxon_group")
+  if ("col_facet" %in% names(data_plot)) gr_by_cols <- c(gr_by_cols, "col_facet")
+
+  # Orden de Sitios
+  ord_site <- if (is.null(ord_site)) {
+    sort(unique(data_plot$col_site))
+  } else {
+    ord_site
+  }
+
+  # --- 2. Cálculo de Abundancia (N) ---
+  res_abund <- data_plot %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(gr_by_cols))) %>%
+    dplyr::summarise(
+      N = sum(col_N, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    # Manejo de Facet como factor
+    {
+      if (!is.null(col_facet) && !is.null(ord_facet)) {
+        dplyr::mutate(., col_facet = factor(col_facet, levels = ord_facet))
+      } else if (!is.null(col_facet) && is.null(ord_facet)) {
+        dplyr::mutate(., col_facet = as.factor(col_facet))
+      } else {
+        .
+      }
+    } %>%
+    dplyr::mutate(col_site = factor(col_site, levels = ord_site))
+
+  # --- 3. Cálculo de Riqueza (S) ---
+  res_riqueza <- data_plot %>%
+    dplyr::filter(!is.na(col_N), col_N > 0) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(gr_by_cols))) %>%
+    dplyr::summarise(S = dplyr::n_distinct(col_taxa), .groups = "drop") %>%
+    # Manejo de Facet como factor
+    {
+      if (!is.null(col_facet) && !is.null(ord_facet)) {
+        dplyr::mutate(., col_facet = factor(col_facet, levels = ord_facet))
+      } else if (!is.null(col_facet) && is.null(ord_facet)) {
+        dplyr::mutate(., col_facet = as.factor(col_facet))
+      } else {
+        .
+      }
+    } %>%
+    dplyr::mutate(col_site = factor(col_site, levels = ord_site))
+
+  # --- 4. Definición de Orden de Clases (Taxones) ---
+  # Ordenar taxones por abundancia total
+  ord_abund <- res_abund %>%
+    dplyr::group_by(taxon_group) %>%
+    dplyr::summarise(total_N = sum(N), .groups = "drop") %>%
+    dplyr::arrange(dplyr::desc(total_N)) %>%
+    dplyr::pull(taxon_group)
+
+  # Ordenar taxones por riqueza total
+  ord_rich <- res_riqueza %>%
+    dplyr::group_by(taxon_group) %>%
+    dplyr::summarise(total_S = sum(S), .groups = "drop") %>%
+    dplyr::arrange(dplyr::desc(total_S)) %>%
+    dplyr::pull(taxon_group)
+
+  # --- 5. Paleta de Colores Consistente ---
+  # Unimos todos los taxones presentes en ambos datasets para que el color sea fijo
+  all_taxon_group <- unique(c(as.character(ord_abund), as.character(ord_rich)))
+  n_taxa_total <- length(all_taxon_group)
+
+  col <- ggsci::pal_d3("category20c")(n_taxa_total)
+  # Si hay más de 20 taxones, pal_d3 recicla o da error dependiendo de la versión,
+  # pero tu código original confiaba en esto. Mantenemos lógica.
+  # Asignamos nombres para scale_fill_manual
+  # Nota: Si n_taxa_total > 20, ggsci podría quedarse corto.
+  # Si necesitas más colores, considera colorRampPalette.
+  # Mantenemos tu original por instrucción.
+  names(col) <- all_taxon_group
+
+  # Asignar niveles a los factores
+  res_abund <- res_abund %>%
+    dplyr::mutate(taxon_group = factor(taxon_group, levels = ord_abund))
+
+  res_riqueza <- res_riqueza %>%
+    dplyr::mutate(taxon_group = factor(taxon_group, levels = ord_rich))
+
+  # Configuración etiqueta X
+  xlab <- ifelse(is.null(xlabel), "Sitios", xlabel)
+
+  # --- 6. Gráfico de Abundancia ---
+  title_facet <- if (!is.null(col_facet)) glue::glue(" por {stringr::str_to_lower(col_facet)}") else ""
+
+  p_abund <- ggplot2::ggplot(res_abund, ggplot2::aes(x = col_site, y = N, fill = taxon_group)) +
+    ggplot2::geom_bar(stat = "identity", position = "stack") +
+    ggplot2::scale_y_continuous(
+      name = "Abundancia total [N]",
+      n.breaks = 6
+    ) +
+    ggplot2::scale_fill_manual(values = col, name = stringr::str_to_sentence(taxon_group)) +
+    ggplot2::labs(
+      title = glue::glue("Abundancia de taxones de {stringr::str_to_lower(taxa_id)}{title_facet}"),
+      x = xlab
+    ) +
+    ggplot2::theme_linedraw(base_size = 10, base_family = "Arial") +
+    ggplot2::theme(
+      legend.position = "right",
+      plot.title = ggplot2::element_text(face = "bold", size = 12),
+      strip.text = ggplot2::element_text(face = "bold", colour = "white"),
+      strip.background = ggplot2::element_rect(fill = "#2c3e50"),
+      plot.tag = ggplot2::element_text(face = "bold")
+    )
+
+  if (!is.null(col_facet)) {
+    p_abund <- p_abund +
+      ggplot2::facet_grid(~col_facet, scales = "free_x", space = "free_x")
+  }
+
+  if (stringr::str_detect(string = taxon_group, pattern = "(?i)(especies?|organismos?)")) {
+    p_abund <- p_abund +
+      ggplot2::theme(legend.text = ggplot2::element_text(face = "italic"))
+  }
+
+  # --- 7. Gráfico de Riqueza ---
+  p_rich <- ggplot2::ggplot(res_riqueza, ggplot2::aes(x = col_site, y = S, fill = taxon_group)) +
+    ggplot2::geom_bar(stat = "identity", position = "stack") +
+    ggplot2::scale_y_continuous(
+      name = "Riqueza de taxones [S]",
+      n.breaks = 6,
+      labels = scales::label_number(accuracy = 1)
+    ) +
+    ggplot2::scale_fill_manual(values = col, name = stringr::str_to_sentence(taxon_group)) +
+    ggplot2::labs(
+      title = glue::glue("Riqueza de taxones de {stringr::str_to_lower(taxa_id)}{title_facet}"),
+      x = xlab
+    ) +
+    ggplot2::theme_linedraw(base_size = 10, base_family = "Arial") +
+    ggplot2::theme(
+      legend.position = "right",
+      plot.title = ggplot2::element_text(face = "bold", size = 12),
+      strip.text = ggplot2::element_text(face = "bold", colour = "white"),
+      strip.background = ggplot2::element_rect(fill = "#2c3e50"),
+      plot.tag = ggplot2::element_text(face = "bold")
+    )
+
+  if (!is.null(col_facet)) {
+    p_rich <- p_rich +
+      ggplot2::facet_grid(~col_facet, scales = "free_x", space = "free_x")
+  }
+
+  if (stringr::str_detect(string = taxon_group, pattern = "(?i)(especies?|organismos?)")) {
+    p_rich <- p_rich +
+      ggplot2::theme(legend.text = ggplot2::element_text(face = "italic"))
+  }
+
+  # --- 8. Guardado ---
+  tryCatch({
+    ggplot2::ggsave(filename = glue::glue("plot_riqueza_sitio_{taxa_id}.png"), plot = p_rich, width = width, height = height, dpi = 300)
+    ggplot2::ggsave(filename = glue::glue("plot_abundancia_sitio_{taxa_id}.png"), plot = p_abund, width = width, height = height, dpi = 300)
+  }, error = function(e) warning("Error guardando gráficos: ", e$message))
+
+  return(invisible(NULL))
+}
+################################################################################
 
 
 
