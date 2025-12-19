@@ -8,7 +8,7 @@ Description: Programa para obtener figuras y tablas de estudios limnológicos y 
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 VignetteBuilder: knitr
 Suggests: 
     rmarkdown
@@ -23,6 +23,7 @@ Imports:
     grDevices,
     janitor,
     knitr,
+    magrittr,
     purrr,
     RColorBrewer,
     readr,
