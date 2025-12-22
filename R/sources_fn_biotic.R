@@ -802,3 +802,230 @@ plot_nmds <- function(data,
 
   return(plot)
 }
+################################################################################
+#' @title Plot Alluvial de Composición (Abundancia o Riqueza por Grupo)
+#' @description Crea un gráfico aluvial. Ordena la leyenda por magnitud y respeta la lógica de riqueza total sin filtrar si se solicita.
+#' @param data Data frame con los datos.
+#' @param col_site String. Columna eje X.
+#' @param ord_site Vector (Opcional). Orden de los sitios.
+#' @param col_N String. Columna de abundancia.
+#' @param col_taxa_group String. El grupo mayor que formará las cintas (ej. Clase, Familia).
+#' @param col_taxa String (Opcional). La unidad menor a contar para riqueza (ej. Especie). Requerido si metric="richness".
+#' @param taxa_id String. Nombre del grupo general para título.
+#' @param col_facet String (Opcional). Columna para facetar.
+#' @param ord_facet Vector (Opcional). Orden de los niveles del facet.
+#' @param metric String. "abundance" (aplica Top N) o "richness" (Muestra TODOS los grupos, sin Top N).
+#' @param legend_label String (Opcional). Título leyenda.
+#' @param xlabel String. Título eje X.
+#' @param top_n Entero. Filtra los N grupos principales (Solo aplica si metric="abundance").
+#' @param output_name String. Nombre del archivo de salida (ej. "grafico.png").
+#' @param width Numérico. Ancho imagen.
+#' @param height Numérico. Alto imagen.
+#' @param save_rds Lógico. Guardar RDS.
+#' @return Un objeto ggplot.
+#' @export plot_alluvial_taxa
+#' @importFrom dplyr select group_by summarise mutate arrange slice_head pull if_else all_of filter n_distinct ungroup
+#' @importFrom ggplot2 ggplot aes labs scale_fill_manual scale_y_continuous theme_bw theme element_text element_rect ggsave facet_grid
+#' @importFrom ggalluvial geom_alluvium geom_stratum
+#' @importFrom rlang sym "!!" "!!!"
+#' @importFrom glue glue
+#' @importFrom ggsci pal_d3
+#' @importFrom forcats fct_relevel fct_reorder
+#' @importFrom scales hue_pal
+#' @importFrom stringr str_replace str_to_lower
+plot_alluvial_taxa <- function(data,
+                               col_site,
+                               ord_site = NULL,
+                               col_N,
+                               col_taxa_group,   # El grupo (Cinta)
+                               col_taxa = NULL,  # Lo que se cuenta (Especie)
+                               taxa_id,
+                               col_facet = NULL,
+                               ord_facet = NULL,
+                               metric = "abundance",
+                               legend_label = NULL,
+                               xlabel = "Sitios",
+                               top_n = 10,
+                               output_name,      # Agregado porque se usa en ggsave
+                               width = 10,
+                               height = 6,
+                               save_rds = FALSE) {
+
+  # 1. Configuración
+  op <- options(scipen = 999)
+  on.exit(options(op))
+
+  # Validación estricta para Riqueza
+  if (metric == "richness" && is.null(col_taxa)) {
+    stop("Error: Para calcular 'richness', debes especificar 'col_taxa' (la columna de especies a contar).")
+  }
+
+  # 2. Selección y Renombrado
+  vars_select <- list(
+    col_site = rlang::sym(col_site),
+    col_N = rlang::sym(col_N),
+    col_taxa_group = rlang::sym(col_taxa_group)
+  )
+
+  if (!is.null(col_taxa)) vars_select$col_taxa <- rlang::sym(col_taxa)
+  if (!is.null(col_facet)) vars_select$col_facet <- rlang::sym(col_facet)
+
+  data_plot <- data %>%
+    dplyr::select(!!!vars_select)
+
+  # 3. Lógica de Cálculo (Abundancia vs Riqueza)
+  grp_base <- c("col_site", "col_taxa_group")
+  if (!is.null(col_facet)) grp_base <- c(grp_base, "col_facet")
+
+  if (metric == "richness") {
+    # --- MODO RIQUEZA ---
+    # Se cuenta la riqueza de 'col_taxa' dentro de 'col_taxa_group'
+    data_calc <- data_plot %>%
+      dplyr::filter(col_N > 0) %>%
+      dplyr::group_by(dplyr::across(dplyr::all_of(grp_base))) %>%
+      dplyr::summarise(final_value = dplyr::n_distinct(col_taxa), .groups = "drop")
+
+    y_label <- "Riqueza de taxa [S]"
+    text_string <- "la riqueza de taxa"
+    if (is.null(legend_label)) legend_label <- "Grupo"
+
+  } else {
+    # --- MODO ABUNDANCIA ---
+    data_calc <- data_plot %>%
+      dplyr::group_by(dplyr::across(dplyr::all_of(grp_base))) %>%
+      dplyr::summarise(final_value = sum(col_N, na.rm = TRUE), .groups = "drop")
+
+    y_label <- "Abundancia [N]"
+    text_string <- "la abundancia"
+    if (is.null(legend_label)) legend_label <- "Taxón"
+  }
+
+  # 4. Lógica de Filtrado y Etiquetado (Corregida según tu instrucción)
+
+  if (metric == "richness") {
+    # Si es riqueza, NO usamos Top N. Usamos TODOS los grupos.
+    top_groups <- unique(data_calc$col_taxa_group)
+
+  } else {
+    # Si es abundancia, calculamos ranking y cortamos por Top N
+    ranking <- data_calc %>%
+      dplyr::group_by(col_taxa_group) %>%
+      dplyr::summarise(total = sum(final_value, na.rm = TRUE)) %>%
+      dplyr::arrange(dplyr::desc(total))
+
+    top_groups <- ranking %>%
+      dplyr::slice_head(n = top_n) %>%
+      dplyr::pull(col_taxa_group)
+  }
+
+  # Re-etiquetar (Top N vs Others) y Sumarizar Final
+  grp_final <- c("col_site", "taxa_label")
+  if (!is.null(col_facet)) grp_final <- c(grp_final, "col_facet")
+
+  data_alluvial <- data_calc %>%
+    dplyr::mutate(
+      taxa_label = dplyr::if_else(col_taxa_group %in% top_groups, as.character(col_taxa_group), "Others")
+    ) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(grp_final))) %>%
+    dplyr::summarise(final_value = sum(final_value, na.rm = TRUE), .groups = "drop")
+
+  # --- CORRECCIÓN 2: ORDENAR LEYENDA POR MAGNITUD ---
+  # Calculamos el total por etiqueta para ordenar el factor
+  total_per_label <- data_alluvial %>%
+    dplyr::group_by(taxa_label) %>%
+    dplyr::summarise(total = sum(final_value, na.rm = TRUE)) %>%
+    dplyr::arrange(dplyr::desc(total))
+
+  # Definimos los niveles ordenados por total descendente
+  ordered_levels <- total_per_label$taxa_label
+
+  # Si existe "Others", forzamos que vaya al final
+  if ("Others" %in% ordered_levels) {
+    ordered_levels <- c(setdiff(ordered_levels, "Others"), "Others")
+  }
+
+  # Aplicamos el factor ordenado
+  data_alluvial <- data_alluvial %>%
+    dplyr::mutate(taxa_label = factor(taxa_label, levels = ordered_levels))
+
+  # 5. Ordenamiento de Ejes (Sitios y Facets)
+  if (!is.null(ord_site)) {
+    data_alluvial <- data_alluvial %>%
+      dplyr::mutate(col_site = factor(col_site, levels = ord_site))
+  }
+
+  if (!is.null(col_facet)) {
+    fac_levels <- if (!is.null(ord_facet)) ord_facet else sort(unique(data_alluvial$col_facet))
+    data_alluvial <- data_alluvial %>%
+      dplyr::mutate(col_facet = factor(col_facet, levels = fac_levels))
+  }
+
+  # 6. Colores
+  n_colors <- length(unique(data_alluvial$taxa_label))
+
+  if (n_colors <= 20) {
+    cols <- ggsci::pal_d3("category20c")(n_colors)
+  } else {
+    cols <- scales::hue_pal()(n_colors)
+  }
+
+  names(cols) <- levels(data_alluvial$taxa_label) # Asegurar match con niveles ordenados
+  if ("Others" %in% names(cols)) cols["Others"] <- "grey80"
+
+  # 7. Plot
+  plot <- ggplot2::ggplot(
+    data_alluvial,
+    ggplot2::aes(x = col_site, y = final_value, alluvium = taxa_label)
+  ) +
+    ggalluvial::geom_alluvium(
+      ggplot2::aes(fill = taxa_label),
+      alpha = 0.5,
+      width = 1 / 5,
+      color = NA
+    ) +
+    ggalluvial::geom_stratum(
+      ggplot2::aes(stratum = taxa_label, fill = taxa_label),
+      width = 1 / 5,
+      alpha = 1,
+      color = "grey20"
+    ) +
+    ggplot2::labs(
+      title = glue::glue("Dinámica espacial de {stringr::str_to_lower(text_string)} de {taxa_id}"),
+      y = y_label,
+      x = xlabel,
+      fill = legend_label
+    ) +
+    ggplot2::scale_fill_manual(values = cols) +
+    ggplot2::scale_y_continuous(n.breaks = 10) +
+    ggplot2::theme_bw(base_size = 12, base_family = "Arial") +
+    ggplot2::theme(
+      strip.text = ggplot2::element_text(face = "bold", colour = "white"),
+      strip.background = ggplot2::element_rect(fill = "#2c3e50"),
+      plot.title = ggplot2::element_text(face = "bold"),
+      axis.text.x = ggplot2::element_text(face = "bold"),
+      legend.position = "right"
+    )
+
+  if (!is.null(col_facet)) {
+    plot <- plot + ggplot2::facet_grid(~col_facet, scales = "free_x", space = "free")
+  }
+
+  # 8. Guardado
+  tryCatch(
+    {
+      ggplot2::ggsave(filename = output_name, plot = plot, width = width, height = height, dpi = 300)
+
+      if (save_rds) {
+        rds_name <- stringr::str_replace(output_name, "\\.(png|jpg|jpeg|pdf|tiff)$", ".rds")
+        if (rds_name == output_name) rds_name <- paste0(output_name, ".rds")
+        # Corregido: guardar 'plot', no 'p'
+        saveRDS(plot, file = rds_name)
+        message(paste("Objeto con grafico aluvial (ggplot) guardado en:", rds_name))
+      }
+    },
+    error = function(e) warning("Error guardando imagen/objeto: ", e$message)
+  )
+
+  return(plot)
+}
+
