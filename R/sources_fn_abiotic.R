@@ -891,7 +891,7 @@ plot_pca <- function(data,
     pval <- format.pval(test$`Pr(>F)`[1], digits = 3, eps = 0.001)
     subtitle <- glue::glue("PERMANOVA por {stringr::str_to_lower(col_factor)}: R² = {R2}%, valor-p = {pval}")
 
-    p <- ggplot2::ggplot(data = scores, mapping = ggplot2::aes(x = xvar, y = yvar, fill = gr, group = gr)) +
+    plot <- ggplot2::ggplot(data = scores, mapping = ggplot2::aes(x = xvar, y = yvar, fill = gr, group = gr)) +
       ggplot2::stat_ellipse(level = 0.68, geom = "polygon") +
       ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "gray") +
       ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "gray") +
@@ -929,7 +929,7 @@ plot_pca <- function(data,
 
   tryCatch(
     {
-      ggplot2::ggsave(filename = output_name, plot = p, device = "png", width = width, height = height, dpi = 300)
+      ggplot2::ggsave(filename = output_name, plot = plot, device = "png", width = width, height = height, dpi = 300)
 
       if (save_rds) {
         rds_name <- stringr::str_replace(output_name, "\\.(png|jpg|jpeg|pdf|tiff)$", ".rds")
@@ -941,7 +941,7 @@ plot_pca <- function(data,
     error = function(e) warning("Error guardando imagen: ", e$message)
   )
 
-  return(p)
+  return(plot)
 }
 
 ###############################################################################
