@@ -1175,9 +1175,9 @@ plot_boxplot <- function(data,
     )
 
   if (!is.null(levels_factor)) {
-    data_plot$col_x <- factor(data_plot$col_x, levels = levels_factor)
+    data_plot <- data_plot %>% dplyr::mutate(col_x = factor(col_x, levels = levels_factor))
   } else {
-    data_plot$col_x <- as.factor(data_plot$col_x)
+    data_plot <- data_plot %>% dplyr::mutate(col_x = as.factor(col_x))
   }
 
   # Recorte visual (95%)
@@ -1209,12 +1209,14 @@ plot_boxplot <- function(data,
 
     # Procesar la tabla externa
     stats_ready <- stats_df %>%
-      dplyr::select(col_pars = parametros, pr_chi) %>% # Renombrar para el join y seleccionar p-value
+      dplyr::select(col_pars = parametros, pr_chi) %>%
+      dplyr::distinct() %>% # Renombrar para el join y seleccionar p-value
       dplyr::inner_join(mapping_labels, by = "col_pars") %>%
       dplyr::mutate(
         # Crear la etiqueta con el formato solicitado
         label_test = glue::glue("Modelo GLM: valor-p = {scales::pvalue(pr_chi, accuracy = 0.001)}")
-      )
+      ) %>%
+      dplyr::distinct(col_label, .keep_all = TRUE)
   }
 
   # --- 3. Función Constructora del Gráfico ---
@@ -1241,61 +1243,81 @@ plot_boxplot <- function(data,
 
     # --- LOGICA CONDICIONAL DE TEST ---
     if (add_test) {
-      # 1. DUNN TEST (Interno y Condicional: <= 4 niveles)
-      if (n_factor <= 4) {
+      # 1. DUNN TEST (Interno y Condicional: > 2 niveles y <= 4 niveles)
+      if (n_factor > 2 && n_factor <= 4) {
+        # dunn_res <- d_plot %>%
+        #    dplyr::group_by(col_label) %>%
+        #    dplyr::group_modify(~ tryCatch(
+        #      rstatix::dunn_test(col_y ~ col_x, data = .x, p.adjust.method = "bonferroni"),
+        #        error = function(e) tibble::tibble()
+        #    )) %>%
+        #    dplyr::ungroup()
+
         dunn_res <- d_plot %>%
           dplyr::group_by(col_label) %>%
           dplyr::group_modify(~ tryCatch(
-            rstatix::dunn_test(col_y ~ col_x, data = .x, p.adjust.method = "bonferroni"),
+            {
+              mod <- stats::lm(col_y ~ col_x, data = .x)
+              rstatix::tukey_hsd(mod)
+            },
             error = function(e) tibble::tibble()
           )) %>%
           dplyr::ungroup()
 
         if (nrow(dunn_res) > 0) {
-          # Corrección visual de altura
+          # Calcular altura usando el MÁXIMO entre outliers y límite superior del boxplot
           max_vis <- d_plot %>%
             dplyr::group_by(col_label) %>%
-            dplyr::summarise(mx = max(col_y_plot, na.rm = TRUE), .groups = "drop")
+            dplyr::summarise(
+              q3 = quantile(col_y, 0.75, na.rm = TRUE),
+              q1 = quantile(col_y, 0.25, na.rm = TRUE),
+              iqr = q3 - q1,
+              limite_bigote = q3 + 1.5 * iqr,
+              max_real = max(col_y, na.rm = TRUE),
+              mx = pmax(limite_bigote, max_real),
+              .groups = "drop"
+            )
 
           dunn_res <- dunn_res %>%
-            rstatix::add_xy_position(x = "col_x", formula = col_y ~ col_x, data = d_plot, step.increase = 0) %>%
+            rstatix::add_xy_position(x = "col_x", formula = col_y ~ col_x, data = d_plot, step.increase = 0.15) %>%
             dplyr::left_join(max_vis, by = "col_label") %>%
             dplyr::group_by(col_label) %>%
             dplyr::mutate(
               step = dplyr::row_number(),
-              y.position = mx + (mx * 0.05) + (step * 0.08 * mx)
+              # Mayor espaciado inicial (10%) y entre llaves (12%)
+              y.position = mx + (mx * 0.10) + (step * 0.12 * mx)
             ) %>%
             dplyr::ungroup()
 
           p <- p + ggpubr::stat_pvalue_manual(dunn_res, label = "p.adj.signif", hide.ns = TRUE, size = 3)
-          p <- p + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.25)))
+          # Más espacio arriba para acomodar múltiples llaves
+          p <- p + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.35)))
           p <- p + ggplot2::scale_x_discrete(expand = ggplot2::expansion(mult = c(0.2, 0.2)))
         }
-      }
-
-      # 2. TEXTO GLM (Desde Tabla Externa stats_df)
+      } # 2. TEXTO GLM (Desde Tabla Externa stats_df)
       if (!is.null(d_stats_glm) && nrow(d_stats_glm) > 0) {
-        if (n_factor <= 4) {
-          # Izquierda (si hay barras Dunn)
+        if (n_factor > 2 && n_factor <= 4) { # <--- CAMBIO: Solo si hay llaves (> 2 niveles)
+          # Izquierda SUPERIOR (si hay barras Dunn)
           p <- p + ggplot2::geom_text(
             data = d_stats_glm,
             ggplot2::aes(x = -Inf, y = Inf, label = label_test),
-            hjust = -0.1, vjust = 1.5, size = 3, fontface = "italic", inherit.aes = FALSE
+            hjust = -0.05, vjust = 2.5, size = 3, fontface = "italic",
+            color = "#2c3e50", inherit.aes = FALSE
           )
         } else {
-          # Derecha (si NO hay barras Dunn)
+          # Derecha SUPERIOR (en todos los demás casos: n_factor <= 2 o n_factor > 4)
+          # SIEMPRE en la esquina superior izquierda, debajo del título del facet
           p <- p + ggplot2::geom_text(
             data = d_stats_glm,
-            ggplot2::aes(x = Inf, y = Inf, label = label_test),
-            hjust = 1.1, vjust = 1.1, size = 3.5, color = "black", fontface = "italic", inherit.aes = FALSE
+            ggplot2::aes(x = -Inf, y = Inf, label = label_test),
+            hjust = -0.02, vjust = 2.0, size = 3, color = "#2c3e50",
+            fontface = "italic", inherit.aes = FALSE
           )
         }
       }
     }
-
     return(p)
   }
-
   # --- 4. Lógica de Paginación ---
   labels_unicos <- unique(data_plot$col_label)
   n_pars <- length(labels_unicos)
@@ -1335,9 +1357,10 @@ plot_boxplot <- function(data,
       error = function(e) warning(e$message)
     )
 
-    return(invisible(p_single))
+    return(p_single)
   }
 }
+
 
 ###############################################################################
 #' @title Graficar Distribución de Granulometría (Stacked Barplot)
