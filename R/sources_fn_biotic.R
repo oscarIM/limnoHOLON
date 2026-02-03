@@ -837,8 +837,8 @@ plot_alluvial_taxa <- function(data,
                                col_site,
                                ord_site = NULL,
                                col_N,
-                               col_taxa_group,   # El grupo (Cinta)
-                               col_taxa = NULL,  # Lo que se cuenta (Especie)
+                               col_taxa_group, # El grupo (Cinta)
+                               col_taxa = NULL, # Lo que se cuenta (Especie)
                                taxa_id,
                                col_facet = NULL,
                                ord_facet = NULL,
@@ -846,11 +846,10 @@ plot_alluvial_taxa <- function(data,
                                legend_label = NULL,
                                xlabel = "Sitios",
                                top_n = 10,
-                               output_name,      # Agregado porque se usa en ggsave
+                               output_name, # Agregado porque se usa en ggsave
                                width = 10,
                                height = 6,
                                save_rds = FALSE) {
-
   # 1. Configuración
   op <- options(scipen = 999)
   on.exit(options(op))
@@ -888,7 +887,6 @@ plot_alluvial_taxa <- function(data,
     y_label <- "Riqueza de taxa [S]"
     text_string <- "la riqueza de taxa"
     if (is.null(legend_label)) legend_label <- "Grupo"
-
   } else {
     # --- MODO ABUNDANCIA ---
     data_calc <- data_plot %>%
@@ -905,7 +903,6 @@ plot_alluvial_taxa <- function(data,
   if (metric == "richness") {
     # Si es riqueza, NO usamos Top N. Usamos TODOS los grupos.
     top_groups <- unique(data_calc$col_taxa_group)
-
   } else {
     # Si es abundancia, calculamos ranking y cortamos por Top N
     ranking <- data_calc %>%
@@ -1028,4 +1025,166 @@ plot_alluvial_taxa <- function(data,
 
   return(plot)
 }
+#' @title Graficar Variación Espacial de Índices Comunitarios
+#' @description Crea un gráfico de líneas y puntos facetado por tipo de índice (N, S, H). Asigna paletas de colores específicas según el nombre de la leyenda.
+#' @param data Data frame con los datos.
+#' @param col_value String. Nombre de la columna con el valor del índice.
+#' @param col_index String. Nombre de la columna que indica el tipo de índice (N, S, H).
+#' @param col_site String. Nombre de la columna de sitios (Eje X).
+#' @param ord_site Vector (Opcional). Orden de los niveles de sitios.
+#' @param col_rep String (Opcional). Nombre de la columna para agrupar líneas/colores (ej. Réplica, Campaña, Estrato).
+#' @param col_facet String (Opcional). Nombre de la columna para facetar horizontalmente (ej. Zona).
+#' @param ord_facet Vector (Opcional). Orden de los niveles del facet.
+#' @param taxa_id String. Identificador del taxón para el título.
+#' @param legend_name String. Título de la leyenda. Determina la paleta de colores ("estratos" activa paleta azul fija).
+#' @param width Numérico. Ancho de la imagen. Default 8.
+#' @param height Numérico. Alto de la imagen. Default 6.
+#' @param xlabel String. Etiqueta para el eje X. Default "Sitios".
+#' @param output_name String. Nombre del archivo de salida.
+#' @param save_rds Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.
+#' @return Un objeto ggplot (invisible).
+#' @export plot_index
+#' @importFrom dplyr select rename mutate all_of
+#' @importFrom ggplot2 ggplot aes geom_line geom_point labs scale_color_manual facet_grid theme_linedraw theme element_text element_rect ggsave
+#' @importFrom rlang sym "!!" "!!!"
+#' @importFrom stats setNames
+#' @importFrom stringr str_detect str_replace
+#' @importFrom ggsci pal_jco pal_npg
+#' @importFrom glue glue
+plot_index <- function(data,
+                       col_value,
+                       col_index,
+                       col_site,
+                       ord_site = NULL,
+                       col_rep = NULL,
+                       col_facet = NULL,
+                       ord_facet = NULL,
+                       taxa_id,
+                       legend_name,
+                       width = 8,
+                       height = 6,
+                       output_name = "plot_index.png",
+                       xlabel = "Sitios",
+                       save_rds = FALSE) {
+  # 1. Configuración
+  op <- options(scipen = 999)
+  on.exit(options(op))
 
+  # 2. Selección y Renombrado Dinámico
+  data_plot <- data %>%
+    dplyr::select(
+      col_value = !!rlang::sym(col_value),
+      col_site = !!rlang::sym(col_site),
+      col_index = !!rlang::sym(col_index),
+      !!!if (!is.null(col_facet)) stats::setNames(col_facet, "col_facet") else NULL,
+      !!!if (!is.null(col_rep)) stats::setNames(col_rep, "col_rep") else NULL
+    ) %>%
+    dplyr::mutate(
+      col_index = factor(col_index,
+        levels = c("N", "S", "H"),
+        labels = c(
+          "Abundancia total [N]",
+          "Riqueza de taxones [S]",
+          "Diversidad de Shannon [H']"
+        )
+      )
+    )
+
+  # 3. Manejo de Facet (Ordenamiento)
+  if (!is.null(col_facet)) {
+    lvls <- if (!is.null(ord_facet)) ord_facet else sort(unique(data_plot$col_facet))
+    data_plot <- data_plot %>%
+      dplyr::mutate(col_facet = factor(col_facet, levels = lvls))
+  }
+
+  # 4. Manejo de Colores y Agrupación (col_rep)
+  cols <- NULL # Inicializar
+
+  if (!is.null(col_rep)) {
+    # Ordenamiento base
+    data_plot <- data_plot %>%
+      dplyr::mutate(col_rep = factor(col_rep, levels = sort(unique(col_rep))))
+
+    # Lógica de Paletas según 'legend_name'
+    if (stringr::str_detect(string = legend_name, pattern = "(?i)estratos?")) {
+      # Caso Estratos: Paleta Azul Fija
+      cols <- c("#87CEFF", "#00868B", "#1874CD")
+      names(cols) <- c("Superficie", "Medio", "Fondo")
+
+      # Forzar niveles para coincidir con la paleta fija
+      data_plot <- data_plot %>%
+        dplyr::mutate(col_rep = factor(col_rep, levels = names(cols)))
+    } else if (stringr::str_detect(string = legend_name, pattern = "(?i)r[eé]plicas?")) {
+      # Caso Réplicas: Paleta JCO
+      n_cols <- length(unique(data_plot$col_rep))
+      cols <- ggsci::pal_jco("default")(n_cols)
+      names(cols) <- unique(data_plot$col_rep)
+    } else {
+      # Caso Default: Paleta NPG
+      n_cols <- length(unique(data_plot$col_rep))
+      cols <- ggsci::pal_npg("nrc")(n_cols)
+      names(cols) <- unique(data_plot$col_rep)
+    }
+  }
+
+  # 5. Orden de Sitios
+  ord_site_final <- if (is.null(ord_site)) {
+    sort(unique(data_plot$col_site))
+  } else {
+    ord_site
+  }
+
+  data_plot <- data_plot %>%
+    dplyr::mutate(col_site = factor(col_site, levels = ord_site_final))
+
+  # 6. Construcción del Gráfico
+  plot <- ggplot2::ggplot(
+    data = data_plot,
+    mapping = ggplot2::aes(
+      x = col_site,
+      y = col_value,
+      colour = col_rep,
+      group = col_rep
+    )
+  ) +
+    ggplot2::geom_line() +
+    ggplot2::geom_point() +
+    ggplot2::labs(
+      x = xlabel,
+      y = "Valor índice",
+      title = glue::glue("Variación espacial de índices comunitarios para {taxa_id}")
+    ) +
+    ggplot2::scale_color_manual(
+      values = cols,
+      name = legend_name
+    ) +
+    ggplot2::facet_grid(col_index ~ col_facet, scales = "free", space = "free_x", switch = "y") +
+    ggplot2::theme_linedraw(base_size = 10, base_family = "Arial") +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(face = "bold", size = 12),
+      strip.text = ggplot2::element_text(face = "bold", colour = "white"),
+      strip.background = ggplot2::element_rect(fill = "#2c3e50")
+    )
+
+  # 7. Guardado
+  tryCatch(
+    {
+      ggplot2::ggsave(
+        filename = output_name,
+        plot = plot,
+        width = width,
+        height = height,
+        dpi = 300
+      )
+
+      if (save_rds) {
+        rds_name <- stringr::str_replace(output_name, "\\.png$", ".rds")
+        saveRDS(plot, file = rds_name)
+        message(glue::glue("Objeto R guardado en: {rds_name}"))
+      }
+    },
+    error = function(e) warning("Error guardando plot: ", e$message)
+  )
+
+  return(plot)
+}
