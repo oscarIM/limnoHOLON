@@ -270,11 +270,11 @@ plot_parameter_levels <- function(data,
           dplyr::filter(excede == 1) %>%
           dplyr::distinct(col_pars) %>%
           dplyr::pull(col_pars)
-        data_ref <- data_ref %>%
+        ref_data <- ref_data %>%
           dplyr::filter(nombre_norma %in% selected_norm) %>%
           dplyr::filter(Sigla %in% selected_pars_norm)
 
-        data_sub <- dplyr::left_join(data_sub, data_ref, by = c("col_pars" = "Sigla"), relationship = "many-to-many")
+        data_sub <- dplyr::left_join(data_sub, ref_data, by = c("col_pars" = "Sigla"), relationship = "many-to-many")
 
         colores_ref <- c("#FF8C00", "#FF3030", "#912CEE", "#0072B2", "#009E73", "#000000", "#CC79A7", "gray50")
         names(colores_ref) <- c(
