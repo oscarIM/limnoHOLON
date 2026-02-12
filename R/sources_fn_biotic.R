@@ -511,8 +511,6 @@ get_index_df <- function(data,
   return(invisible(summ_index))
 }
 ################################################################################
-
-################################################################################
 #' @title Abreviar Nombres Taxonómicos con Desambiguación
 #' @description Genera códigos abreviados. Si detecta colisiones (mismo código para especies distintas), aumenta la longitud del género para diferenciarlas.
 #'
@@ -1025,6 +1023,7 @@ plot_alluvial_taxa <- function(data,
 
   return(plot)
 }
+################################################################################
 #' @title Graficar Variación Espacial de Índices Comunitarios
 #' @description Crea un gráfico de líneas y puntos facetado por tipo de índice (N, S, H). Asigna paletas de colores específicas según el nombre de la leyenda.
 #' @param data Data frame con los datos.
@@ -1188,3 +1187,156 @@ plot_index <- function(data,
 
   return(plot)
 }
+################################################################################
+#' @title taxonómia segun worms
+#' @description Esta función toma un vector de nombres científicos y consulta la base de datos de WoRMS
+#' para obtener su clasificación taxonómica completa.
+#' @param taxa_vector Vector de caracteres con los nombres de las especies o grupos taxonómicos.
+#' @param max_dist Distancia máxima para match difuso (default 3).
+#' @param dist_method Método de cálculo de distancia (default "lv").
+#' @return Un tibble con la jerarquía taxonómica (desde Kingdom hasta Rank) y metadatos de búsqueda.
+#' @importFrom worrms wm_records_names wm_records_taxamatch wm_classification
+#' @importFrom dplyr bind_rows select rename arrange filter slice mutate group_by summarise first desc case_when
+#' @importFrom purrr map pluck list_rbind
+#' @importFrom tibble tibble
+#' @importFrom stringr regex str_replace_all str_squish str_detect str_split_i str_equal
+#' @importFrom stringdist stringdist
+#' @importFrom tidyr pivot_wider
+#' @export get_taxo_worms
+#'
+#' @examples
+#' \dontrun{
+#' species <- c("Calanus chilensis", "Acartia tonsa", "Navicula sp.")
+#' taxo <- get_taxo_worms(species)
+#' }
+get_taxo_worms <- function(taxa_vector, max_dist = 3, dist_method = "lv") {
+  clean_taxon_name <- function(name) {
+    # 1. Eliminar autores, años y paréntesis
+    name_clean <- stringr::str_replace_all(
+      name,
+      ",?\\s*\\(?[A-Z][a-z]+\\)?\\s*,?\\s*\\d{4}.*",
+      ""
+    )
+    # 2. Eliminar calificadores (cf, sp, var, etc)
+    name_clean <- stringr::str_replace_all(
+      name_clean,
+      "(?i)\\b(cf\\.|sp\\.|spp\\.|aff\\.|gr\\.|v\\.|var\\.)\\b",
+      " "
+    )
+    return(stringr::str_squish(name_clean))
+  }
+
+  get_single_taxo <- function(taxon_raw) {
+    # 1. Detección de genéricos y limpieza
+    es_generico <- stringr::str_detect(taxon_raw, stringr::regex("\\b(sp|spp)\\b|\\d+", ignore_case = TRUE))
+    es_generico <- ifelse(is.na(es_generico), FALSE, es_generico)
+
+    taxon_clean <- clean_taxon_name(taxon_raw)
+    res <- NULL
+    attempt <- NA_real_
+
+    # --- PASO 1: Exacto ---
+    res_exact <- tryCatch(worrms::wm_records_names(taxon_clean, fuzzy = FALSE, marine_only = FALSE), error = function(e) NULL)
+    if (!is.null(res_exact) && length(res_exact) > 0) {
+      # Priorizar Reinos fitoplanctónicos en caso de homónimos exactos
+      res <- dplyr::bind_rows(res_exact) %>%
+        dplyr::arrange(
+          dplyr::desc(stringr::str_detect(kingdom, "Chromista|Plantae")),
+          status == "unaccepted"
+        ) %>%
+        dplyr::slice(1)
+      attempt <- 1
+    }
+
+    # --- PASO 2: TAXAMATCH (Fuzzy) ---
+    if (is.na(attempt) && !es_generico) {
+      res_taxa <- tryCatch(worrms::wm_records_taxamatch(taxon_clean, marine_only = FALSE), error = function(e) NULL)
+      if (!is.null(res_taxa) && length(res_taxa) > 0) {
+        res <- dplyr::bind_rows(res_taxa) %>%
+          dplyr::mutate(d = stringdist::stringdist(taxon_clean, scientificname, method = dist_method)) %>%
+          dplyr::filter(d <= max_dist + 1) %>%
+          # Priorización de Reino + Distancia + Status
+          dplyr::arrange(
+            dplyr::desc(stringr::str_detect(kingdom, "Chromista|Plantae")),
+            d,
+            status == "unaccepted"
+          ) %>%
+          dplyr::slice(1)
+        if (nrow(res) > 0) attempt <- 2
+      }
+    }
+
+    # --- PASO 3: Fallback Género (Homónimos controlados) ---
+    if (is.na(attempt)) {
+      higher_rank <- stringr::str_split_i(taxon_clean, "\\s+", 1)
+      res_gen <- tryCatch(worrms::wm_records_names(higher_rank, fuzzy = TRUE, marine_only = FALSE), error = function(e) NULL)
+      if (!is.null(res_gen) && length(res_gen) > 0) {
+        res <- dplyr::bind_rows(res_gen) %>%
+          dplyr::arrange(
+            dplyr::desc(stringr::str_detect(kingdom, "Chromista|Plantae")),
+            status == "unaccepted"
+          ) %>%
+          dplyr::slice(1)
+        attempt <- 3
+      }
+    }
+
+    # Manejo de NAs/Sin registros
+    if (is.na(attempt)) {
+      return(tibble::tibble(
+        taxa_input = taxon_raw, taxa_searched = taxon_clean, match_attempt = NA_real_,
+        valid_name = NA_character_, status = "not found", AphiaID = NA_integer_,
+        verificacion_taxonomica = "taxa no encontrado", notas = "Sin registros"
+      ))
+    }
+
+    # Procesamiento de resultados
+    best <- res # Ya viene con slice(1) de los pasos anteriores
+
+    # Clasificación
+    classif <- tryCatch(worrms::wm_classification(best$AphiaID), error = function(e) NULL)
+    classif_flat <- if (!is.null(classif)) {
+      classif %>%
+        dplyr::filter(rank %in% c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus")) %>%
+        dplyr::group_by(rank) %>%
+        dplyr::summarise(scientificname = dplyr::first(scientificname), .groups = "drop") %>%
+        tidyr::pivot_wider(names_from = rank, values_from = scientificname)
+    } else {
+      NULL
+    }
+
+    # Verificación
+    is_valid <- stringr::str_equal(
+      stringr::str_squish(taxon_clean),
+      stringr::str_squish(best$valid_name),
+      ignore_case = TRUE
+    )
+    is_valid <- ifelse(is_valid %in% TRUE, TRUE, FALSE)
+    verificacion <- ifelse(is_valid, "taxa encontrado", "taxa invalido")
+
+    # Notas diagnósticas
+    nota <- dplyr::case_when(
+      es_generico ~ "Identificación a nivel de género (sp./spp. detectado)",
+      attempt == 2 ~ paste("Sugerido vía Taxamatch (Fuzzy):", best$scientificname),
+      best$status == "unaccepted" ~ paste("Sinónimo de:", best$valid_name),
+      attempt == 3 ~ "Match logrado solo a nivel de género",
+      TRUE ~ "Nombre coincide con registro válido"
+    )
+
+    tibble::tibble(
+      taxa_input = taxon_raw, taxa_searched = taxon_clean, match_attempt = attempt,
+      valid_name = best$valid_name, status = best$status, AphiaID = best$AphiaID,
+      matched_rank = best$rank, Kingdom = purrr::pluck(classif_flat, "Kingdom", .default = NA_character_),
+      Phylum = purrr::pluck(classif_flat, "Phylum", .default = NA_character_),
+      Class = purrr::pluck(classif_flat, "Class", .default = NA_character_),
+      Order = purrr::pluck(classif_flat, "Order", .default = NA_character_),
+      Family = purrr::pluck(classif_flat, "Family", .default = NA_character_),
+      Genus = purrr::pluck(classif_flat, "Genus", .default = NA_character_),
+      verificacion_taxonomica = verificacion, notas = nota
+    )
+  }
+
+  purrr::map(taxa_vector, get_single_taxo) %>%
+    purrr::list_rbind()
+}
+################################################################################
