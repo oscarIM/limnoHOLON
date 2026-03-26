@@ -32,3 +32,11 @@ get_data_pca_plot <- function(pca_obj) {
   df.v$hjust <- with(df.v, (1 - varname.adjust * sign(xvar)) / 2)
   return(list(scores = df.u, directions = df.v))
 }
+#' @keywords internal
+ensure_output_path <- function(output_name, output_dir) {
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+    message("Directorio creado: ", output_dir)
+  }
+  file.path(output_dir, basename(output_name))
+}
