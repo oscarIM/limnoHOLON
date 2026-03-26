@@ -1,3 +1,4 @@
+# --- 1.  fn estadística descriptiva--------------------------------------------
 #' @title Resumen estadístico por parámetro
 #' @description Calcula estadísticos descriptivos por parámetro
 #' @param data Tabla de datos de entrada.
@@ -80,7 +81,7 @@ get_summ_stats <- function(data,
   file <- stringr::str_replace(string = output_name, pattern = ".csv", replacement = ".tsv")
   readr::write_tsv(x = summ_pars, file = file)
 }
-###############################################################################
+# --- 2.  fn Niveles por parámetro ---------------------------------------------
 #' @title Gráficos de barras de parámetros abióticos con normas
 #' @description Variante de `plot_parameter_levels` que, cuando se entrega una tabla de normas (`ref_data`), filtra y dibuja solo aquellas referencias que se sexcedan
 #' @param data Tabla de datos de entrada.
@@ -97,6 +98,7 @@ get_summ_stats <- function(data,
 #' @param legend_name Título de la leyenda asociada a `col_group` (opcional).
 #' @param data_source Cadena que describe la fuente de datos (por ejemplo, "in situ").
 #' @param ref_data Tabla con normas o valores de referencia para los parámetros (incluyendo columnas `Sigla`, `nombre_norma`, `limite`, `tipo_limite`).
+#' @param dir_output Ruta en la cual se guardan los resultados
 #' @importFrom dplyr rename group_by summarise mutate filter pull arrange case_when group_split distinct left_join
 #' @importFrom dplyr select
 #' @importFrom rlang sym
@@ -121,10 +123,11 @@ plot_parameter_levels <- function(data,
                                   col_group = NULL,
                                   legend_name = NULL,
                                   data_source,
-                                  ref_data = NULL) {
+                                  ref_data = NULL,
+                                  dir_output = ".") {
   op <- options(scipen = 999)
   on.exit(options(op))
-  #### función auxiliar####
+  ## --- función auxiliar --------------------------------------------------------
   fn_plot_aux <- function(data) {
     n_pars <- length(unique(data$col_pars))
     type_data <- as.character(unique(data$type_par))
@@ -136,7 +139,7 @@ plot_parameter_levels <- function(data,
       paste("Parámetros medidos", data_source)
     }
 
-    # ---- generador de gráficos ----
+    ## ---- generador de gráficos --------------------------------------------------
     make_plot <- function(data_sub, idx = NULL) {
       n_pars_sub <- length(unique(data_sub$col_pars))
 
@@ -247,7 +250,7 @@ plot_parameter_levels <- function(data,
         )
 
       if (!is.null(ref_data)) {
-        ### ACA HAY QUE FILTRAR
+        # ACA HAY QUE FILTRAR
         normas_tbl <- ref_data %>%
           dplyr::filter(.data$Sigla %in% unique(data_sub$col_pars))
         normas_tbl <- dplyr::left_join(data_sub, normas_tbl, by = c("col_pars" = "Sigla"), relationship = "many-to-many")
@@ -338,9 +341,9 @@ plot_parameter_levels <- function(data,
       sufijo <- if (!is.null(idx)) paste0("_", idx) else ""
 
       file_name <- if (is.null(col_facet)) {
-        glue::glue("bar_pars_{unique(data_sub$type_par)}{sufijo}_{matrix}_{data_source_clean}.png")
+        glue::glue("{dir_ouput}/bar_pars_{unique(data_sub$type_par)}{sufijo}_{matrix}_{data_source_clean}.png")
       } else {
-        glue::glue("bar_pars_{unique(data_sub$type_par)}{sufijo}_{col_facet}_{matrix}_{data_source_clean}.png")
+        glue::glue("{dir_ouput}/bar_pars_{unique(data_sub$type_par)}{sufijo}_{col_facet}_{matrix}_{data_source_clean}.png")
       }
       ggplot2::ggsave(
         filename = file_name,
@@ -364,7 +367,7 @@ plot_parameter_levels <- function(data,
       make_plot(data)
     }
   }
-  #### variables base####
+  # variables base
   pars_gran <- c(
     "LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN", "GUIJ",
     "Arena Fina", "Arena Gruesa", "Arena Media", "Arena Muy Fina",
@@ -383,7 +386,7 @@ plot_parameter_levels <- function(data,
       !!!if (!is.null(col_facet)) setNames(col_facet, "col_facet") else NULL,
       !!!if (!is.null(col_group)) setNames(col_group, "col_group") else NULL
     )
-  ##### selección de parámetros####
+  # selección de parámetros
   selected_pars <- data_plot %>%
     dplyr::group_by(col_pars) %>%
     dplyr::summarise(
@@ -404,13 +407,13 @@ plot_parameter_levels <- function(data,
   cols_type <- ggsci::pal_nejm("default")(length(order_type) + 1)
   cols_type[7] <- "#727272"
   names(cols_type) <- order_type
-  #### colores por tipo de parámetro ####
+  # colores por tipo de parámetro
   n_types <- length(unique(data_plot$type_par))
   if (is.null(col_group)) {
     type_par <- unique(data_plot$type_par)
     cols_type <- cols_type[type_par]
   }
-  #### colores por grupo : Estratos, replicas, etc ####
+  # colores por grupo : Estratos, replicas, etc
   if (!is.null(col_group)) {
     if (stringr::str_detect(string = col_group, pattern = "(?i)estratos?")) {
       cols_type <- c("#87CEFF", "#00868B", "#1874CD")
@@ -424,7 +427,7 @@ plot_parameter_levels <- function(data,
     }
   }
 
-  #### ángulo etiquetas####
+  # ángulo etiquetas
   angle <- if (length(ord_site) <= 13) 0 else 90
   data_plot <- data_plot %>%
     dplyr::mutate(
@@ -448,7 +451,7 @@ plot_parameter_levels <- function(data,
 
   purrr::walk(df_list, ~ fn_plot_aux(data = .))
 }
-###############################################################################
+# --- 3.  fn correlograma ------------------------------------------------------
 #' @title  Correlograma de Spearman para Parámetros Ambientales
 #' @description Esta función procesa un data frame de parámetros ambientales, calcula correlaciones de Spearman y genera un gráfico de tipo "heatmap" (triángulo inferior)
 #' @param data Un data.frame o tibble que contiene los datos.
@@ -507,7 +510,7 @@ plot_correlogram <- function(data,
   )
 
   # 2. Selección y renombrado de columnas usando tidy evaluation
-  # Creamos una lista de columnas a seleccionar
+  # Crear una lista de columnas a seleccionar
   vars_select <- c(col_site, col_pars, col_value)
   if (!is.null(col_group)) vars_select <- c(vars_select, col_group)
   if (!is.null(col_factor)) vars_select <- c(vars_select, col_factor)
@@ -651,7 +654,8 @@ plot_correlogram <- function(data,
 
   return(p)
 }
-###############################################################################
+# --- 4.  fn PCA ---------------------------------------------------------------
+
 #' @title Biplot de PCA con PERMANOVA Opcional
 #' @description Realiza un Análisis de Componentes Principales (PCA) y genera un biplot.
 #' Si se proporciona un factor (`col_factor`), calcula PERMANOVA y añade elipses.
@@ -702,7 +706,7 @@ plot_pca <- function(data,
   op <- options(scipen = 999)
   on.exit(options(op))
 
-  # --- 2. Configuración de Parámetros ---
+  # 2. Configuración de Parámetros ---
   pars_gran <- c(
     "LIM", "AMF", "AF", "AM", "AG", "AMG", "GRAN", "GUIJ",
     "Arena Fina", "Arena Gruesa", "Arena Media", "Arena Muy Fina", "Arena Muy Gruesa", "Fango",
@@ -762,7 +766,7 @@ plot_pca <- function(data,
   type_par_vec <- unique(data_plot$type_par)
   cols_type <- cols_type[names(cols_type) %in% type_par_vec]
 
-  # --- 3. Generación del Gráfico (Estructura Original Bifurcada) ---
+  # --- Generación del Gráfico (Estructura Original Bifurcada) -----------------
 
   if (is.null(col_factor)) {
     # === CASO A: SIN FACTOR ===
@@ -944,7 +948,7 @@ plot_pca <- function(data,
   return(plot)
 }
 
-###############################################################################
+# --- 5.  fn GLM ---------------------------------------------------------------
 #' @title Modelos Lineales Generalizados (GLM) por Grupos
 #' @description Ajusta GLMs para múltiples parámetros simultáneamente, calcula el análisis de deviance (ANOVA) y genera tablas resumen con el porcentaje de deviance explicada (%DEM) y significancia.
 #' @param data Data frame con los datos.
@@ -977,7 +981,7 @@ get_glm <- function(data,
   op <- options(scipen = 999)
   on.exit(options(op))
 
-  # 1. Validación y Configuración
+  # Validación y Configuración
   family <- match.arg(family) # Valida que family sea una de las opciones permitidas
 
   # Selección y renombrado seguro
@@ -996,7 +1000,7 @@ get_glm <- function(data,
       dplyr::mutate(col_value_internal = ifelse(col_value_internal <= 0, col_value_internal + 1e-6, col_value_internal))
   }
 
-  # 2. Construcción de la Fórmula
+  # Construcción de la Fórmula
   # Usamos los nombres originales de los factores que están ahora en data_clean
   predictors <- paste(col_factor, collapse = " + ")
 
@@ -1014,7 +1018,7 @@ get_glm <- function(data,
 
   formula_obj <- stats::as.formula(formula_str)
 
-  # 3. Ajuste de Modelos (Iteración por parámetro)
+  # Ajuste de Modelos (Iteración por parámetro)
   # Dividir datos
   data_split <- data_clean %>%
     dplyr::group_by(col_pars_internal) %>%
@@ -1046,7 +1050,7 @@ get_glm <- function(data,
 
   if (length(models_fit) == 0) stop("Ningún modelo pudo ser ajustado.")
 
-  # 4. Extracción de ANOVA y Tabla Resumen
+  # Extracción de ANOVA y Tabla Resumen
   # Pre-calcular null deviances para eficiencia
   null_deviances <- purrr::map(models_fit, ~ .x$null.deviance)
 
@@ -1080,7 +1084,7 @@ get_glm <- function(data,
   glm_table_raw <- glm_table_processed %>%
     janitor::clean_names()
 
-  # 5. Cálculo de % Deviance Explained (%DEM)
+  # Cálculo de % Deviance Explained (%DEM)
   glm_table_clean <- glm_table_raw %>%
     dplyr::mutate(expl_percent = round((deviance / null_deviance) * 100, dec)) %>%
     dplyr::select(efecto, parametros, expl_percent) %>%
@@ -1090,7 +1094,7 @@ get_glm <- function(data,
     dplyr::ungroup() %>%
     dplyr::rename("Parámetros" = parametros)
 
-  # 6. Guardado de Archivos (Opcional)
+  # Guardado de Archivos (Opcional)
   if (!is.null(output_name)) {
     # Asegurar extensión csv
     if (!grepl("\\.csv$", output_name)) output_name <- paste0(output_name, ".csv")
@@ -1109,7 +1113,7 @@ get_glm <- function(data,
     summary_raw = glm_table_raw
   ))
 }
-###############################################################################
+# --- 6.  fn boxplot -----------------------------------------------------------
 #' @title Generar Boxplots con GLM Externo (Campos Específicos)
 #' @description Crea boxplots paginados. Usa una tabla externa (`stats_df`) con campos `parametros` y `pr_chi` para etiquetar el GLM.
 #' @param data Data frame con los datos crudos.
@@ -1361,8 +1365,8 @@ plot_boxplot <- function(data,
   }
 }
 
+# --- 7.  fn boxplot -----------------------------------------------------------
 
-###############################################################################
 #' @title Graficar Distribución de Granulometría (Stacked Barplot)
 #' @description Genera un gráfico de barras apiladas para visualizar la composición granulométrica por sitio. Permite agrupar por factores (ej. Zonas) y separar por réplicas.
 #' @param data Data frame con los datos.
@@ -1513,7 +1517,8 @@ plot_granulometria <- function(data,
 
   return(p)
 }
-#######################################################################################
+# --- 8.  fn series temporal con outliers-----------------------------------------------------------
+
 #' @title Gráfico de Series Temporales con Detección de Outliers (DBSCAN)
 #' @description Genera gráficos de línea por sitio/campaña, detectando anomalías mediante DBSCAN y el método "Kneedle" para epsilon óptimo. Permite resaltar valores bajo límite de detección (BLD).
 #' @param data Data frame con los datos.
@@ -1805,7 +1810,8 @@ line_plot_by_time <- function(data,
 
   return(p)
 }
-################################################################################
+# --- .  fn excedencias --------------------------------------------------------
+
 #' @title Calcular Excedencias de Normas Ambientales
 #' @description Evalúa los datos frente a una tabla de normas, calculando frecuencias y porcentajes de excedencia. Maneja lógica específica para rangos (ej. pH) y límites superiores.
 #'
