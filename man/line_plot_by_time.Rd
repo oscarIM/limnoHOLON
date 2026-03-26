@@ -16,6 +16,7 @@ line_plot_by_time(
   col_group = NULL,
   ord_site = NULL,
   output_name,
+  output_dir = "outputs",
   width = 8,
   height = 8,
   legend_label = "Sitio",
@@ -28,44 +29,46 @@ line_plot_by_time(
 \arguments{
 \item{data}{Data frame con los datos.}
 
-\item{col_value}{String. Nombre de la columna con los valores numéricos.}
+\item{col_value}{String. Columna con los valores numéricos.}
 
-\item{col_pars}{String. Nombre de la columna del parámetro.}
+\item{col_pars}{String. Columna del parámetro.}
 
-\item{col_x}{String. Nombre de la columna eje X (ej. "Campaña" numérico o factor).}
+\item{col_x}{String. Columna eje X.}
 
-\item{col_site}{String. Nombre de la columna de sitios.}
+\item{col_site}{String. Columna de sitios.}
 
-\item{col_year}{String. Nombre de la columna de año.}
+\item{col_year}{String. Columna de año.}
 
-\item{matrix}{String. Nombre de la matrix (para títulos).}
+\item{matrix}{String. Nombre de la matrix.}
 
-\item{col_units}{String. Nombre de la columna de unidades.}
+\item{col_units}{String. Columna de unidades.}
 
-\item{col_group}{String (Opcional). Columna para agrupación adicional (ej. Estrato).}
+\item{col_group}{String (Opcional). Columna para agrupación adicional.}
 
-\item{ord_site}{Vector (Opcional). Orden de los sitios.}
+\item{ord_site}{Vector (Opcional). Orden de sitios.}
 
-\item{output_name}{String. Nombre del archivo de salida.}
+\item{output_name}{String. Nombre archivo salida.}
 
-\item{width}{Numérico. Ancho imagen.}
+\item{output_dir}{Ruta del directorio de salida. Default: \code{"outputs"}.}
 
-\item{height}{Numérico. Alto imagen.}
+\item{width}{Numérico. Ancho.}
 
-\item{legend_label}{String. Título de la leyenda de color.}
+\item{height}{Numérico. Alto.}
 
-\item{pars_annot}{Vector (Opcional). Parámetros a excluir de la anotación de asteriscos BLD.}
+\item{legend_label}{String. Título leyenda color.}
+
+\item{pars_annot}{Vector (Opcional). Parámetros a excluir de anotación BLD.}
 
 \item{n_col}{Entero. Columnas en facet_wrap.}
 
-\item{type_plot}{String. "annotated" (muestra outliers y BLD) o "clean" (filtra outliers y BLD).}
+\item{type_plot}{String. "annotated" o "clean".}
 
 \item{save_rds}{Lógico. Guardar objeto ggplot.}
 
-\item{xlabel}{String. Título del eje x.}
+\item{xlabel}{String. Título eje x.}
 
-\item{ylabel}{String. Título del eje y.}
+\item{ylabel}{String. Título eje y.}
 }
 \description{
-Genera gráficos de línea por sitio/campaña, detectando anomalías mediante DBSCAN y el método "Kneedle" para epsilon óptimo. Permite resaltar valores bajo límite de detección (BLD).
+Genera gráficos de línea por sitio/campaña con detección de anomalías.
 }

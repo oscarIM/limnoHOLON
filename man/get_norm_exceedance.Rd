@@ -11,25 +11,30 @@ get_norm_exceedance(
   col_value,
   col_group = NULL,
   output_name = "tabla_excedencias.tsv",
+  output_dir = "outputs",
   matrix = "agua"
 )
 }
 \arguments{
-\item{data}{Data frame con los datos de mediciones.}
+\item{data}{Data frame con las mediciones.}
 
-\item{norm_data}{Data frame con las normas. Debe contener columnas `limite_1` y `limite_2`.}
+\item{norm_data}{Data frame con las normas (columnas \code{limite_1} y \code{limite_2}).}
 
-\item{col_pars}{String. Nombre de la columna de parámetros en `data` y `norm_data`.}
+\item{col_pars}{String. Columna de parámetros.}
 
-\item{col_value}{String. Nombre de la columna de valores en `data`.}
+\item{col_value}{String. Columna de valores.}
 
-\item{col_group}{String (Opcional). Columna de agrupación (ej. "Zona", "Sitio").}
+\item{col_group}{String (Opcional). Columna de agrupación.}
 
-\item{output_name}{String. Nombre del archivo de salida (.tsv o .csv).}
+\item{output_name}{String. Nombre archivo salida.}
+
+\item{output_dir}{Ruta del directorio de salida. Default: \code{"outputs"}.}
+
+\item{matrix}{String. Tipo de matrix: "agua" o "sedimento".}
 }
 \value{
-Un data frame con el resumen de excedencias (invisible).
+Data frame con el resumen de excedencias.
 }
 \description{
-Evalúa los datos frente a una tabla de normas, calculando frecuencias y porcentajes de excedencia. Maneja lógica específica para rangos (ej. pH) y límites superiores.
+Evalúa datos frente a una tabla de normas, calculando frecuencias y porcentajes de excedencia.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/sources_fn_abiotic.R
 \name{plot_boxplot}
 \alias{plot_boxplot}
-\title{Generar Boxplots con GLM Externo (Campos Específicos)}
+\title{Generar Boxplots con GLM Externo}
 \usage{
 plot_boxplot(
   data,
@@ -13,6 +13,7 @@ plot_boxplot(
   stats_df = NULL,
   n_col = 3,
   output_name = "boxplot.png",
+  output_dir = "outputs",
   width = 10,
   height = 8,
   levels_factor = NULL,
@@ -24,7 +25,7 @@ plot_boxplot(
 )
 }
 \arguments{
-\item{data}{Data frame con los datos crudos.}
+\item{data}{Data frame con los datos.}
 
 \item{col_x}{String. Columna eje X.}
 
@@ -34,11 +35,13 @@ plot_boxplot(
 
 \item{col_units}{String. Columna de unidades.}
 
-\item{stats_df}{Data frame con los resultados del GLM. Debe contener las columnas **`parametros`** y **`pr_chi`**.}
+\item{stats_df}{Data frame con resultados GLM (columnas \code{parametros} y \code{pr_chi}).}
 
 \item{n_col}{Entero. Columnas facet.}
 
 \item{output_name}{String. Archivo salida.}
+
+\item{output_dir}{Ruta del directorio de salida. Default: \code{"outputs"}.}
 
 \item{width}{Numérico. Ancho.}
 
@@ -52,10 +55,10 @@ plot_boxplot(
 
 \item{label_y}{String. Etiqueta Y.}
 
-\item{add_test}{Lógico. Si TRUE, activa subtítulo GLM, etiquetas GLM y test de Dunn (condicional).}
+\item{add_test}{Lógico. Si TRUE, activa subtítulo GLM y test de Dunn.}
 
 \item{save_rds}{Lógico. Guardar RDS.}
 }
 \description{
-Crea boxplots paginados. Usa una tabla externa (`stats_df`) con campos `parametros` y `pr_chi` para etiquetar el GLM.
+Crea boxplots paginados con estadísticas opcionales.
 }

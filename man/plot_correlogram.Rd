@@ -15,47 +15,38 @@ plot_correlogram(
   width = 6,
   height = 6,
   output_name = "correlograma_spearman.png",
+  output_dir = "outputs",
   save_rds = FALSE
 )
 }
 \arguments{
-\item{data}{Un data.frame o tibble que contiene los datos.}
+\item{data}{Un data.frame o tibble con los datos.}
 
-\item{col_pars}{String. Nombre de la columna que contiene los nombres de los parámetros (ej. "Parametro").}
+\item{col_pars}{String. Columna con los nombres de los parámetros.}
 
-\item{col_site}{String. Nombre de la columna que contiene los sitios/estaciones.}
+\item{col_site}{String. Columna con los sitios/estaciones.}
 
-\item{col_value}{String. Nombre de la columna que contiene los valores numéricos.}
+\item{col_value}{String. Columna con los valores numéricos.}
 
-\item{matrix}{String. Tipo de matrix (ej. "Agua", "Sedimento"). Si contiene "sedimento", se excluyen parámetros granulométricos.}
+\item{matrix}{String. Tipo de matrix (ej. "Agua", "Sedimento").}
 
-\item{col_group}{String (Opcional). Nombre de la columna para agrupación adicional. Por defecto NULL.}
+\item{col_group}{String (Opcional). Columna para agrupación adicional.}
 
-\item{col_factor}{String (Opcional). Nombre de una columna de factor extra. Por defecto NULL.}
+\item{col_factor}{String (Opcional). Columna de factor extra.}
 
-\item{width}{Numérico. Ancho de la imagen guardada en pulgadas. Por defecto 6.}
+\item{width}{Numérico. Ancho de la imagen en pulgadas.}
 
-\item{height}{Numérico. Alto de la imagen guardada en pulgadas. Por defecto 6.}
+\item{height}{Numérico. Alto de la imagen en pulgadas.}
 
 \item{output_name}{String. Nombre archivo de salida.}
 
-\item{save_rds}{Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.}
+\item{output_dir}{Ruta del directorio de salida. Se crea automáticamente si no existe. Default: \code{"outputs"}.}
+
+\item{save_rds}{Lógico. Si es TRUE, guarda también el objeto R (.rds).}
 }
 \value{
-Un objeto ggplot2 con el correlograma. También guarda un archivo PNG en el directorio de trabajo.
+Un objeto ggplot2 con el correlograma.
 }
 \description{
-Esta función procesa un data frame de parámetros ambientales, calcula correlaciones de Spearman y genera un gráfico de tipo "heatmap" (triángulo inferior)
-}
-\examples{
-\dontrun{
-plot_correlogram(
-  data = mi_data,
-  col_pars = "PARAMETRO",
-  col_site = "ESTACION",
-  col_value = "RESULTADO",
-  matrix = "Agua de Mar",
-  output_name = "correlograma_spearman.png"
-)
-}
+Calcula correlaciones de Spearman y genera un heatmap (triángulo inferior).
 }

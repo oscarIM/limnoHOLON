@@ -18,6 +18,7 @@ plot_pca(
   height = 6,
   dist = "euclidean",
   output_name = "pca.png",
+  output_dir = "outputs",
   save_rds = FALSE
 )
 }
@@ -32,28 +33,29 @@ plot_pca(
 
 \item{type_par}{String. Columna que clasifica el tipo de parámetro.}
 
-\item{matrix}{String. Tipo de matrix (ej. "Agua", "Sedimento").}
+\item{matrix}{String. Tipo de matrix.}
 
 \item{col_rep}{String (Opcional). Columna de réplicas.}
 
 \item{col_factor}{String (Opcional). Columna para agrupar y calcular PERMANOVA.}
 
-\item{levels_factor}{Vector (Opcional). Orden específico para los niveles de `col_factor`.}
+\item{levels_factor}{Vector (Opcional). Orden para los niveles de \code{col_factor}.}
 
 \item{width}{Numérico. Ancho de la imagen.}
 
 \item{height}{Numérico. Alto de la imagen.}
 
-\item{dist}{String. Método de distancia para PERMANOVA (por defecto "euclidean").}
+\item{dist}{String. Método de distancia para PERMANOVA.}
 
-\item{output_name}{String. Nombre del archivo de salida (png).}
+\item{output_name}{String. Nombre del archivo de salida.}
 
-\item{save_rds}{Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.}
+\item{output_dir}{Ruta del directorio de salida. Se crea automáticamente si no existe. Default: \code{"outputs"}.}
+
+\item{save_rds}{Lógico. Si es TRUE, guarda también el objeto R (.rds).}
 }
 \value{
 Un objeto ggplot (invisible).
 }
 \description{
-Realiza un Análisis de Componentes Principales (PCA) y genera un biplot.
-Si se proporciona un factor (`col_factor`), calcula PERMANOVA y añade elipses.
+Realiza un PCA y genera un biplot. Si se proporciona un factor, calcula PERMANOVA y añade elipses.
 }

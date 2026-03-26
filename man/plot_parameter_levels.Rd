@@ -18,7 +18,8 @@ plot_parameter_levels(
   col_group = NULL,
   legend_name = NULL,
   data_source,
-  ref_data = NULL
+  ref_data = NULL,
+  output_dir = "outputs"
 )
 }
 \arguments{
@@ -42,14 +43,16 @@ plot_parameter_levels(
 
 \item{type_par}{Nombre de la columna (cadena) que clasifica los parámetros por tipo.}
 
-\item{col_group}{Nombre de la columna (cadena) con el grupo (estrato, réplica, etc.) para colorear barras (opcional). En caso de ser estratos, tienen que ser ,"Supreficie", "Medio" y/o "Fondo".}
+\item{col_group}{Nombre de la columna (cadena) con el grupo (estrato, réplica, etc.) para colorear barras (opcional).}
 
 \item{legend_name}{Título de la leyenda asociada a `col_group` (opcional).}
 
 \item{data_source}{Cadena que describe la fuente de datos (por ejemplo, "in situ").}
 
-\item{ref_data}{Tabla con normas o valores de referencia para los parámetros (incluyendo columnas `Sigla`, `nombre_norma`, `limite`, `tipo_limite`).}
+\item{ref_data}{Tabla con normas o valores de referencia para los parámetros.}
+
+\item{output_dir}{Ruta del directorio de salida. Se crea automáticamente si no existe. Default: \code{"outputs"}.}
 }
 \description{
-Variante de `plot_parameter_levels` que, cuando se entrega una tabla de normas (`ref_data`), filtra y dibuja solo aquellas referencias que se sexcedan
+Variante de `plot_parameter_levels` que, cuando se entrega una tabla de normas (`ref_data`), filtra y dibuja solo aquellas referencias que se excedan
 }

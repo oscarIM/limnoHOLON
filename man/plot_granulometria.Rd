@@ -2,7 +2,7 @@
 % Please edit documentation in R/sources_fn_abiotic.R
 \name{plot_granulometria}
 \alias{plot_granulometria}
-\title{Graficar Distribución de Granulometría (Stacked Barplot)}
+\title{Gráfico de Distribución Granulométrica (Stacked Barplot)}
 \usage{
 plot_granulometria(
   data,
@@ -16,37 +16,40 @@ plot_granulometria(
   width = 8,
   height = 6,
   output_name = "plot_granulometria.png",
+  output_dir = "outputs",
   save_rds = FALSE
 )
 }
 \arguments{
 \item{data}{Data frame con los datos.}
 
-\item{col_pars}{String. Nombre de la columna con los tipos de grano (ej. "Parametro").}
+\item{col_pars}{String. Columna con los tipos de grano.}
 
-\item{col_site}{String. Nombre de la columna con los sitios.}
+\item{col_site}{String. Columna con los sitios.}
 
-\item{col_value}{String. Nombre de la columna con el porcentaje/valor.}
+\item{col_value}{String. Columna con el porcentaje/valor.}
 
-\item{col_factor}{String (Opcional). Columna para agrupar en facetas (columnas).}
+\item{col_factor}{String (Opcional). Columna para facetas (columnas).}
 
-\item{col_rep}{String (Opcional). Columna para agrupar en facetas (filas).}
+\item{col_rep}{String (Opcional). Columna para facetas (filas).}
 
-\item{ord_site}{Vector (Opcional). Orden específico para los sitios.}
+\item{ord_site}{Vector (Opcional). Orden de sitios.}
 
-\item{levels_factor}{Vector (Opcional). Orden específico para el factor de agrupación.}
+\item{levels_factor}{Vector (Opcional). Orden del factor.}
 
-\item{width}{Numérico. Ancho de la imagen guardada.}
+\item{width}{Numérico. Ancho.}
 
-\item{height}{Numérico. Alto de la imagen guardada.}
+\item{height}{Numérico. Alto.}
 
-\item{output_name}{String. Nombre del archivo de salida.}
+\item{output_name}{String. Nombre archivo salida.}
 
-\item{save_rds}{Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.}
+\item{output_dir}{Ruta del directorio de salida. Default: \code{"outputs"}.}
+
+\item{save_rds}{Lógico. Guardar RDS.}
 }
 \value{
 Un objeto ggplot.
 }
 \description{
-Genera un gráfico de barras apiladas para visualizar la composición granulométrica por sitio. Permite agrupar por factores (ej. Zonas) y separar por réplicas.
+Barras apiladas para composición granulométrica por sitio.
 }

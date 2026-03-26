@@ -11,7 +11,8 @@ get_summ_stats(
   col_bld,
   matrix,
   round = 2,
-  output_name
+  output_name,
+  output_dir = "outputs"
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ get_summ_stats(
 \item{round}{Número de decimales para redondear los estadísticos (por defecto 2).}
 
 \item{output_name}{Nombre de archivo de salida (CSV) donde se guardará la tabla de resultados (se genera también un TSV adicional).}
+
+\item{output_dir}{Ruta del directorio de salida. Se crea automáticamente si no existe. Default: \code{"outputs"}.}
 }
 \description{
 Calcula estadísticos descriptivos por parámetro
@@ -35,10 +38,10 @@ Calcula estadísticos descriptivos por parámetro
 \examples{
 \dontrun{
 data <- readr::read_tsv("data_sedimento_inv_2025_clean.tsv")
-col_pars <- "Sigla"
-col_value <- "Valor"
-matrix <- "sedimento"
-round <- 4
-fn_stats(data = data, col_pars = col_pars, col_value = col_value, data_pars = data_pars, matrix = matrix, round = round)
+get_summ_stats(
+  data = data, col_pars = "Sigla", col_value = "Valor",
+  col_bld = "is_BLD", matrix = "sedimento", round = 4,
+  output_name = "tabla_descr_stat.csv"
+)
 }
 }

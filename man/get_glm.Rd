@@ -11,6 +11,7 @@ get_glm(
   col_factor,
   interaction = NULL,
   output_name = NULL,
+  output_dir = "outputs",
   family = c("Gaussian", "Gamma", "Quasipoisson"),
   dec = 2
 )
@@ -18,23 +19,25 @@ get_glm(
 \arguments{
 \item{data}{Data frame con los datos.}
 
-\item{col_pars}{String. Nombre de la columna que identifica el parámetro (variable de agrupación).}
+\item{col_pars}{String. Columna que identifica el parámetro.}
 
-\item{col_value}{String. Nombre de la columna con la variable respuesta (numérica).}
+\item{col_value}{String. Columna con la variable respuesta.}
 
-\item{col_factor}{Vector de caracteres. Nombres de las columnas que actuarán como predictores (factores).}
+\item{col_factor}{Vector de caracteres. Columnas predictoras.}
 
-\item{interaction}{Vector de caracteres (Opcional). Interacciones explícitas (ej. "FactorA:FactorB").}
+\item{interaction}{Vector (Opcional). Interacciones explícitas.}
 
-\item{family}{String. Familia del GLM. Opciones: "Gamma", "Gaussian", "Quasipoisson".}
+\item{output_name}{String. Nombre base para archivos de salida.}
 
-\item{dec}{Entero. Número de decimales para el redondeo. Por defecto 2.}
+\item{output_dir}{Ruta del directorio de salida. Se crea automáticamente si no existe. Default: \code{"outputs"}.}
 
-\item{output_name.}{Ruta/Nombre base para guardar los archivos de salida.}
+\item{family}{String. Familia del GLM: "Gamma", "Gaussian", "Quasipoisson".}
+
+\item{dec}{Entero. Decimales para redondeo.}
 }
 \value{
-Una lista con dos data frames: `summary_dem` (% Deviance Explicada) y `summary_raw` (Tabla completa con valores p).
+Lista con \code{summary_dem} y \code{summary_raw}.
 }
 \description{
-Ajusta GLMs para múltiples parámetros simultáneamente, calcula el análisis de deviance (ANOVA) y genera tablas resumen con el porcentaje de deviance explicada (%DEM) y significancia.
+Ajusta GLMs para múltiples parámetros, calcula ANOVA y genera tablas resumen.
 }
