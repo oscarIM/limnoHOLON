@@ -148,10 +148,19 @@ plot_parameter_levels <- function(data,
 
     make_plot <- function(data_sub, idx = NULL) {
       n_pars_sub <- length(unique(data_sub$col_pars))
-      if (n_pars_sub <= 2) { w <- 9; h <- 5
-      } else if (n_pars_sub <= 5) { w <- 9; h <- 10
-      } else if (n_pars_sub <= 7) { w <- 9; h <- 11
-      } else { w <- 9; h <- 18 }
+      if (n_pars_sub <= 2) {
+        w <- 9
+        h <- 5
+      } else if (n_pars_sub <= 5) {
+        w <- 9
+        h <- 10
+      } else if (n_pars_sub <= 7) {
+        w <- 9
+        h <- 11
+      } else {
+        w <- 9
+        h <- 18
+      }
 
       if (is.null(col_group) && is.null(col_facet)) {
         plot <- ggplot2::ggplot(data = data_sub, ggplot2::aes(x = factor(col_site), y = col_value)) +
@@ -200,9 +209,17 @@ plot_parameter_levels <- function(data,
             col_pars != "pH" & col_value > limite ~ 1,
             TRUE ~ 0
           ))
-        selected_norm <- df_excede %>% dplyr::filter(excede == 1) %>% dplyr::distinct(nombre_norma) %>% dplyr::pull(nombre_norma)
-        selected_pars_norm <- df_excede %>% dplyr::filter(excede == 1) %>% dplyr::distinct(col_pars) %>% dplyr::pull(col_pars)
-        ref_data <- ref_data %>% dplyr::filter(nombre_norma %in% selected_norm) %>% dplyr::filter(Sigla %in% selected_pars_norm)
+        selected_norm <- df_excede %>%
+          dplyr::filter(excede == 1) %>%
+          dplyr::distinct(nombre_norma) %>%
+          dplyr::pull(nombre_norma)
+        selected_pars_norm <- df_excede %>%
+          dplyr::filter(excede == 1) %>%
+          dplyr::distinct(col_pars) %>%
+          dplyr::pull(col_pars)
+        ref_data <- ref_data %>%
+          dplyr::filter(nombre_norma %in% selected_norm) %>%
+          dplyr::filter(Sigla %in% selected_pars_norm)
         data_sub <- dplyr::left_join(data_sub, ref_data, by = c("col_pars" = "Sigla"), relationship = "many-to-many")
         colores_ref <- c("#FF8C00", "#FF3030", "#912CEE", "#0072B2", "#009E73", "#000000", "#CC79A7", "gray50")
         names(colores_ref) <- c("Referencia norma ANZECC", "Referencia norma CCME", "Valor característico", "Referencia norma DS 144", "Referencia norma EPA", "Referencia norma NOAA", "Referencia norma NSCA Quintero", "Referencia norma UE 2023")
@@ -248,7 +265,8 @@ plot_parameter_levels <- function(data,
   selected_pars <- data_plot %>%
     dplyr::group_by(col_pars) %>%
     dplyr::summarise(prom = abs(mean(col_value, na.rm = TRUE)), desvest = sd(col_value, na.rm = TRUE), cv_num = desvest / prom) %>%
-    dplyr::filter(cv_num > 0) %>% dplyr::pull(col_pars)
+    dplyr::filter(cv_num > 0) %>%
+    dplyr::pull(col_pars)
   if (stringr::str_detect(string = matrix, pattern = "(?i)sedimento?")) selected_pars <- setdiff(selected_pars, pars_gran)
   data_plot <- data_plot %>% dplyr::filter(col_pars %in% selected_pars)
 
@@ -256,25 +274,36 @@ plot_parameter_levels <- function(data,
   cols_type <- ggsci::pal_nejm("default")(length(order_type) + 1)
   cols_type[7] <- "#727272"
   names(cols_type) <- order_type
-  if (is.null(col_group)) { type_par <- unique(data_plot$type_par); cols_type <- cols_type[type_par] }
+  if (is.null(col_group)) {
+    type_par <- unique(data_plot$type_par)
+    cols_type <- cols_type[type_par]
+  }
   if (!is.null(col_group)) {
     if (stringr::str_detect(string = col_group, pattern = "(?i)estratos?")) {
-      cols_type <- c("#87CEFF", "#00868B", "#1874CD"); names(cols_type) <- c("Superficie", "Medio", "Fondo")
+      cols_type <- c("#87CEFF", "#00868B", "#1874CD")
+      names(cols_type) <- c("Superficie", "Medio", "Fondo")
     } else if (stringr::str_detect(string = col_group, pattern = "(?i)r[eé]plicas?")) {
-      cols_type <- ggsci::pal_jco("default")(length(unique(data_plot$col_group))); names(cols_type) <- sort(unique(data_plot$col_group))
+      cols_type <- ggsci::pal_jco("default")(length(unique(data_plot$col_group)))
+      names(cols_type) <- sort(unique(data_plot$col_group))
     } else {
-      cols_type <- ggsci::pal_npg("nrc")(length(unique(data_plot$col_group))); names(cols_type) <- unique(data_plot$col_group)
+      cols_type <- ggsci::pal_npg("nrc")(length(unique(data_plot$col_group)))
+      names(cols_type) <- unique(data_plot$col_group)
     }
   }
   angle <- if (length(ord_site) <= 13) 0 else 90
   data_plot <- data_plot %>%
-    dplyr::mutate(col_site = factor(col_site, levels = ord_site), type_par = factor(type_par, levels = order_type),
-                  col_facet = if ("col_facet" %in% names(.)) factor(col_facet, levels = ord_facet) else col_facet) %>%
+    dplyr::mutate(
+      col_site = factor(col_site, levels = ord_site), type_par = factor(type_par, levels = order_type),
+      col_facet = if ("col_facet" %in% names(.)) factor(col_facet, levels = ord_facet) else col_facet
+    ) %>%
     dplyr::arrange(type_par) %>%
     dplyr::mutate(label = glue::glue("{col_pars} {col_units}"), label = dplyr::case_when(col_pars == "pH" ~ "pH", .default = label))
   if (!is.null(col_group)) data_plot <- data_plot %>% dplyr::mutate(col_group = factor(col_group, levels = unique(data_plot$col_group)))
 
-  df_list <- data_plot %>% dplyr::group_by(type_par) %>% dplyr::group_split() %>% setNames(purrr::map(., ~ paste0(unique(.[["type_par"]]))))
+  df_list <- data_plot %>%
+    dplyr::group_by(type_par) %>%
+    dplyr::group_split() %>%
+    setNames(purrr::map(., ~ paste0(unique(.[["type_par"]]))))
   purrr::walk(df_list, ~ fn_plot_aux(data = .))
 }
 
@@ -325,24 +354,37 @@ plot_correlogram <- function(data,
   if (!is.null(col_factor)) vars_select <- c(vars_select, col_factor)
   data_clean <- data %>%
     dplyr::select(dplyr::all_of(vars_select)) %>%
-    dplyr::rename(col_site = !!rlang::sym(col_site), col_pars = !!rlang::sym(col_pars), col_value = !!rlang::sym(col_value),
-                  !!!if (!is.null(col_factor)) stats::setNames(col_factor, "col_factor") else NULL,
-                  !!!if (!is.null(col_group)) stats::setNames(col_group, "col_group") else NULL)
+    dplyr::rename(
+      col_site = !!rlang::sym(col_site), col_pars = !!rlang::sym(col_pars), col_value = !!rlang::sym(col_value),
+      !!!if (!is.null(col_factor)) stats::setNames(col_factor, "col_factor") else NULL,
+      !!!if (!is.null(col_group)) stats::setNames(col_group, "col_group") else NULL
+    )
   stats_summary <- data_clean %>%
     dplyr::group_by(col_pars) %>%
     dplyr::summarise(prom = abs(mean(col_value, na.rm = TRUE)), desvest = stats::sd(col_value, na.rm = TRUE), cv_num = dplyr::if_else(prom == 0, 0, desvest / prom), .groups = "drop")
-  selected_pars <- stats_summary %>% dplyr::filter(cv_num > 0) %>% dplyr::pull(col_pars)
+  selected_pars <- stats_summary %>%
+    dplyr::filter(cv_num > 0) %>%
+    dplyr::pull(col_pars)
   if (stringr::str_detect(string = matrix, pattern = "(?i)sedimento?")) selected_pars <- setdiff(selected_pars, pars_gran)
-  data_plot <- data_clean %>% dplyr::filter(col_pars %in% selected_pars) %>% tidyr::pivot_wider(names_from = col_pars, values_from = col_value)
+  data_plot <- data_clean %>%
+    dplyr::filter(col_pars %in% selected_pars) %>%
+    tidyr::pivot_wider(names_from = col_pars, values_from = col_value)
   cols_metadata <- "col_site"
   if ("col_group" %in% names(data_plot)) cols_metadata <- c(cols_metadata, "col_group")
   if ("col_factor" %in% names(data_plot)) cols_metadata <- c(cols_metadata, "col_factor")
-  data_corr <- data_plot %>% dplyr::select(!dplyr::any_of(cols_metadata)) %>% scale() %>% as.data.frame()
+  data_corr <- data_plot %>%
+    dplyr::select(!dplyr::any_of(cols_metadata)) %>%
+    scale() %>%
+    as.data.frame()
   n_sitios <- nrow(data_corr)
   if (n_sitios <= 4) warning(glue::glue("¡Atención!, hay solo n = {n_sitios} puntos. Interpretar con extremo cuidado."))
-  coor_r <- rstatix::cor_mat(data_corr, method = "spearman", alternative = "two.sided", conf.level = 0.95) %>% dplyr::select(-rowname) %>% as.matrix()
+  coor_r <- rstatix::cor_mat(data_corr, method = "spearman", alternative = "two.sided", conf.level = 0.95) %>%
+    dplyr::select(-rowname) %>%
+    as.matrix()
   rownames(coor_r) <- colnames(coor_r)
-  coor_p <- rstatix::cor_pmat(data_corr, method = "spearman", alternative = "two.sided", conf.level = 0.95) %>% dplyr::select(-rowname) %>% as.matrix()
+  coor_p <- rstatix::cor_pmat(data_corr, method = "spearman", alternative = "two.sided", conf.level = 0.95) %>%
+    dplyr::select(-rowname) %>%
+    as.matrix()
   rownames(coor_p) <- colnames(coor_p)
   plot_df <- as.data.frame(as.table(coor_r)) %>%
     dplyr::rename(Var1 = Var1, Var2 = Var2, Cor = Freq) %>%
@@ -359,14 +401,17 @@ plot_correlogram <- function(data,
     ggplot2::coord_fixed()
 
   output_path <- ensure_output_path(output_name, output_dir)
-  tryCatch({
-    ggplot2::ggsave(filename = output_path, plot = p, width = width, height = height, dpi = 300)
-    if (save_rds) {
-      rds_path <- stringr::str_replace(output_path, "\\.(png|jpg|jpeg|pdf|tiff)$", ".rds")
-      saveRDS(p, file = rds_path)
-      message("Objeto guardado en: ", rds_path)
-    }
-  }, error = function(e) warning("Error guardando imagen/objeto: ", e$message))
+  tryCatch(
+    {
+      ggplot2::ggsave(filename = output_path, plot = p, width = width, height = height, dpi = 300)
+      if (save_rds) {
+        rds_path <- stringr::str_replace(output_path, "\\.(png|jpg|jpeg|pdf|tiff)$", ".rds")
+        saveRDS(p, file = rds_path)
+        message("Objeto guardado en: ", rds_path)
+      }
+    },
+    error = function(e) warning("Error guardando imagen/objeto: ", e$message)
+  )
   return(p)
 }
 
@@ -411,12 +456,16 @@ plot_pca <- function(data, col_pars, col_site, col_value, type_par, matrix,
   vars <- c(col_site, col_pars, col_value, col_rep, type_par, col_factor)
   data_plot <- data %>%
     dplyr::select(dplyr::all_of(vars)) %>%
-    dplyr::rename(col_pars = !!rlang::sym(col_pars), col_site = !!rlang::sym(col_site), col_value = !!rlang::sym(col_value), type_par = !!rlang::sym(type_par),
-                  !!!if (!is.null(col_factor)) stats::setNames(col_factor, "col_factor") else NULL,
-                  !!!if (!is.null(col_rep)) stats::setNames(col_rep, "col_rep") else NULL)
-  selected_pars <- data_plot %>% dplyr::group_by(col_pars) %>%
+    dplyr::rename(
+      col_pars = !!rlang::sym(col_pars), col_site = !!rlang::sym(col_site), col_value = !!rlang::sym(col_value), type_par = !!rlang::sym(type_par),
+      !!!if (!is.null(col_factor)) stats::setNames(col_factor, "col_factor") else NULL,
+      !!!if (!is.null(col_rep)) stats::setNames(col_rep, "col_rep") else NULL
+    )
+  selected_pars <- data_plot %>%
+    dplyr::group_by(col_pars) %>%
     dplyr::summarise(prom = abs(mean(col_value, na.rm = TRUE)), desvest = stats::sd(col_value, na.rm = TRUE), cv_num = desvest / prom) %>%
-    dplyr::filter(cv_num > 0) %>% dplyr::pull(col_pars)
+    dplyr::filter(cv_num > 0) %>%
+    dplyr::pull(col_pars)
   if (stringr::str_detect(string = matrix, pattern = "(?i)sedimento?")) selected_pars <- setdiff(selected_pars, pars_gran)
   data_pca <- data_plot %>% dplyr::filter(col_pars %in% selected_pars)
 
@@ -439,7 +488,9 @@ plot_pca <- function(data, col_pars, col_site, col_value, type_par, matrix,
     prop_pca <- pca$sdev^2 / sum(pca$sdev^2)
     tmp_data <- get_data_pca_plot(pca_obj = pca)
     directions <- tmp_data$directions
-    data_pars <- data_pca %>% dplyr::select(col_pars, type_par) %>% dplyr::distinct()
+    data_pars <- data_pca %>%
+      dplyr::select(col_pars, type_par) %>%
+      dplyr::distinct()
     directions <- dplyr::left_join(directions, data_pars, by = c("varname" = "col_pars"))
     scores <- tmp_data$scores
     scores <- dplyr::bind_cols(scores, metadata)
@@ -450,29 +501,39 @@ plot_pca <- function(data, col_pars, col_site, col_value, type_par, matrix,
     plot <- ggplot2::ggplot() +
       ggplot2::geom_hline(yintercept = 0, linetype = 3, color = "gray0") +
       ggplot2::geom_vline(xintercept = 0, linetype = 3, color = "gray0") +
-      ggplot2::xlim(xmin + 0.25, xmax - 0.25) + ggplot2::ylim(ymin + 0.25, ymax - 0.25) +
-      ggplot2::labs(title = glue::glue("Análisis multivariado (PCA) para parámetros medidos en {matrix}"),
-                    x = glue::glue("Primera Componente Principal ({scales::percent(prop_pca[1])})"),
-                    y = glue::glue("Segunda Componente Principal ({scales::percent(prop_pca[2])})")) +
+      ggplot2::xlim(xmin + 0.25, xmax - 0.25) +
+      ggplot2::ylim(ymin + 0.25, ymax - 0.25) +
+      ggplot2::labs(
+        title = glue::glue("Análisis multivariado (PCA) para parámetros medidos en {matrix}"),
+        x = glue::glue("Primera Componente Principal ({scales::percent(prop_pca[1])})"),
+        y = glue::glue("Segunda Componente Principal ({scales::percent(prop_pca[2])})")
+      ) +
       ggplot2::geom_segment(data = directions, mapping = ggplot2::aes(x = 0, y = 0, xend = xvar, yend = yvar, color = type_par), arrow = ggplot2::arrow(length = ggplot2::unit(1 / 2, "picas"))) +
       ggplot2::geom_text(data = directions, mapping = ggplot2::aes(label = varname, x = xvar, y = yvar, angle = angle, hjust = hjust, color = type_par), size = 3, family = "sans") +
       ggplot2::geom_text(data = scores, mapping = ggplot2::aes(x = xvar, y = yvar, label = col_site), nudge_y = 0.1, family = "sans", size = 3) +
       ggplot2::scale_color_manual(name = "Tipo parámetro", values = cols_type, breaks = names(cols_type)) +
       ggplot2::guides(color = ggplot2::guide_legend(title.position = "top", override.aes = list(label = " "))) +
       ggplot2::geom_point(data = scores, mapping = ggplot2::aes(x = xvar, y = yvar), size = 1) +
-      ggplot2::scale_x_continuous(expand = c(0.1, 0.1)) + ggplot2::scale_y_continuous(expand = c(0.1, 0.1)) +
-      ggplot2::theme_bw() + ggplot2::theme(text = ggplot2::element_text(size = 8, family = "sans"), plot.title = ggplot2::element_text(face = "bold", family = "sans", size = 10))
+      ggplot2::scale_x_continuous(expand = c(0.1, 0.1)) +
+      ggplot2::scale_y_continuous(expand = c(0.1, 0.1)) +
+      ggplot2::theme_bw() +
+      ggplot2::theme(text = ggplot2::element_text(size = 8, family = "sans"), plot.title = ggplot2::element_text(face = "bold", family = "sans", size = 10))
   } else {
-    to_pca <- data_pca %>% dplyr::select(dplyr::starts_with("col_")) %>%
+    to_pca <- data_pca %>%
+      dplyr::select(dplyr::starts_with("col_")) %>%
       tidyr::pivot_wider(names_from = col_pars, values_from = col_value) %>%
       dplyr::select(dplyr::where(~ !any(is.na(.))))
-    begin <- data_pca %>% dplyr::select(dplyr::any_of(c("col_site", "col_factor", "col_rep"))) %>% ncol(.) + 1
+    begin <- data_pca %>%
+      dplyr::select(dplyr::any_of(c("col_site", "col_factor", "col_rep"))) %>%
+      ncol(.) + 1
     pca <- stats::prcomp(to_pca[begin:ncol(to_pca)], scale = TRUE)
     test <- vegan::adonis2(to_pca[begin:ncol(to_pca)] ~ as.factor(to_pca$col_factor), method = dist)
     prop_pca <- pca$sdev^2 / sum(pca$sdev^2)
     tmp_data <- get_data_pca_plot(pca_obj = pca)
     directions <- tmp_data$directions
-    data_pars <- data_pca %>% dplyr::select(col_pars, type_par) %>% dplyr::distinct()
+    data_pars <- data_pca %>%
+      dplyr::select(col_pars, type_par) %>%
+      dplyr::distinct()
     directions <- dplyr::left_join(directions, data_pars, by = c("varname" = "col_pars"))
     scores <- dplyr::bind_cols(to_pca, tmp_data$scores)
     directions$gr <- "constante"
@@ -489,30 +550,36 @@ plot_pca <- function(data, col_pars, col_site, col_value, type_par, matrix,
       ggplot2::stat_ellipse(level = 0.68, geom = "polygon") +
       ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "gray") +
       ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "gray") +
-      ggplot2::labs(x = glue::glue("Primera Componente Principal ({scales::percent(prop_pca[1])})"),
-                    y = glue::glue("Segunda Componente Principal ({scales::percent(prop_pca[2])})"),
-                    title = glue::glue("Análisis multivariado (PCA) para parámetros medidos en {matrix}"), subtitle = subtitle) +
+      ggplot2::labs(
+        x = glue::glue("Primera Componente Principal ({scales::percent(prop_pca[1])})"),
+        y = glue::glue("Segunda Componente Principal ({scales::percent(prop_pca[2])})"),
+        title = glue::glue("Análisis multivariado (PCA) para parámetros medidos en {matrix}"), subtitle = subtitle
+      ) +
       ggplot2::scale_fill_manual(name = stringr::str_to_sentence(col_factor), values = ggplot2::alpha(col_pca, 0.2), labels = names(col_pca)) +
       ggplot2::geom_segment(data = directions, mapping = ggplot2::aes(x = 0, y = 0, xend = xvar, yend = yvar, color = type_par), arrow = ggplot2::arrow(length = ggplot2::unit(1 / 2, "picas")), inherit.aes = FALSE) +
       ggplot2::geom_text(data = directions, mapping = ggplot2::aes(label = varname, x = xvar, y = yvar, angle = angle, hjust = hjust, color = type_par), size = 3, inherit.aes = FALSE) +
       ggplot2::scale_color_manual(name = "Tipo parámetro", values = cols_type, breaks = names(cols_type)) +
       ggplot2::geom_point(data = scores, mapping = ggplot2::aes(x = xvar, y = yvar), show.legend = FALSE) +
       ggplot2::geom_text(data = scores, mapping = ggplot2::aes(x = xvar, y = yvar, label = col_site), nudge_y = 0.1, size = 2.5) +
-      ggplot2::scale_x_continuous(expand = c(0.1, 0.1)) + ggplot2::scale_y_continuous(expand = c(0.1, 0.1)) +
+      ggplot2::scale_x_continuous(expand = c(0.1, 0.1)) +
+      ggplot2::scale_y_continuous(expand = c(0.1, 0.1)) +
       ggplot2::theme_bw(base_family = "Arial") +
       ggplot2::guides(fill = ggplot2::guide_legend(order = 1), color = ggplot2::guide_legend(order = 2, override.aes = list(label = " "))) +
       ggplot2::theme(plot.title = ggplot2::element_text(face = "bold"))
   }
 
   output_path <- ensure_output_path(output_name, output_dir)
-  tryCatch({
-    ggplot2::ggsave(filename = output_path, plot = plot, device = "png", width = width, height = height, dpi = 300)
-    if (save_rds) {
-      rds_path <- stringr::str_replace(output_path, "\\.(png|jpg|jpeg|pdf|tiff)$", ".rds")
-      saveRDS(plot, file = rds_path)
-      message("Objeto PCA guardado en: ", rds_path)
-    }
-  }, error = function(e) warning("Error guardando imagen: ", e$message))
+  tryCatch(
+    {
+      ggplot2::ggsave(filename = output_path, plot = plot, device = "png", width = width, height = height, dpi = 300)
+      if (save_rds) {
+        rds_path <- stringr::str_replace(output_path, "\\.(png|jpg|jpeg|pdf|tiff)$", ".rds")
+        saveRDS(plot, file = rds_path)
+        message("Objeto PCA guardado en: ", rds_path)
+      }
+    },
+    error = function(e) warning("Error guardando imagen: ", e$message)
+  )
   return(plot)
 }
 
@@ -562,30 +629,48 @@ get_glm <- function(data, col_pars, col_value, col_factor, interaction = NULL,
     formula_str <- paste("col_value_internal ~", predictors)
   }
   formula_obj <- stats::as.formula(formula_str)
-  data_split <- data_clean %>% dplyr::group_by(col_pars_internal) %>% dplyr::group_split() %>% purrr::set_names(purrr::map(., ~ unique(.x$col_pars_internal)))
-  glm_family <- switch(family, "Gaussian" = stats::gaussian(link = "identity"), "Gamma" = stats::Gamma(link = "log"), "Quasipoisson" = stats::quasipoisson(link = "log"))
+  data_split <- data_clean %>%
+    dplyr::group_by(col_pars_internal) %>%
+    dplyr::group_split() %>%
+    purrr::set_names(purrr::map(., ~ unique(.x$col_pars_internal)))
+  glm_family <- switch(family,
+    "Gaussian" = stats::gaussian(link = "identity"),
+    "Gamma" = stats::Gamma(link = "log"),
+    "Quasipoisson" = stats::quasipoisson(link = "log")
+  )
   models_fit <- purrr::map(data_split, function(df) {
     tryCatch(stats::glm(formula = formula_obj, data = df, na.action = stats::na.omit, family = glm_family),
-             error = function(e) { warning(paste("Falló el ajuste para:", unique(df$col_pars_internal), "-", e$message)); NULL })
+      error = function(e) {
+        warning(paste("Falló el ajuste para:", unique(df$col_pars_internal), "-", e$message))
+        NULL
+      }
+    )
   })
   models_fit <- purrr::keep(models_fit, ~ !is.null(.x))
   if (length(models_fit) == 0) stop("Ningún modelo pudo ser ajustado.")
   null_deviances <- purrr::map(models_fit, ~ .x$null.deviance)
   anovas <- purrr::map(models_fit, ~ stats::anova(.x, test = "Chisq"))
   glm_table <- purrr::imap_dfr(anovas, function(anova_obj, par_name) {
-    df <- as.data.frame(anova_obj); df$Parametros <- par_name; df$efecto <- rownames(df); df$Null_deviance <- null_deviances[[par_name]]; df
+    df <- as.data.frame(anova_obj)
+    df$Parametros <- par_name
+    df$efecto <- rownames(df)
+    df$Null_deviance <- null_deviances[[par_name]]
+    df
   })
   if (nrow(glm_table) == 0) stop("No se pudo generar la tabla ANOVA.")
   glm_table_processed <- glm_table %>%
-    dplyr::relocate(efecto) %>% dplyr::filter(!is.na(efecto), efecto != "NULL") %>%
+    dplyr::relocate(efecto) %>%
+    dplyr::filter(!is.na(efecto), efecto != "NULL") %>%
     dplyr::mutate(significancia = dplyr::case_when(is.na(`Pr(>Chi)`) ~ NA_character_, `Pr(>Chi)` <= 0.001 ~ "***", `Pr(>Chi)` <= 0.01 ~ "**", `Pr(>Chi)` <= 0.05 ~ "*", TRUE ~ "ns"))
   glm_table_raw <- glm_table_processed %>% janitor::clean_names()
   glm_table_clean <- glm_table_raw %>%
     dplyr::mutate(expl_percent = round((deviance / null_deviance) * 100, dec)) %>%
     dplyr::select(efecto, parametros, expl_percent) %>%
     tidyr::pivot_wider(names_from = "efecto", values_from = "expl_percent") %>%
-    dplyr::rowwise() %>% dplyr::mutate(`%DEM` = sum(dplyr::c_across(2:ncol(.)), na.rm = TRUE)) %>%
-    dplyr::ungroup() %>% dplyr::rename("Parámetros" = parametros)
+    dplyr::rowwise() %>%
+    dplyr::mutate(`%DEM` = sum(dplyr::c_across(2:ncol(.)), na.rm = TRUE)) %>%
+    dplyr::ungroup() %>%
+    dplyr::rename("Parámetros" = parametros)
 
   if (!is.null(output_name)) {
     if (!grepl("\\.csv$", output_name)) output_name <- paste0(output_name, ".csv")
@@ -636,16 +721,22 @@ plot_boxplot <- function(data, col_x, col_y, col_pars, col_units, stats_df = NUL
     dplyr::select(dplyr::all_of(vars)) %>%
     dplyr::rename(col_x = !!rlang::sym(col_x), col_y = !!rlang::sym(col_y), col_pars = !!rlang::sym(col_pars), col_units = !!rlang::sym(col_units)) %>%
     dplyr::mutate(col_label = dplyr::if_else(is.na(col_units), as.character(col_pars), glue::glue("{col_pars} {col_units}")))
-  if (!is.null(levels_factor)) { data_plot <- data_plot %>% dplyr::mutate(col_x = factor(col_x, levels = levels_factor))
-  } else { data_plot <- data_plot %>% dplyr::mutate(col_x = as.factor(col_x)) }
+  if (!is.null(levels_factor)) {
+    data_plot <- data_plot %>% dplyr::mutate(col_x = factor(col_x, levels = levels_factor))
+  } else {
+    data_plot <- data_plot %>% dplyr::mutate(col_x = as.factor(col_x))
+  }
 
   stats_ready <- NULL
   subtitle_text <- "Parámetros con efecto significativo del factor considerado (GLM)"
   if (add_test && !is.null(stats_df)) {
     if (!all(c("parametros", "pr_chi") %in% names(stats_df))) stop("'stats_df' debe contener 'parametros' y 'pr_chi'.")
-    mapping_labels <- data_plot %>% dplyr::select(col_pars, col_label) %>% dplyr::distinct()
+    mapping_labels <- data_plot %>%
+      dplyr::select(col_pars, col_label) %>%
+      dplyr::distinct()
     stats_ready <- stats_df %>%
-      dplyr::select(col_pars = parametros, pr_chi) %>% dplyr::distinct() %>%
+      dplyr::select(col_pars = parametros, pr_chi) %>%
+      dplyr::distinct() %>%
       dplyr::inner_join(mapping_labels, by = "col_pars") %>%
       dplyr::mutate(label_test = glue::glue("Modelo GLM: valor-p = {scales::pvalue(pr_chi, accuracy = 0.001)}")) %>%
       dplyr::distinct(col_label, .keep_all = TRUE)
@@ -658,29 +749,43 @@ plot_boxplot <- function(data, col_x, col_y, col_pars, col_units, stats_df = NUL
       ggplot2::facet_wrap(~col_label, scales = "free_y", ncol = n_col) +
       ggplot2::labs(x = label_x, y = label_y, title = title, subtitle = subtitle_text) +
       ggplot2::theme_linedraw(base_family = "Arial") +
-      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 0, hjust = 0.5),
-                     strip.text = ggplot2::element_text(face = "bold", colour = "white"),
-                     strip.background = ggplot2::element_rect(fill = "#2c3e50"))
+      ggplot2::theme(
+        axis.text.x = ggplot2::element_text(angle = 0, hjust = 0.5),
+        strip.text = ggplot2::element_text(face = "bold", colour = "white"),
+        strip.background = ggplot2::element_rect(fill = "#2c3e50")
+      )
     if (add_test) {
       if (n_factor > 2 && n_factor <= 4) {
-        dunn_res <- d_plot %>% dplyr::group_by(col_label) %>%
-          dplyr::group_modify(~ tryCatch({ mod <- stats::lm(col_y ~ col_x, data = .x); rstatix::tukey_hsd(mod) }, error = function(e) tibble::tibble())) %>%
+        dunn_res <- d_plot %>%
+          dplyr::group_by(col_label) %>%
+          dplyr::group_modify(~ tryCatch(
+            {
+              mod <- stats::lm(col_y ~ col_x, data = .x)
+              rstatix::tukey_hsd(mod)
+            },
+            error = function(e) tibble::tibble()
+          )) %>%
           dplyr::ungroup()
         if (nrow(dunn_res) > 0) {
-          max_vis <- d_plot %>% dplyr::group_by(col_label) %>%
+          max_vis <- d_plot %>%
+            dplyr::group_by(col_label) %>%
             dplyr::summarise(q3 = quantile(col_y, 0.75, na.rm = TRUE), q1 = quantile(col_y, 0.25, na.rm = TRUE), iqr = q3 - q1, limite_bigote = q3 + 1.5 * iqr, max_real = max(col_y, na.rm = TRUE), mx = pmax(limite_bigote, max_real), .groups = "drop")
           dunn_res <- dunn_res %>%
             rstatix::add_xy_position(x = "col_x", formula = col_y ~ col_x, data = d_plot, step.increase = 0.15) %>%
             dplyr::left_join(max_vis, by = "col_label") %>%
-            dplyr::group_by(col_label) %>% dplyr::mutate(step = dplyr::row_number(), y.position = mx + (mx * 0.10) + (step * 0.12 * mx)) %>% dplyr::ungroup()
+            dplyr::group_by(col_label) %>%
+            dplyr::mutate(step = dplyr::row_number(), y.position = mx + (mx * 0.10) + (step * 0.12 * mx)) %>%
+            dplyr::ungroup()
           p <- p + ggpubr::stat_pvalue_manual(dunn_res, label = "p.adj.signif", hide.ns = TRUE, size = 3)
           p <- p + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.35)))
           p <- p + ggplot2::scale_x_discrete(expand = ggplot2::expansion(mult = c(0.2, 0.2)))
         }
       }
       if (!is.null(d_stats_glm) && nrow(d_stats_glm) > 0) {
-        p <- p + ggplot2::geom_text(data = d_stats_glm, ggplot2::aes(x = -Inf, y = Inf, label = label_test),
-                                    hjust = -0.05, vjust = 2.5, size = 3, fontface = "italic", color = "#2c3e50", inherit.aes = FALSE)
+        p <- p + ggplot2::geom_text(
+          data = d_stats_glm, ggplot2::aes(x = -Inf, y = Inf, label = label_test),
+          hjust = -0.05, vjust = 2.5, size = 3, fontface = "italic", color = "#2c3e50", inherit.aes = FALSE
+        )
       }
     }
     return(p)
@@ -698,19 +803,25 @@ plot_boxplot <- function(data, col_x, col_y, col_pars, col_units, stats_df = NUL
       p_page <- build_plot(sub_data, sub_stats)
       fname <- glue::glue("{tools::file_path_sans_ext(output_name)}_{i}.png")
       output_path <- ensure_output_path(fname, output_dir)
-      tryCatch({
-        ggplot2::ggsave(filename = output_path, plot = p_page, width = width, height = height, dpi = 300)
-        if (save_rds) saveRDS(p_page, file = stringr::str_replace(output_path, "\\.png$", ".rds"))
-      }, error = function(e) warning(paste("Error página", i, ":", e$message)))
+      tryCatch(
+        {
+          ggplot2::ggsave(filename = output_path, plot = p_page, width = width, height = height, dpi = 300)
+          if (save_rds) saveRDS(p_page, file = stringr::str_replace(output_path, "\\.png$", ".rds"))
+        },
+        error = function(e) warning(paste("Error página", i, ":", e$message))
+      )
     }
     return(invisible(NULL))
   } else {
     p_single <- build_plot(data_plot, stats_ready)
     output_path <- ensure_output_path(output_name, output_dir)
-    tryCatch({
-      ggplot2::ggsave(filename = output_path, plot = p_single, width = width, height = height, dpi = 300)
-      if (save_rds) saveRDS(p_single, stringr::str_replace(output_path, "\\.[a-z]+$", ".rds"))
-    }, error = function(e) warning(e$message))
+    tryCatch(
+      {
+        ggplot2::ggsave(filename = output_path, plot = p_single, width = width, height = height, dpi = 300)
+        if (save_rds) saveRDS(p_single, stringr::str_replace(output_path, "\\.[a-z]+$", ".rds"))
+      },
+      error = function(e) warning(e$message)
+    )
     return(p_single)
   }
 }
@@ -747,17 +858,27 @@ plot_granulometria <- function(data, col_pars, col_site, col_value,
   vars_select <- c(col_site, col_pars, col_value, col_factor, col_rep)
   data_clean <- data %>%
     dplyr::select(dplyr::all_of(vars_select)) %>%
-    dplyr::rename(col_site = !!rlang::sym(col_site), col_pars = !!rlang::sym(col_pars), col_value = !!rlang::sym(col_value),
-                  !!!if (!is.null(col_factor)) stats::setNames(col_factor, "col_factor") else NULL,
-                  !!!if (!is.null(col_rep)) stats::setNames(col_rep, "col_rep") else NULL)
+    dplyr::rename(
+      col_site = !!rlang::sym(col_site), col_pars = !!rlang::sym(col_pars), col_value = !!rlang::sym(col_value),
+      !!!if (!is.null(col_factor)) stats::setNames(col_factor, "col_factor") else NULL,
+      !!!if (!is.null(col_rep)) stats::setNames(col_rep, "col_rep") else NULL
+    )
   pars_present <- intersect(pars_gran_all, unique(data_clean$col_pars))
   if (length(pars_present) == 0) warning("No se encontraron parámetros de granulometría estándar.")
-  data_plot <- data_clean %>% dplyr::filter(col_pars %in% pars_present) %>% dplyr::mutate(col_pars = factor(col_pars, levels = pars_present))
-  if (!is.null(ord_site)) { data_plot$col_site <- factor(data_plot$col_site, levels = intersect(ord_site, unique(data_plot$col_site)))
-  } else { data_plot$col_site <- as.factor(data_plot$col_site) }
+  data_plot <- data_clean %>%
+    dplyr::filter(col_pars %in% pars_present) %>%
+    dplyr::mutate(col_pars = factor(col_pars, levels = pars_present))
+  if (!is.null(ord_site)) {
+    data_plot$col_site <- factor(data_plot$col_site, levels = intersect(ord_site, unique(data_plot$col_site)))
+  } else {
+    data_plot$col_site <- as.factor(data_plot$col_site)
+  }
   if (!is.null(col_factor)) {
-    if (!is.null(levels_factor)) { data_plot$col_factor <- factor(data_plot$col_factor, levels = levels_factor)
-    } else { data_plot$col_factor <- as.factor(data_plot$col_factor) }
+    if (!is.null(levels_factor)) {
+      data_plot$col_factor <- factor(data_plot$col_factor, levels = levels_factor)
+    } else {
+      data_plot$col_factor <- as.factor(data_plot$col_factor)
+    }
   }
   n_sites <- length(unique(data_plot$col_site))
   angle_x <- if (n_sites <= 13) 0 else 90
@@ -771,24 +892,34 @@ plot_granulometria <- function(data, col_pars, col_site, col_value,
     ggplot2::scale_fill_manual("Fracción granulométrica", values = cols_grano) +
     ggplot2::guides(fill = ggplot2::guide_legend(title.position = "left", title = "Fracción granulométrica")) +
     ggplot2::theme_bw(base_size = 10) +
-    ggplot2::theme(text = ggplot2::element_text(family = "Arial"), plot.title = ggplot2::element_text(face = "bold", size = 12),
-                   strip.text = ggplot2::element_text(face = "bold", colour = "white"), strip.background = ggplot2::element_rect(fill = "#2c3e50"),
-                   axis.text.x = ggplot2::element_text(angle = angle_x, hjust = hjust_x, vjust = vjust_x),
-                   legend.title = ggplot2::element_text(angle = 90, hjust = 0.5, vjust = 0.5))
+    ggplot2::theme(
+      text = ggplot2::element_text(family = "Arial"), plot.title = ggplot2::element_text(face = "bold", size = 12),
+      strip.text = ggplot2::element_text(face = "bold", colour = "white"), strip.background = ggplot2::element_rect(fill = "#2c3e50"),
+      axis.text.x = ggplot2::element_text(angle = angle_x, hjust = hjust_x, vjust = vjust_x),
+      legend.title = ggplot2::element_text(angle = 90, hjust = 0.5, vjust = 0.5)
+    )
   if (!is.null(col_factor)) {
-    if (is.null(col_rep)) { p <- p + ggplot2::facet_grid(~col_factor, scales = "free_x", space = "free_x")
-    } else { p <- p + ggplot2::facet_grid(col_rep ~ col_factor, scales = "free", space = "free", switch = "y") }
-  } else if (!is.null(col_rep)) { p <- p + ggplot2::facet_grid(col_rep ~ ., scales = "free", space = "free") }
+    if (is.null(col_rep)) {
+      p <- p + ggplot2::facet_grid(~col_factor, scales = "free_x", space = "free_x")
+    } else {
+      p <- p + ggplot2::facet_grid(col_rep ~ col_factor, scales = "free", space = "free", switch = "y")
+    }
+  } else if (!is.null(col_rep)) {
+    p <- p + ggplot2::facet_grid(col_rep ~ ., scales = "free", space = "free")
+  }
 
   output_path <- ensure_output_path(output_name, output_dir)
-  tryCatch({
-    ggplot2::ggsave(filename = output_path, plot = p, width = width, height = height, dpi = 300)
-    if (save_rds) {
-      rds_path <- stringr::str_replace(output_path, "\\.(png|jpg|jpeg|pdf|tiff)$", ".rds")
-      saveRDS(p, file = rds_path)
-      message("Objeto R guardado en: ", rds_path)
-    }
-  }, error = function(e) warning("Error guardando archivos: ", e$message))
+  tryCatch(
+    {
+      ggplot2::ggsave(filename = output_path, plot = p, width = width, height = height, dpi = 300)
+      if (save_rds) {
+        rds_path <- stringr::str_replace(output_path, "\\.(png|jpg|jpeg|pdf|tiff)$", ".rds")
+        saveRDS(p, file = rds_path)
+        message("Objeto R guardado en: ", rds_path)
+      }
+    },
+    error = function(e) warning("Error guardando archivos: ", e$message)
+  )
   return(p)
 }
 
@@ -836,15 +967,22 @@ line_plot_by_time <- function(data, col_value, col_pars, col_x, col_site, col_ye
   on.exit(options(op))
 
   find_eps_kneedle <- function(distancias) {
-    y <- sort(distancias); x <- seq_along(y)
-    if (length(y) < 2) return(0.1)
-    a <- (y[length(y)] - y[1]) / (length(y) - 1); b <- y[1] - a
+    y <- sort(distancias)
+    x <- seq_along(y)
+    if (length(y) < 2) {
+      return(0.1)
+    }
+    a <- (y[length(y)] - y[1]) / (length(y) - 1)
+    b <- y[1] - a
     dist_to_line <- abs(a * x - y + b) / sqrt(a^2 + 1)
     y[which.max(dist_to_line)]
   }
 
   fn_get_ol <- function(df_subset) {
-    if (nrow(df_subset) < 5) { df_subset$ol_dbscan <- FALSE; return(df_subset %>% dplyr::select(inx_row, ol_dbscan)) }
+    if (nrow(df_subset) < 5) {
+      df_subset$ol_dbscan <- FALSE
+      return(df_subset %>% dplyr::select(inx_row, ol_dbscan))
+    }
     data_input <- scale(df_subset[, "col_y"])
     knn_res <- dbscan::kNN(data_input, k = 4)
     d_k <- apply(knn_res$dist, 1, max)
@@ -861,65 +999,97 @@ line_plot_by_time <- function(data, col_value, col_pars, col_x, col_site, col_ye
   if (!is.null(col_group)) vars_select <- c(vars_select, col_group)
   data_plot <- data %>%
     dplyr::select(dplyr::all_of(vars_select)) %>%
-    dplyr::rename(col_site = !!rlang::sym(col_site), col_x = !!rlang::sym(col_x), col_pars = !!rlang::sym(col_pars),
-                  col_y = !!rlang::sym(col_value), col_year = !!rlang::sym(col_year), col_units = !!rlang::sym(col_units),
-                  !!!if (!is.null(col_group)) rlang::set_names(col_group, "col_group") else NULL) %>%
+    dplyr::rename(
+      col_site = !!rlang::sym(col_site), col_x = !!rlang::sym(col_x), col_pars = !!rlang::sym(col_pars),
+      col_y = !!rlang::sym(col_value), col_year = !!rlang::sym(col_year), col_units = !!rlang::sym(col_units),
+      !!!if (!is.null(col_group)) rlang::set_names(col_group, "col_group") else NULL
+    ) %>%
     dplyr::mutate(inx_row = dplyr::row_number(), col_label = dplyr::if_else(is.na(col_units), as.character(col_pars), glue::glue("{col_pars} {col_units}"))) %>%
     dplyr::filter(!is.na(col_y))
-  if (!is.null(ord_site)) { data_plot$col_site <- factor(data_plot$col_site, levels = intersect(ord_site, unique(data_plot$col_site)))
-  } else { data_plot$col_site <- as.factor(data_plot$col_site) }
+  if (!is.null(ord_site)) {
+    data_plot$col_site <- factor(data_plot$col_site, levels = intersect(ord_site, unique(data_plot$col_site)))
+  } else {
+    data_plot$col_site <- as.factor(data_plot$col_site)
+  }
 
-  data_outliers <- data_plot %>% dplyr::select(col_y, dplyr::any_of("col_group"), col_pars, inx_row) %>%
-    dplyr::group_split(col_pars) %>% purrr::map(fn_get_ol) %>% dplyr::bind_rows()
+  data_outliers <- data_plot %>%
+    dplyr::select(col_y, dplyr::any_of("col_group"), col_pars, inx_row) %>%
+    dplyr::group_split(col_pars) %>%
+    purrr::map(fn_get_ol) %>%
+    dplyr::bind_rows()
   data_plot <- dplyr::left_join(data_plot, data_outliers, by = "inx_row")
-  min_y <- min(data_plot$col_year, na.rm = TRUE); max_y <- max(data_plot$col_year, na.rm = TRUE)
+  min_y <- min(data_plot$col_year, na.rm = TRUE)
+  max_y <- max(data_plot$col_year, na.rm = TRUE)
   title_main <- glue::glue("Concentración de parámetros en {matrix}")
   subtitle_main <- glue::glue("Periodo: {min_y}\u2013{max_y}")
 
   if (tp == "clean") {
-    data_viz <- data_plot %>% dplyr::filter(!is_BLD1, !ol_dbscan) %>%
+    data_viz <- data_plot %>%
+      dplyr::filter(!is_BLD1, !ol_dbscan) %>%
       dplyr::mutate(group_aes = if ("col_group" %in% names(.)) interaction(col_site, col_group, drop = TRUE) else col_site)
-    p <- ggplot2::ggplot() + ggplot2::geom_line(data = data_viz, ggplot2::aes(x = col_x, y = col_y, group = group_aes, color = col_site))
+    p <- ggplot2::ggplot() +
+      ggplot2::geom_line(data = data_viz, ggplot2::aes(x = col_x, y = col_y, group = group_aes, color = col_site))
   } else {
     matrix_safe <- stringr::str_replace_all(matrix, " ", "_")
     file_annot <- ensure_output_path(glue::glue("data_{matrix_safe}_PROMNA_annotated.csv"), output_dir)
     cols_curr <- c("col_site", "col_x", "col_pars", "col_y", "col_units", "col_year", "is_BLD1")
     cols_orig <- c("Sitio", "Campaña", "Sigla", "Valor", "Unidades", "Año", "is_BLD1")
-    if ("col_group" %in% names(data_plot)) { cols_curr <- c(cols_curr, "col_group"); cols_orig <- c(cols_orig, "Estrato/Grupo") }
-    cols_curr <- c(cols_curr, "ol_dbscan"); cols_orig <- c(cols_orig, "ol_dbscan")
-    csv_out <- data_plot %>% dplyr::select(dplyr::all_of(cols_curr)) %>% rlang::set_names(cols_orig)
+    if ("col_group" %in% names(data_plot)) {
+      cols_curr <- c(cols_curr, "col_group")
+      cols_orig <- c(cols_orig, "Estrato/Grupo")
+    }
+    cols_curr <- c(cols_curr, "ol_dbscan")
+    cols_orig <- c(cols_orig, "ol_dbscan")
+    csv_out <- data_plot %>%
+      dplyr::select(dplyr::all_of(cols_curr)) %>%
+      rlang::set_names(cols_orig)
     tryCatch(readr::write_csv(csv_out, file_annot), error = function(e) warning("No se pudo guardar CSV anotado"))
     data_viz <- data_plot %>% dplyr::mutate(group_aes = if ("col_group" %in% names(.)) interaction(col_site, col_group, drop = TRUE) else col_site)
     p <- ggplot2::ggplot() +
-      ggplot2::geom_point(data = data_viz %>% dplyr::filter(ol_dbscan, is.null(pars_annot) | !(col_pars %in% pars_annot)),
-                          ggplot2::aes(x = col_x, y = col_y), color = "#B22222", size = 1.5) +
+      ggplot2::geom_point(
+        data = data_viz %>% dplyr::filter(ol_dbscan, is.null(pars_annot) | !(col_pars %in% pars_annot)),
+        ggplot2::aes(x = col_x, y = col_y), color = "#B22222", size = 1.5
+      ) +
       ggplot2::geom_line(data = data_viz, ggplot2::aes(x = col_x, y = col_y, group = group_aes, color = col_site)) +
       ggplot2::labs(caption = paste0("\u2022 Puntos rojos: Valores anómalos (DBSCAN)\n", "\u2022 Asteriscos (*): Parámetros mayoritariamente BLD (>90%)"))
     if (!is.null(pars_annot) && length(pars_annot) > 0) {
-      anotaciones <- data_viz %>% dplyr::filter(col_pars %in% pars_annot) %>% dplyr::distinct(col_label) %>% dplyr::mutate(x = Inf, y = Inf, label = "*")
+      anotaciones <- data_viz %>%
+        dplyr::filter(col_pars %in% pars_annot) %>%
+        dplyr::distinct(col_label) %>%
+        dplyr::mutate(x = Inf, y = Inf, label = "*")
       p <- p + ggplot2::geom_text(data = anotaciones, ggplot2::aes(x = x, y = y, label = label), inherit.aes = FALSE, color = "#225E7C", hjust = 1.1, vjust = 1.1, size = 10, fontface = "bold")
     }
   }
 
-  x_breaks <- if (is.numeric(data_plot$col_x)) { seq(min(data_plot$col_x, na.rm = TRUE), max(data_plot$col_x, na.rm = TRUE), length.out = 5) %>% round() %>% unique()
-  } else { ggplot2::waiver() }
+  x_breaks <- if (is.numeric(data_plot$col_x)) {
+    seq(min(data_plot$col_x, na.rm = TRUE), max(data_plot$col_x, na.rm = TRUE), length.out = 5) %>%
+      round() %>%
+      unique()
+  } else {
+    ggplot2::waiver()
+  }
   p <- p + ggplot2::facet_wrap(~col_label, scales = "free_y", ncol = n_col) +
     ggplot2::labs(colour = legend_label, x = xlabel, y = ylabel, title = title_main, subtitle = subtitle_main) +
     ggsci::scale_color_d3() + ggplot2::scale_x_continuous(breaks = x_breaks) +
     ggplot2::theme_linedraw(base_family = "Arial") +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0, face = "bold"), strip.text.x = ggplot2::element_text(face = "bold", size = 9),
-                   legend.position = "right", legend.box = "horizontal", legend.text = ggplot2::element_text(size = 8),
-                   plot.caption = ggplot2::element_text(hjust = 0, face = "italic", size = 9))
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(hjust = 0, face = "bold"), strip.text.x = ggplot2::element_text(face = "bold", size = 9),
+      legend.position = "right", legend.box = "horizontal", legend.text = ggplot2::element_text(size = 8),
+      plot.caption = ggplot2::element_text(hjust = 0, face = "italic", size = 9)
+    )
 
   output_path <- ensure_output_path(output_name, output_dir)
-  tryCatch({
-    ggplot2::ggsave(filename = output_path, plot = p, dpi = 300, width = width, height = height)
-    if (save_rds) {
-      rds_path <- stringr::str_replace(output_path, "\\.[a-z]+$", ".rds")
-      saveRDS(p, file = rds_path)
-      message("Objeto R guardado en: ", rds_path)
-    }
-  }, error = function(e) warning("Error al guardar gráfico: ", e$message))
+  tryCatch(
+    {
+      ggplot2::ggsave(filename = output_path, plot = p, dpi = 300, width = width, height = height)
+      if (save_rds) {
+        rds_path <- stringr::str_replace(output_path, "\\.[a-z]+$", ".rds")
+        saveRDS(p, file = rds_path)
+        message("Objeto R guardado en: ", rds_path)
+      }
+    },
+    error = function(e) warning("Error al guardar gráfico: ", e$message)
+  )
   return(p)
 }
 
@@ -955,18 +1125,22 @@ get_norm_exceedance <- function(data, norm_data, col_pars, col_value,
   selected_pars <- data_clean %>%
     dplyr::group_by(col_pars_int) %>%
     dplyr::summarise(prom = mean(col_val_int, na.rm = TRUE), desvest = stats::sd(col_val_int, na.rm = TRUE), cv_num = dplyr::if_else(prom == 0, 0, desvest / prom), .groups = "drop") %>%
-    dplyr::filter(cv_num > 0) %>% dplyr::pull(col_pars_int)
+    dplyr::filter(cv_num > 0) %>%
+    dplyr::pull(col_pars_int)
   data_filt <- data_clean %>% dplyr::filter(col_pars_int %in% selected_pars)
   if (!all(c("limite_1", "limite_2") %in% names(norm_data))) stop("'norm_data' debe contener 'limite_1' y 'limite_2'.")
   norm_prep <- norm_data %>% dplyr::rename(col_pars_int = !!rlang::sym(col_pars))
   data_to_table <- data_filt %>% dplyr::filter(col_pars_int %in% unique(norm_prep$col_pars_int))
   data_final <- dplyr::left_join(data_to_table, norm_prep, by = "col_pars_int", relationship = "many-to-many")
-  df_long <- data_final %>% tidyr::pivot_longer(cols = c("limite_1", "limite_2"), names_to = "tipo_limite_int", values_to = "limite_val") %>% dplyr::filter(!is.na(limite_val))
+  df_long <- data_final %>%
+    tidyr::pivot_longer(cols = c("limite_1", "limite_2"), names_to = "tipo_limite_int", values_to = "limite_val") %>%
+    dplyr::filter(!is.na(limite_val))
   df_excede <- df_long %>%
     dplyr::mutate(excede = dplyr::case_when(
       col_pars_int == "pH" & tipo_limite_int == "limite_1" & col_val_int < limite_val ~ 1,
       col_pars_int == "pH" & tipo_limite_int == "limite_2" & col_val_int > limite_val ~ 1,
-      col_pars_int != "pH" & col_val_int > limite_val ~ 1, TRUE ~ 0))
+      col_pars_int != "pH" & col_val_int > limite_val ~ 1, TRUE ~ 0
+    ))
   if (!"norma" %in% names(df_excede)) df_excede$norma <- "Norma"
   tabla_excedencia <- df_excede %>%
     dplyr::group_by(col_pars_int, norma, tipo_limite_int, col_group_int) %>%
@@ -981,16 +1155,26 @@ get_norm_exceedance <- function(data, norm_data, col_pars, col_value,
       matrix == "sedimento" & stringr::str_detect(norma, "NOAA") & tipo_limite_int == "limite_2" ~ "PEL",
       stringr::str_detect(norma, "NOAA") & tipo_limite_int == "limite_1" ~ "Agudo",
       stringr::str_detect(norma, "NOAA") & tipo_limite_int == "limite_2" ~ "Crónico",
-      TRUE ~ tipo_limite_int)) %>%
-    dplyr::relocate(Limite_desc, .after = norma) %>% dplyr::select(-tipo_limite_int) %>%
-    dplyr::rename(Parámetro = col_pars_int, Norma = norma, Límite = Limite_desc,
-                  !!rlang::sym(col_group) := col_group_int, "N° de muestras" = N_muestras,
-                  "N° de excedencias" = N_excedencias, "Excedencias %" = Porcentaje_excedencia)
+      TRUE ~ tipo_limite_int
+    )) %>%
+    dplyr::relocate(Limite_desc, .after = norma) %>%
+    dplyr::select(-tipo_limite_int) %>%
+    dplyr::rename(
+      Parámetro = col_pars_int, Norma = norma, Límite = Limite_desc,
+      !!rlang::sym(col_group) := col_group_int, "N° de muestras" = N_muestras,
+      "N° de excedencias" = N_excedencias, "Excedencias %" = Porcentaje_excedencia
+    )
 
   output_path <- ensure_output_path(output_name, output_dir)
-  tryCatch({
-    if (stringr::str_detect(output_path, "\\.csv$")) { readr::write_csv(tabla_excedencia, output_path)
-    } else { readr::write_tsv(tabla_excedencia, output_path) }
-  }, error = function(e) warning("Error guardando tabla: ", e$message))
+  tryCatch(
+    {
+      if (stringr::str_detect(output_path, "\\.csv$")) {
+        readr::write_csv(tabla_excedencia, output_path)
+      } else {
+        readr::write_tsv(tabla_excedencia, output_path)
+      }
+    },
+    error = function(e) warning("Error guardando tabla: ", e$message)
+  )
   return(tabla_excedencia)
 }
