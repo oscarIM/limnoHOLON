@@ -567,7 +567,7 @@ abbreviate_taxa <- function(taxa_name) {
 #' @param col_taxa String. Nombre de la columna de taxones.
 #' @param taxa_id String. Nombre del grupo taxonómico para el título.
 #' @param col_factor String (Opcional). Nombre de la columna de agrupación.
-#' @param legend_factor String (Opcional). Título personalizado para la leyenda.
+#' @param legend_plot String (Opcional). Título personalizado para la leyenda.
 #' @param levels_factor Vector (Opcional). Orden de los niveles del factor.
 #' @param height Numérico. Alto de la imagen. Default 6.
 #' @param width Numérico. Ancho de la imagen. Default 6.
@@ -582,7 +582,7 @@ plot_nmds <- function(data,
                       col_taxa,
                       taxa_id,
                       col_factor = NULL,
-                      legend_factor = NULL,
+                      legend_plot = NULL,
                       levels_factor = NULL,
                       height = 6,
                       width = 6,
@@ -688,9 +688,9 @@ plot_nmds <- function(data,
   names(cols) <- unique(data_nmds$col_factor)
 
   legend_title <- if (run_stats) {
-    if (!is.null(legend_factor)) legend_factor else stringr::str_to_sentence(col_factor)
+    if (!is.null(legend_plot)) legend_plot else stringr::str_to_sentence(col_factor)
   } else {
-    "Sitios"
+    legend_plot
   }
 
   # --- 5.8 Construcción del gráfico ------------------------------------------
