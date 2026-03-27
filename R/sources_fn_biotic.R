@@ -1015,7 +1015,7 @@ plot_index <- function(data,
                        col_facet = NULL,
                        ord_facet = NULL,
                        taxa_id,
-                       legend_name,
+                       legend_name = NULL,
                        width = 8,
                        height = 6,
                        output_name = "plot_index.png",
@@ -1088,15 +1088,24 @@ plot_index <- function(data,
     dplyr::mutate(col_site = factor(col_site, levels = ord_site_final))
 
   # --- 7.6 Construcción del gráfico ------------------------------------------
-  plot <- ggplot2::ggplot(
-    data = data_plot,
-    mapping = ggplot2::aes(
+
+  # Construir aes condicionalmente según col_rep
+  if (!is.null(col_rep)) {
+    plot_aes <- ggplot2::aes(
       x      = col_site,
       y      = col_value,
       colour = col_rep,
       group  = col_rep
     )
-  ) +
+  } else {
+    plot_aes <- ggplot2::aes(
+      x     = col_site,
+      y     = col_value,
+      group = 1
+    )
+  }
+
+  plot <- ggplot2::ggplot(data = data_plot, mapping = plot_aes) +
     ggplot2::geom_line() +
     ggplot2::geom_point() +
     ggplot2::labs(
@@ -1105,10 +1114,24 @@ plot_index <- function(data,
       title = glue::glue(
         "Variaci\u00f3n espacial de \u00edndices comunitarios para {taxa_id}"
       )
-    ) +
-    ggplot2::scale_color_manual(values = cols, name = legend_name) +
+    )
+
+  # Agregar escala de color solo si col_rep existe
+  if (!is.null(col_rep)) {
+    plot <- plot +
+      ggplot2::scale_color_manual(values = cols, name = legend_name)
+  }
+
+  # Construir facet condicionalmente según col_facet
+  if (!is.null(col_facet)) {
+    facet_formula <- col_index ~ col_facet
+  } else {
+    facet_formula <- col_index ~ .
+  }
+
+  plot <- plot +
     ggplot2::facet_grid(
-      col_index ~ col_facet,
+      facet_formula,
       scales = "free", space = "free_x", switch = "y"
     ) +
     ggplot2::theme_linedraw(base_size = 10, base_family = "Arial") +
