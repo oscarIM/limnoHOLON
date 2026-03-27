@@ -2,27 +2,21 @@
 % Please edit documentation in R/sources_fn_biotic.R
 \name{get_taxo_worms}
 \alias{get_taxo_worms}
-\title{taxonómia segun worms}
+\title{Taxonomía según WoRMS}
 \usage{
 get_taxo_worms(taxa_vector, max_dist = 3, dist_method = "lv")
 }
 \arguments{
-\item{taxa_vector}{Vector de caracteres con los nombres de las especies o grupos taxonómicos.}
+\item{taxa_vector}{Vector de caracteres con los nombres de las especies.}
 
-\item{max_dist}{Distancia máxima para match difuso (default 3).}
+\item{max_dist}{Distancia máxima para match difuso. Default 3.}
 
-\item{dist_method}{Método de cálculo de distancia (default "lv").}
+\item{dist_method}{Método de cálculo de distancia. Default "lv".}
 }
 \value{
-Un tibble con la jerarquía taxonómica (desde Kingdom hasta Rank) y metadatos de búsqueda.
+Un tibble con la jerarquía taxonómica y metadatos de búsqueda.
 }
 \description{
-Esta función toma un vector de nombres científicos y consulta la base de datos de WoRMS
-para obtener su clasificación taxonómica completa.
-}
-\examples{
-\dontrun{
-species <- c("Calanus chilensis", "Acartia tonsa", "Navicula sp.")
-taxo <- get_taxo_worms(species)
-}
+Toma un vector de nombres científicos y consulta la base de
+  datos de WoRMS para obtener su clasificación taxonómica completa.
 }

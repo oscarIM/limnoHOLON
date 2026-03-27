@@ -19,6 +19,7 @@ plot_alluvial_taxa(
   xlabel = "Sitios",
   top_n = 10,
   output_name,
+  output_dir = "outputs",
   width = 10,
   height = 6,
   save_rds = FALSE
@@ -33,9 +34,9 @@ plot_alluvial_taxa(
 
 \item{col_N}{String. Columna de abundancia.}
 
-\item{col_taxa_group}{String. El grupo mayor que formará las cintas (ej. Clase, Familia).}
+\item{col_taxa_group}{String. Grupo mayor que forma las cintas.}
 
-\item{col_taxa}{String (Opcional). La unidad menor a contar para riqueza (ej. Especie). Requerido si metric="richness".}
+\item{col_taxa}{String (Opcional). Unidad menor a contar para riqueza.}
 
 \item{taxa_id}{String. Nombre del grupo general para título.}
 
@@ -43,25 +44,28 @@ plot_alluvial_taxa(
 
 \item{ord_facet}{Vector (Opcional). Orden de los niveles del facet.}
 
-\item{metric}{String. "abundance" (aplica Top N) o "richness" (Muestra TODOS los grupos, sin Top N).}
+\item{metric}{String. "abundance" o "richness".}
 
 \item{legend_label}{String (Opcional). Título leyenda.}
 
-\item{xlabel}{String. Título eje X.}
+\item{xlabel}{String. Título eje X. Default "Sitios".}
 
-\item{top_n}{Entero. Filtra los N grupos principales (Solo aplica si metric="abundance").}
+\item{top_n}{Entero. Top N grupos (solo para metric = "abundance").}
 
-\item{output_name}{String. Nombre del archivo de salida (ej. "grafico.png").}
+\item{output_name}{String. Nombre del archivo de salida.}
 
-\item{width}{Numérico. Ancho imagen.}
+\item{output_dir}{String. Directorio de salida. Default "outputs".}
 
-\item{height}{Numérico. Alto imagen.}
+\item{width}{Numérico. Ancho imagen. Default 10.}
 
-\item{save_rds}{Lógico. Guardar RDS.}
+\item{height}{Numérico. Alto imagen. Default 6.}
+
+\item{save_rds}{Lógico. Guardar RDS. Default FALSE.}
 }
 \value{
 Un objeto ggplot.
 }
 \description{
-Crea un gráfico aluvial. Ordena la leyenda por magnitud y respeta la lógica de riqueza total sin filtrar si se solicita.
+Crea un gráfico aluvial. Ordena la leyenda por magnitud y
+  respeta la lógica de riqueza total sin filtrar si se solicita.
 }

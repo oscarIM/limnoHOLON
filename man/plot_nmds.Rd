@@ -2,7 +2,7 @@
 % Please edit documentation in R/sources_fn_biotic.R
 \name{plot_nmds}
 \alias{plot_nmds}
-\title{Plot NMDS and PERMANOVA}
+\title{Plot NMDS y PERMANOVA}
 \usage{
 plot_nmds(
   data,
@@ -16,6 +16,7 @@ plot_nmds(
   height = 6,
   width = 6,
   output_name = "plot_nmds.png",
+  output_dir = "outputs",
   save_rds = FALSE
 )
 }
@@ -28,11 +29,11 @@ plot_nmds(
 
 \item{col_taxa}{String. Nombre de la columna de taxones.}
 
-\item{taxa_id}{String. Nombre del grupo taxonómico para el título (ej. "Fitoplancton").}
+\item{taxa_id}{String. Nombre del grupo taxonómico para el título.}
 
-\item{col_factor}{String (Opcional). Nombre de la columna de agrupación. Si es NULL, se usa `col_site` para colorear.}
+\item{col_factor}{String (Opcional). Nombre de la columna de agrupación.}
 
-\item{legend_factor}{String (Opcional). Título personalizado para la leyenda del gráfico cuando se usa `col_factor`.}
+\item{legend_factor}{String (Opcional). Título personalizado para la leyenda.}
 
 \item{levels_factor}{Vector (Opcional). Orden de los niveles del factor.}
 
@@ -42,11 +43,14 @@ plot_nmds(
 
 \item{output_name}{String. Nombre del archivo de salida.}
 
-\item{save_rds}{Lógico. Si es TRUE, guarda el objeto ggplot como .rds.}
+\item{output_dir}{String. Directorio de salida. Default "outputs".}
+
+\item{save_rds}{Lógico. Si TRUE, guarda el objeto ggplot como .rds.}
 }
 \value{
 Un objeto ggplot con el NMDS.
 }
 \description{
-Realiza un análisis NMDS con transformación de Hellinger. Si hay factor, dibuja elipses y calcula PERMANOVA. Si no, colorea por sitios.
+Realiza un análisis NMDS con transformación de Hellinger. Si hay
+  factor, dibuja elipses y calcula PERMANOVA. Si no, colorea por sitios.
 }

@@ -18,6 +18,7 @@ plot_index(
   width = 8,
   height = 6,
   output_name = "plot_index.png",
+  output_dir = "outputs",
   xlabel = "Sitios",
   save_rds = FALSE
 )
@@ -27,21 +28,21 @@ plot_index(
 
 \item{col_value}{String. Nombre de la columna con el valor del índice.}
 
-\item{col_index}{String. Nombre de la columna que indica el tipo de índice (N, S, H).}
+\item{col_index}{String. Nombre de la columna que indica el tipo de índice.}
 
 \item{col_site}{String. Nombre de la columna de sitios (Eje X).}
 
 \item{ord_site}{Vector (Opcional). Orden de los niveles de sitios.}
 
-\item{col_rep}{String (Opcional). Nombre de la columna para agrupar líneas/colores (ej. Réplica, Campaña, Estrato).}
+\item{col_rep}{String (Opcional). Columna para agrupar líneas/colores.}
 
-\item{col_facet}{String (Opcional). Nombre de la columna para facetar horizontalmente (ej. Zona).}
+\item{col_facet}{String (Opcional). Columna para facetar horizontalmente.}
 
 \item{ord_facet}{Vector (Opcional). Orden de los niveles del facet.}
 
 \item{taxa_id}{String. Identificador del taxón para el título.}
 
-\item{legend_name}{String. Título de la leyenda. Determina la paleta de colores ("estratos" activa paleta azul fija).}
+\item{legend_name}{String. Título de la leyenda.}
 
 \item{width}{Numérico. Ancho de la imagen. Default 8.}
 
@@ -49,13 +50,17 @@ plot_index(
 
 \item{output_name}{String. Nombre del archivo de salida.}
 
-\item{xlabel}{String. Etiqueta para el eje X. Default "Sitios".}
+\item{output_dir}{String. Directorio de salida. Default "outputs".}
 
-\item{save_rds}{Lógico. Si es TRUE, guarda también el objeto R (.rds). Por defecto FALSE.}
+\item{xlabel}{String. Etiqueta eje X. Default "Sitios".}
+
+\item{save_rds}{Lógico. Guardar .rds. Default FALSE.}
 }
 \value{
 Un objeto ggplot (invisible).
 }
 \description{
-Crea un gráfico de líneas y puntos facetado por tipo de índice (N, S, H). Asigna paletas de colores específicas según el nombre de la leyenda.
+Crea un gráfico de líneas y puntos facetado por tipo de índice
+  (N, S, H). Asigna paletas de colores específicas según el nombre de la
+  leyenda.
 }

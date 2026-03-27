@@ -17,39 +17,43 @@ plot_treemap(
   taxa_group,
   width = 8,
   height = 10,
-  output_name = "plot_treemap.png"
+  output_name = "plot_treemap.png",
+  output_dir = "outputs"
 )
 }
 \arguments{
 \item{data}{Data frame con los datos.}
 
-\item{col_site}{String (Opcional). Nombre de la columna de sitios. (Anteriormente `col_sitio`).}
+\item{col_site}{String (Opcional). Nombre de la columna de sitios.}
 
 \item{ord_site}{Vector (Opcional). Orden de los niveles de sitios.}
 
-\item{col_N}{String. Nombre de la columna de abundancia o conteo. (Anteriormente `col_N`).}
+\item{col_N}{String. Nombre de la columna de abundancia o conteo.}
 
 \item{col_facet}{String (Opcional). Nombre de la columna para facetar.}
 
 \item{ord_facet}{Vector (Opcional). Orden de los niveles del facet.}
 
-\item{col_zone}{String (Opcional). Nombre de la columna de zonas. (Anteriormente `col_zona`).}
+\item{col_zone}{String (Opcional). Nombre de la columna de zonas.}
 
 \item{ord_zone}{Vector (Opcional). Orden de los niveles de zonas.}
 
-\item{taxa_id}{String. Texto identificador del taxón superior (ej. "Familia X") para el título.}
+\item{taxa_id}{String. Texto identificador del taxón superior para el título.}
 
-\item{taxa_group}{String. Nombre de la columna con el grupo taxonómico a graficar.}
+\item{taxa_group}{String. Nombre de la columna con el grupo taxonómico.}
 
 \item{width}{Numérico. Ancho de la imagen. Default 8.}
 
 \item{height}{Numérico. Alto de la imagen. Default 10.}
 
 \item{output_name}{String. Nombre del archivo de salida.}
+
+\item{output_dir}{String. Directorio de salida. Default "outputs".}
 }
 \value{
 Un objeto ggplot (invisible).
 }
 \description{
-Crea un gráfico Treemap basado en abundancias. Soporta facetado, agrupación por sitio/zona y formateo específico de etiquetas.
+Crea un gráfico Treemap basado en abundancias. Soporta
+  facetado, agrupación por sitio/zona y formateo específico de etiquetas.
 }

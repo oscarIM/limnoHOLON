@@ -13,6 +13,7 @@ get_index_df(
   col_zone = NULL,
   col_rep = NULL,
   output_name,
+  output_dir = "outputs",
   fun = sum
 )
 }
@@ -23,7 +24,7 @@ get_index_df(
 
 \item{col_site}{String. Nombre de la columna de sitios.}
 
-\item{col_sampling}{String (Opcional). Nombre de la columna de muestreo/campaña.}
+\item{col_sampling}{String (Opcional). Nombre de la columna de muestreo.}
 
 \item{col_taxa}{String. Nombre de la columna de taxones.}
 
@@ -33,17 +34,14 @@ get_index_df(
 
 \item{output_name}{String. Nombre del archivo de salida (.csv).}
 
-\item{fun}{Función o nombre de función (ej. "sum", "mean") para agregar los datos antes de calcular índices.}
+\item{output_dir}{String. Directorio de salida. Default "outputs".}
 
-\item{col_N}{String. Nombre de la columna de abundancia o valor.}
+\item{fun}{Función o nombre de función para agregar datos. Default sum.}
 }
 \value{
 Un data frame con los índices calculados (invisible).
-
-Un data frame con los índices calculados (invisible).
 }
 \description{
-Agrupa datos, calcula abundancia (N), riqueza (S) y Shannon (H) usando `vegan`, y guarda el resultado.
-
-Agrupa datos, calcula abundancia (N), riqueza (S) y Shannon (H) usando `vegan`, y guarda el resultado en CSV.
+Agrupa datos, calcula abundancia (N), riqueza (S) y Shannon (H)
+  usando \code{vegan}, y guarda el resultado en CSV.
 }

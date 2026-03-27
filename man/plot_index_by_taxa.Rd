@@ -16,7 +16,8 @@ plot_index_by_taxa(
   taxa_id,
   width = 10,
   height = 6,
-  xlabel = NULL
+  xlabel = NULL,
+  output_dir = "outputs"
 )
 }
 \arguments{
@@ -28,25 +29,29 @@ plot_index_by_taxa(
 
 \item{col_N}{String. Nombre de la columna de abundancia.}
 
-\item{col_taxa}{String. Nombre de la columna de taxones individuales (para conteo de riqueza).}
+\item{col_taxa}{String. Nombre de la columna de taxones individuales.}
 
-\item{taxon_group}{String. Nombre de la columna de agrupación taxonómica (ej. "Phylum", "Clase") para el relleno del gráfico.}
+\item{taxon_group}{String. Nombre de la columna de agrupación taxonómica.}
 
-\item{col_facet}{String (Opcional). Nombre de la columna para facetar (ej. "Zona").}
+\item{col_facet}{String (Opcional). Nombre de la columna para facetar.}
 
 \item{ord_facet}{Vector (Opcional). Orden de los niveles del facet.}
 
-\item{taxa_id}{String. Identificador del grupo taxonómico general (ej. "Macroinvertebrados") para títulos y nombres de archivo.}
+\item{taxa_id}{String. Identificador del grupo taxonómico general.}
 
 \item{width}{Numérico. Ancho de la imagen.}
 
 \item{height}{Numérico. Alto de la imagen.}
 
-\item{xlabel}{String (Opcional). Etiqueta personalizada para el eje X. Por defecto "Sitios".}
+\item{xlabel}{String (Opcional). Etiqueta para el eje X. Default "Sitios".}
+
+\item{output_dir}{String. Directorio de salida. Default "outputs".}
 }
 \value{
 Invisible NULL. Guarda dos archivos PNG.
 }
 \description{
-Genera y guarda dos gráficos de barras apiladas: uno de Abundancia Total y otro de Riqueza de Taxones, desglosados por sitio y grupo taxonómico.
+Genera y guarda dos gráficos de barras apiladas: uno de
+  Abundancia Total y otro de Riqueza de Taxones, desglosados por sitio y
+  grupo taxonómico.
 }

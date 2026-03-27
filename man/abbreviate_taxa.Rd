@@ -13,5 +13,7 @@ abbreviate_taxa(taxa_name)
 Un vector de caracteres con las abreviaciones.
 }
 \description{
-Genera códigos abreviados. Si detecta colisiones (mismo código para especies distintas), aumenta la longitud del género para diferenciarlas.
+Genera códigos abreviados de nombres científicos. Si detecta
+  colisiones (mismo código para especies distintas), aumenta la longitud del
+  género para diferenciarlas.
 }
